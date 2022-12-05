@@ -1,93 +1,93 @@
-import {
-  add,
-  delay,
-  go,
-  reduce,
-  rangeL,
-  map,
-  isEmpty,
-  log,
-  append,
-  deepFlat,
-  take,
-  curry,
-} from "fxjs";
 import * as L from "fxjs/Lazy";
+import { go, map, pipe, tap } from "fxjs";
 import * as C from "fxjs/Concurrency";
-import * as $ from "fxdom";
+import {
+  $addClass,
+  $append,
+  $appendTo,
+  $attr,
+  $children,
+  $closest,
+  $delegate,
+  $el,
+  $els,
+  $findAll,
+  $on,
+  $prepend,
+  $prependTo,
+  $qs,
+  $remove,
+  $removeClass,
+} from "fxdom";
 
-let todos = JSON.parse(localStorage.getItem("todos"));
+// 사전에 정의된 아이콘들
+import { check_box, check_box_full } from "./icons";
+// 데이터 및 기능 정의
+import {
+  addTodo,
+  makeTodoData,
+  removeAllTodoData,
+  removeTodo,
+  todos,
+} from "./data";
+import {
+  applyToEl,
+  applyToTarget,
+  applyToElOnlyEnter,
+  findNotId,
+  makeEmpty,
+} from "./basic_func";
 
-const updateData = () => {
-  localStorage.setItem("todos", JSON.stringify(todos));
-  log(todos);
-};
+/*
+ * 기본 생성 tags
+ * top_bar : 탑바
+ * $children(top_bar) : input_box - [input], 추가 버튼, 삭제 버튼
+ * contents : todos가 들어갈 자리
+ * */
+const top_bar = $qs(".top");
+const [input_box, button_add, button_delete] = $children(top_bar);
+const input = $children(input_box)[0];
+const contents = $qs(".contents");
 
-const makeTodoData = (text) => ({
-  content: text,
-  regDate: new Date(),
-  checked: false,
-});
+// todo를 받아서 하나의 template string 만들
+const mkCon = (todo) => `<div class="content" id="${todo.id}">
+    <button class="button check">
+        ${
+          todo.checked
+            ? check_box_full(["button", "check"])
+            : check_box(["button", "check"])
+        }
+    </button>
+    <span class="title">${todo.content}</span>
+    <button class="button delete">삭제</button>
+</div>`;
 
-const addTodo = (el) => {
-  if (isEmpty(el.value)) {
-    // 경고 문고 알람창 만들기
-    log("비어있습니다!");
-    return;
-  }
-  todos = go(todos, append(makeTodoData(el.value)));
-  el.value = "";
-  updateData();
-};
+// 하나의 컴포넌트를 만들기
+const mkConOne = pipe(mkCon, $el, $prependTo(contents));
 
-const removeTodo = (value) => {
-  todos = go(
-    todos,
-    filter((a) => a.content != value)
-  );
-  updateData();
-};
+// 모든 element tag 삭제
+const rmAll = pipe($findAll("div"), map($remove));
+// 선택한 element tag 삭제
+const rmOne = pipe($closest("div"), $remove);
 
-const removeAllTodo = () => {
-  todos = [];
-  updateData();
-};
+// 선택한 content 태그 및 데이터 삭제
+const rmAllCnt = () => go(contents, rmAll, removeAllTodoData);
+// 모든 content 태그 및 데이터 삭제
+const rmOneCnt = pipe(rmOne, findNotId, removeTodo);
 
-const addInputEvent = (f) => $.$on("input", f);
-const addOnClickEvent = (f) => $.$on("click", f);
+// content 만들기 및 저장
+const mkCntOne = pipe(tap(addTodo, mkConOne), makeEmpty);
 
-const toggleGhost = (value, el) => {
-  if (isEmpty(value)) {
-    $.$removeClass("ghost", el);
-    $.$addClass("active", el);
-    return;
-  }
-  $.$addClass("ghost", el);
-  $.$removeClass("active", el);
-};
+// 기존 데이터 토대로 컴포넌트 활성화
+go(todos, L.map(mkCon), L.map($el), map($prependTo(contents)));
 
-const inputEvent = (el) => (e) => toggleGhost(e.target.value, el);
+// 이벤트 위임 - 삭제
+go(contents, $delegate("click", ".delete", applyToTarget(rmOneCnt)));
 
-const todo_input = $.$qsa(".input_box");
-
+// 이벤트 위임 - 추가, 전부 삭제
 go(
-  todo_input,
-  map($.$children),
-  map(([label, input]) => addInputEvent(inputEvent(label))(input))
+  top_bar,
+  $delegate("click", ".add", applyToEl(input, mkCntOne)),
+  $delegate("keypress", ".todo", applyToElOnlyEnter(input, mkCntOne)),
+  $delegate("click", ".delete_all", applyToEl(button_delete, rmAllCnt))
 );
-
-const add_button = $.$qsa(".top");
-
-const saveEvent = (el, f) => (e) => f(el);
-
-go(
-  add_button,
-  map($.$children),
-  map(([input_box, button_add, button_delete]) => {
-    const [_, input] = $.$children(input_box);
-    addOnClickEvent(saveEvent(input, addTodo))(button_add);
-    addOnClickEvent(saveEvent(button_delete, removeAllTodo))(button_delete);
-  })
-);
-
-go();

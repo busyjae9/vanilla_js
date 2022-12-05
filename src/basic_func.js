@@ -1,0 +1,26 @@
+// 기초 함수들
+import { head, isEmpty, map, pipe, sortByDesc, take } from "fxjs";
+import { $addClass, $attr, $removeClass } from "fxdom";
+
+export const applyToEl = (el, f) => (e) => f(el);
+export const applyToTarget = (f) => (e) => f(e.target);
+export const applyToElOnlyEnter = (el, f) => (e) => e.key == "Enter" && f(el);
+
+// 태그에 클래스를 붙이고 삭제하는 방식으로 해당 태그 내용을 화면에서 토글
+const visible = pipe($removeClass("ghost"), $addClass("active"));
+const invisible = pipe($addClass("ghost"), $removeClass("active"));
+export const toggleGhost = (value, el) =>
+  !value || isEmpty(value) ? visible(el) : invisible(el);
+
+export const makeEmpty = (el) => (el.value = "");
+export const makeEmptyList = (list) => (list = []);
+export const findNotId = (el) => (a) => a.id != $attr("id", el);
+
+export const emptyCheck = (el) =>
+  new Promise((resolve, reject) =>
+    !el.value || isEmpty(el.value) ? reject("비어있습니다!") : resolve(el)
+  );
+
+export const expId = (v) => v.id;
+export const addToId1 = (v) => v.id + 1;
+export const getLastId = pipe(sortByDesc(expId), take(1), map(addToId1), head);

@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>만들기</title>
     <style>
+        svg {
+            color: white;
+        }
+
         html,
         body {
             margin: 0;
@@ -77,18 +81,39 @@
             border-color: #0891b2;
         }
 
-        .top .button:hover {
+        .button:hover {
             border-color: #0891b2;
             color: #0891b2;
         }
 
-        .top .button {
+        .button {
             background-color: transparent;
             color: #f9fafb;
             border-width: 0 0 4px;
             border-color: darkgray;
             font-size: 1em;
             padding: .4em .4em;
+        }
+
+        .button.delete {
+            color: #fca5a5;
+            border-color: #fca5a5
+        }
+
+        .button.delete:hover {
+            border-color: #b91c1c;
+            color: #b91c1c;
+        }
+
+        .button.check {
+            border-width: 0 0;
+            color: #f9fafb;
+            border-color: darkgray;
+        }
+
+        .button.check:hover {
+            border-color: #0891b2;
+            color: #0891b2;
         }
 
         .contents {
@@ -107,37 +132,43 @@
             align-items: center;
             justify-content: space-between;
             color: black;
-            background-color: white;
             width: 90%;
-            height: 3em;
-            padding: .4em .4em;
+            max-height: 6em;
+            padding: 1em 1em;
+            border-radius: 1em;
+            box-shadow: 0em 0em .5em .2em rgba(255, 255, 255, 0.2);
+            background-color: #18181b;
+        }
+
+        .contents .title {
+            max-width: 70%;
+            font-size: 1em;
+            max-height: 4.8em; /* (Number of lines you want visible) * (line-height) */
+            line-height: 1.2em;
+            text-align: justify;
+            text-overflow: ellipsis;
+            word-break: break-word;
+            overflow: hidden;
+            color: #fafafa;
+            -webkit-line-clamp: 4; /* number of lines to show */
+            -webkit-box-orient: vertical;
+            display: -webkit-box;
         }
     </style>
 </head>
 <body>
+<main></main>
 <div class="container">
-    <div class="top">
+    <header class="top">
         <div class="input_box">
-            <label class="label_todo active" for="todo">할 일 입력하기</label>
             <input class="todo" type="text" id="todo" todo="todo" required
-                   minlength="1">
+                   minlength="1" placeholder="할 일 입력하기">
         </div>
         <button class="add button">추가하기</button>
         <button class="delete_all button">전부 삭제</button>
-    </div>
-    <div class="contents">
-        <div class="content">
-            <span class="check">check</span>
-            <span class="title">내용입니다</span>
-            <span class="delete">delete</span>
-        </div>
-        <div class="content">
-        </div>
-        <div class="content">
-        </div>
-        <div class="content">
-        </div>
-    </div>
+    </header>
+    <section class="contents">
+    </section>
 </div>
 <script type="module" src="src/index.js"></script>
 </body>

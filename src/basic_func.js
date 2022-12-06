@@ -1,6 +1,6 @@
 // 기초 함수들
 import { head, isEmpty, map, pipe, sortByDesc, take } from "fxjs";
-import { $addClass, $attr, $removeClass } from "fxdom";
+import { $addClass, $attr, $removeClass, $setVal } from "fxdom";
 
 export const applyToEl = (el, f) => (e) => f(el);
 export const applyToTarget = (f) => (e) => f(e.target);
@@ -12,7 +12,6 @@ const invisible = pipe($addClass("ghost"), $removeClass("active"));
 export const toggleGhost = (value, el) =>
   !value || isEmpty(value) ? visible(el) : invisible(el);
 
-export const makeEmpty = (el) => (el.value = "");
 export const makeEmptyList = (list) => (list = []);
 export const findNotId = (el) => (a) => a.id != $attr("id", el);
 

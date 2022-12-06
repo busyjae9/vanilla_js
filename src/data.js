@@ -15,7 +15,7 @@ import {
   tap,
 } from "fxjs";
 import * as L from "fxjs/Lazy";
-import { emptyCheck, getLastId, makeEmpty, makeEmptyList } from "./basic_func";
+import { emptyCheck, getLastId, makeEmptyList } from "./basic_func";
 
 export let todos = [];
 

@@ -15,11 +15,6 @@ export const toggleGhost = (value, el) =>
 export const makeEmptyList = (list) => (list = []);
 export const findNotId = (el) => (a) => a.id != $attr("id", el);
 
-export const emptyCheck = (el) =>
-  new Promise((resolve, reject) =>
-    !el.value || isEmpty(el.value) ? reject("비어있습니다!") : resolve(el)
-  );
-
 export const expId = (v) => v.id;
 export const addToId1 = (v) => v.id + 1;
 export const getLastId = pipe(sortByDesc(expId), take(1), map(addToId1), head);

@@ -15,42 +15,51 @@ import {
   tap,
 } from "fxjs";
 import * as L from "fxjs/Lazy";
-import { emptyCheck, getLastId, makeEmptyList } from "./basic_func";
+import { getLastId, makeEmptyList } from "./basic_func";
 
-export let todos = [];
+const Data = {
+  todos: [],
+};
 
-function reload() {
+Data.reload = function () {
   try {
-    todos = JSON.parse(localStorage.getItem("todos"));
+    Data.todos = JSON.parse(localStorage.getItem("todos")).reverse();
   } catch (e) {
     log(e);
   }
+  log(Data.todos);
+};
 
-  log(todos);
-}
+Data.reload();
 
-reload();
-
-// 텍스트를 받아서 아이템을 객체로 생성
-export const makeTodoData = ({ value }) => ({
+Data.emptyCheck = (el) =>
+  new Promise((resolve, reject) =>
+    !el.value || isEmpty(el.value) ? reject("비어있습니다!") : resolve(el)
+  );
+Data.getLastId = () => getLastId(Data.todos);
+Data.makeTodoData = ({ value }) => ({
   content: value,
   regDate: new Date(),
   checked: false,
-  id: getLastId(todos) || 0,
+  id: Data.getLastId() || 0,
 });
 
-export const updateData = tap((_todos = []) => {
+Data.updateData = tap((_todos = []) => {
   localStorage.setItem("todos", JSON.stringify(_todos));
-  todos = _todos;
+  Data.todos = _todos;
+
+  log(_todos);
 });
 
-export const addTodoData = tap((todo) => go(todos, append(todo), updateData));
+Data.addTodoData = tap((todo) => go(Data.todos, append(todo), Data.updateData));
 
 // 아이템을 생성 시 확인 후 경고 문구 활성화
-export const addTodo = pipe(emptyCheck, makeTodoData, addTodoData);
+Data.addTodo = pipe(Data.emptyCheck, Data.makeTodoData, Data.addTodoData);
 
 // 아이템 삭제
-export const removeTodo = (f) => go(todos, filter(f), updateData);
+Data.removeTodo = (f) => go(Data.todos, filter(f), Data.updateData);
 
 // 모든 아이템 삭제
-export const removeAllTodoData = () => go(todos, makeEmptyList, updateData);
+Data.removeAllTodoData = () => go(Data.todos, makeEmptyList, Data.updateData);
+
+export default Data;

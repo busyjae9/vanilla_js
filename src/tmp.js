@@ -1,57 +1,27 @@
 import * as L from "fxjs/Lazy";
-import { go, map, pipe, tap } from "fxjs";
+import { go, log, map, pipe, strMap, tap } from "fxjs";
 import * as C from "fxjs/Concurrency";
 import {
-  $addClass,
-  $append,
   $appendTo,
-  $attr,
-  $children,
   $closest,
   $delegate,
   $el,
-  $els,
   $findAll,
-  $on,
-  $prepend,
   $prependTo,
   $qs,
   $remove,
-  $removeClass,
   $setVal,
 } from "fxdom";
 
-// 사전에 정의된 아이콘들
+import Data from "./data";
 import { check_box, check_box_full } from "./icons";
-// 데이터 및 기능 정의
-import {
-  addTodo,
-  makeTodoData,
-  removeAllTodoData,
-  removeTodo,
-  todos,
-} from "./data";
-import {
-  applyToTarget,
-  applyToElOnlyEnter,
-  findNotId,
-  applyToEl,
-} from "./basic_func";
+import { applyToElOnlyEnter, findNotId } from "./basic_func";
 
-/*
- * 기본 생성 tags
- * top_bar : 탑바
- * $children(top_bar) : input_box - [input], 추가 버튼, 삭제 버튼
- * contents : todos가 들어갈 자리
- * */
-const top_bar = $qs(".top");
-const [input_box, button_add, button_delete] = $children(top_bar);
-const input = $children(input_box)[0];
-const contents = $qs(".contents");
+const Todo = {};
 
-// todo를 받아서 하나의 template string 만들
-const mkCon = (todo) => `<div class="content" id="${todo.id}">
-    <button class="button check">
+Todo.mkConTmp = (todo) => `
+<div class="content" id="${todo.id}">
+    <button class="button empty">
         ${
           todo.checked
             ? check_box_full(["button", "check"])
@@ -60,34 +30,52 @@ const mkCon = (todo) => `<div class="content" id="${todo.id}">
     </button>
     <span class="title">${todo.content}</span>
     <button class="button delete">삭제</button>
-</div>`;
+</div>
+`;
 
-// 하나의 컴포넌트를 만들기
-const mkConOne = pipe(mkCon, $el, $prependTo(contents));
+Todo.initTmp = (_todos) => `
+<div class="container">
+    <header class="top_bar">
+        <div class="input_box">
+            <input class="todo" type="text" id="todo" todo="todo" required
+                   minlength="1" placeholder="할 일 입력하기">
+        </div>
+        <button class="add button">추가하기</button>
+        <button class="delete_all button">전부 삭제</button>
+    </header>
+    <section class="contents">
+        ${strMap(Todo.mkConTmp, _todos)}
+    </section>
+</div>
+`;
 
-// 모든 element tag 삭제
-const rmAll = pipe($findAll("div"), map($remove));
-// 선택한 element tag 삭제
-const rmOne = pipe($closest("div"), $remove);
+Todo.init = pipe(Todo.initTmp, $el, $appendTo($qs("body")));
+/*
+ * $prependTo가 $qs를 미리 받고 함수를 리턴한 상황이기 때문에 초기에 init이 되지 않았으면 null이 반환되기 때문
+ *  */
+Todo.mkCon = pipe(Todo.mkConTmp, $el, (v) => $prependTo($qs(".contents"))(v));
+Todo.mkConAndSave = () =>
+  go($qs(".todo"), tap(Data.addTodo, Todo.mkCon), $setVal(""));
+Todo.rmAll = pipe($findAll("div.content"), map($remove));
+Todo.rmOne = pipe($closest("div.content"), $remove);
 
-// 선택한 content 태그 및 데이터 삭제
-const rmAllCnt = () => go(contents, rmAll, removeAllTodoData);
-// 모든 content 태그 및 데이터 삭제
-const rmOneCnt = pipe(rmOne, findNotId, removeTodo);
+Todo.initPipe = () => go(Data.todos, Todo.init);
 
-// content 만들기 및 저장
-const mkCntOne = pipe(tap(addTodo, mkConOne), $setVal(""));
+Todo.delegate = (container_el) =>
+  go(
+    container_el,
+    $delegate("click", ".contents .delete", ({ target }) =>
+      go(target, Todo.rmOne, findNotId, Data.removeTodo)
+    ),
+    $delegate("click", ".top_bar .add", Todo.mkConAndSave),
+    $delegate(
+      "keypress",
+      ".top_bar .todo",
+      (e) => e.key == "Enter" && Todo.mkConAndSave()
+    ),
+    $delegate("click", ".top_bar .delete_all", (_) =>
+      go($qs(".contents"), Todo.rmAll, Data.removeAllTodoData)
+    )
+  );
 
-// 기존 데이터 토대로 컴포넌트 활성화
-go(todos, L.map(mkCon), L.map($el), map($prependTo(contents)));
-
-// 이벤트 위임 - 삭제
-go(contents, $delegate("click", ".delete", applyToTarget(rmOneCnt)));
-
-// 이벤트 위임 - 추가, 전부 삭제
-go(
-  top_bar,
-  $delegate("click", ".add", applyToEl(input, mkCntOne)),
-  $delegate("keypress", ".todo", applyToElOnlyEnter(input, mkCntOne)),
-  $delegate("click", ".delete_all", applyToEl(button_delete, rmAllCnt))
-);
+export default Todo;

@@ -18,13 +18,13 @@ import {
   $toggleClass,
 } from "fxdom";
 
-import Todo from "../data/todo";
+import Todo_Data from "../data/todo";
 import { check_box, check_box_full } from "./icons";
 import { findAttrId } from "../basic_func";
 
-const Todo = {};
+const TodoUi = {};
 
-Todo.mkConTmp = (todo) => `
+TodoUi.mkConTmp = (todo) => `
 <div class="content" id="${todo.id}">
     <button status="${todo.checked ? "done" : "empty"}" class="empty checkbox">
         ${
@@ -38,7 +38,7 @@ Todo.mkConTmp = (todo) => `
 </div>
 `;
 
-Todo.initTmp = (_todos) => `
+TodoUi.initTmp = (_todos) => `
 <div class="container">
     <header class="top_bar">
         <div class="input_box">
@@ -49,22 +49,24 @@ Todo.initTmp = (_todos) => `
         <button class="delete_all button">전부 삭제</button>
     </header>
     <section class="contents">
-        ${strMap(Todo.mkConTmp, _todos)}
+        ${strMap(TodoUi.mkConTmp, _todos)}
     </section>
 </div>
 `;
 
-Todo.init = pipe(Todo.initTmp, $el, $appendTo($qs("body")));
+TodoUi.init = pipe(TodoUi.initTmp, $el, $appendTo($qs("body")));
 /*
  * $prependTo가 $qs를 미리 받고 함수를 리턴한 상황이기 때문에 초기에 init이 되지 않았으면 null이 반환되기 때문
  *  */
-Todo.mkCon = pipe(Todo.mkConTmp, $el, (v) => $prependTo($qs(".contents"))(v));
-Todo.mkConAndSave = () =>
-  go($qs(".todo"), tap(Todo.addTodo, Todo.mkCon), $setVal(""));
-Todo.rmAll = pipe($findAll("div.content"), map($remove));
-Todo.rmOne = pipe($closest("div.content"), $remove);
+TodoUi.mkCon = pipe(TodoUi.mkConTmp, $el, (v) =>
+  $prependTo($qs(".contents"))(v)
+);
+TodoUi.mkConAndSave = () =>
+  go($qs(".todo"), tap(Todo_Data.addTodo, TodoUi.mkCon), $setVal(""));
+TodoUi.rmAll = pipe($findAll("div.content"), map($remove));
+TodoUi.rmOne = pipe($closest("div.content"), $remove);
 
-Todo.conditionCheck = (el) => $attr("status", el) == "empty";
+TodoUi.conditionCheck = (el) => $attr("status", el) == "empty";
 
 const doneText = (check) => (els) => $toggleClass("done_text", els[1]);
 
@@ -79,7 +81,7 @@ const replaceIcon = (check) => (els) =>
         head(els)
       );
 
-Todo.check = ([el, check]) =>
+TodoUi.check = ([el, check]) =>
   go(
     el,
     $setAttr({ status: check ? "done" : "empty" }),
@@ -88,36 +90,36 @@ Todo.check = ([el, check]) =>
     replaceIcon(check)
   );
 
-Todo.initPipe = () => go(Todo.todos, Todo.init);
+TodoUi.initPipe = () => go(Todo_Data.todos, TodoUi.init);
 
-Todo.delegate = (container_el) =>
+TodoUi.delegate = (container_el) =>
   go(
     container_el,
     $delegate("click", ".contents .delete", ({ target }) =>
-      go(target, Todo.rmOne, findAttrId, Todo.removeTodo)
+      go(target, TodoUi.rmOne, findAttrId, Todo_Data.removeTodoData)
     ),
     $delegate("click", ".contents .checkbox", ({ target }) =>
       go(
         target,
         $closest("button.checkbox"),
-        (el) => [el, Todo.conditionCheck(el)],
+        (el) => [el, TodoUi.conditionCheck(el)],
         tap(
           ([el, check]) => [$closest("div.content", el), check],
           ([el, check]) => ({ id: $attr("id", el), checked: check }),
-          Todo.editTodo
+          Todo_Data.editTodoData
         ),
-        Todo.check
+        TodoUi.check
       )
     ),
-    $delegate("click", ".top_bar .add", Todo.mkConAndSave),
+    $delegate("click", ".top_bar .add", TodoUi.mkConAndSave),
     $delegate(
       "keypress",
       ".top_bar .todo",
-      (e) => e.key == "Enter" && Todo.mkConAndSave()
+      (e) => e.key == "Enter" && TodoUi.mkConAndSave()
     ),
     $delegate("click", ".top_bar .delete_all", (_) =>
-      go($qs(".contents"), Todo.rmAll, Todo.removeAllTodoData)
+      go($qs(".contents"), TodoUi.rmAll, Todo_Data.removeAllTodoData)
     )
   );
 
-export default Todo;
+export default TodoUi;

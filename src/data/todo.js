@@ -19,51 +19,61 @@ import {
 import * as L from "fxjs/Lazy";
 import { editOne, findId, getLastId, makeEmptyList } from "../basic_func";
 
-const Todo = {
+const Todo_Data = {
   todos: [],
 };
 
-Todo.reload = function () {
+Todo_Data.reload = function () {
   try {
-    Todo.todos = JSON.parse(localStorage.getItem("todos"));
+    Todo_Data.todos = JSON.parse(localStorage.getItem("todos"));
   } catch (e) {
     log(e);
   }
-  log(Todo.todos);
+  log(Todo_Data.todos);
 };
 
-Todo.reload();
+Todo_Data.reload();
 
-Todo.emptyCheck = (el) =>
+Todo_Data.emptyCheck = (el) =>
   new Promise((resolve, reject) =>
     !el.value || isEmpty(el.value) ? reject("비어있습니다!") : resolve(el)
   );
-Todo.getLastId = () => getLastId(Todo.todos);
-Todo.makeTodoData = ({ value }) => ({
-  id: Todo.getLastId() || 0,
+Todo_Data.getLastId = () => getLastId(Todo_Data.todos);
+Todo_Data.makeTodoData = ({ value }) => ({
+  id: Todo_Data.getLastId() || 0,
   checked: false,
   content: value,
   regDate: new Date(),
 });
 
-Todo.updateData = tap((_todos = []) => {
+Todo_Data.updateData = tap((_todos = []) => {
   localStorage.setItem("todos", JSON.stringify(_todos));
-  Todo.todos = _todos;
+  Todo_Data.todos = _todos;
 
   log(_todos);
 });
 
-Todo.addTodoData = tap((todo) => go(Todo.todos, append(todo), Todo.updateData));
+Todo_Data.addTodoData = tap((todo) =>
+  go(Todo_Data.todos, append(todo), Todo_Data.updateData)
+);
 
 // 아이템을 생성 시 확인 후 경고 문구 활성화
-Todo.addTodo = pipe(Todo.emptyCheck, Todo.makeTodoData, Todo.addTodoData);
+Todo_Data.addTodo = pipe(
+  Todo_Data.emptyCheck,
+  Todo_Data.makeTodoData,
+  Todo_Data.addTodoData
+);
 
 // 아이템 삭제
-Todo.removeTodo = (f) => go(Todo.todos, reject(f), Todo.updateData);
+Todo_Data.removeTodoData = (f) =>
+  go(Todo_Data.todos, reject(f), Todo_Data.updateData);
 
-Todo.editTodo = (data) => go(Todo.todos, map(editOne(data)), Todo.updateData);
+// it needs to change map to update
+Todo_Data.editTodoData = (data) =>
+  go(Todo_Data.todos, map(editOne(data)), Todo_Data.updateData);
 
 // 모든 아이템 삭제
-Todo.removeAllTodoData = () => go(Todo.todos, makeEmptyList, Todo.updateData);
+Todo_Data.removeAllTodoData = () =>
+  go(Todo_Data.todos, makeEmptyList, Todo_Data.updateData);
 
-export default Todo;
+export default Todo_Data;

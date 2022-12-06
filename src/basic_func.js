@@ -1,5 +1,5 @@
 // 기초 함수들
-import { head, isEmpty, map, pipe, sortByDesc, take } from "fxjs";
+import { head, isEmpty, log, map, pipe, sortByDesc, take } from "fxjs";
 import { $addClass, $attr, $removeClass } from "fxdom";
 
 export const applyToEl = (el, f) => (_) => f(el);
@@ -25,3 +25,8 @@ export const editOne = (data) => (v) =>
 export const expId = (v) => v.id;
 export const addToId1 = (v) => v.id + 1;
 export const getLastId = pipe(sortByDesc(expId), take(1), map(addToId1), head);
+
+export const logFast = (v) => {
+  log(v);
+  return v;
+};

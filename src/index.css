@@ -164,3 +164,51 @@ button {
     color: #6b7280;
     text-decoration: line-through white;
 }
+
+.alert {
+    position: fixed;
+    display: flex;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert .body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #0ea5e9;
+    box-shadow: 0 0 .6em .4em rgba(255, 255, 255, 0.3);
+    width: 20em;
+    height: 12em;
+    border-radius: 2em;
+}
+
+.alert .title {
+    width: 100%;
+    padding: 0.5em 1em;
+    text-align: center;
+    font-size: 1.4em;
+}
+
+.alert .msg {
+    width: 100%;
+    padding: 0.2em 1em;
+    text-align: center;
+    font-size: 1em;
+}
+
+.alert .buttons {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
+

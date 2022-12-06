@@ -33,11 +33,7 @@ Alert.mkAlertTmp = (data) => `
 <div class="alert">
     <div class="body">
         <div class="title">${data.title}</div>
-        ${
-          data?.msg || !isEmpty(data.msg)
-            ? `<div class="msg">${data.msg}</div>`
-            : ""
-        }
+        ${data?.msg ? `<div class="msg">${data.msg}</div>` : ""}
         <div class="buttons">${strMap(Alert.mkButtonTmp, data.buttons)}</div>
     </div>
 </div>
@@ -60,12 +56,11 @@ Alert.asyncPop = (data) =>
   });
 
 Alert.pop = async (data) => {
-  Alert.asyncPop(data).then((class_name) =>
-    go(
-      class_name,
-      (class_name) => (a) => a.class == class_name,
-      (f) => go(data.buttons, find(f), (v) => v.func())
-    )
+  const class_name = await Alert.asyncPop(data);
+  go(
+    class_name,
+    (class_name) => (a) => a.class == class_name,
+    (f) => go(data.buttons, find(f), (v) => v?.func && v?.func())
   );
 };
 

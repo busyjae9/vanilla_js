@@ -23,8 +23,14 @@ export const editOne = (data) => (v) =>
       }
     : v;
 export const expId = (v) => v.id;
-export const addToId1 = (v) => v.id + 1;
-export const getLastId = pipe(sortByDesc(expId), take(1), map(addToId1), head);
+export const addToId1 = (v) => Number(v.id) + 1;
+export const getLastId = pipe(
+  sortByDesc(expId),
+  take(1),
+  map(addToId1),
+  head,
+  String
+);
 
 export const logFast = (v) => {
   log(v);

@@ -1,8 +1,10 @@
 import * as L from "fxjs/Lazy";
-import { go, log, map, pipe, strMap, tap } from "fxjs";
+import { go, head, log, map, pipe, strMap, tap } from "fxjs";
 import * as C from "fxjs/Concurrency";
 import {
   $appendTo,
+  $attr,
+  $children,
   $closest,
   $delegate,
   $el,
@@ -10,22 +12,25 @@ import {
   $prependTo,
   $qs,
   $remove,
+  $replaceWith,
+  $setAttr,
   $setVal,
+  $toggleClass,
 } from "fxdom";
 
 import Data from "./data";
 import { check_box, check_box_full } from "./icons";
-import { applyToElOnlyEnter, findNotId } from "./basic_func";
+import { applyToElOnlyEnter, findAttrId } from "./basic_func";
 
 const Todo = {};
 
 Todo.mkConTmp = (todo) => `
 <div class="content" id="${todo.id}">
-    <button class="button empty">
+    <button status="${todo.checked ? "done" : "empty"}" class="empty checkbox">
         ${
           todo.checked
-            ? check_box_full(["button", "check"])
-            : check_box(["button", "check"])
+            ? check_box_full(["button", "done", "fa-xl"])
+            : check_box(["button", "empty", "fa-xl"])
         }
     </button>
     <span class="title">${todo.content}</span>
@@ -59,13 +64,50 @@ Todo.mkConAndSave = () =>
 Todo.rmAll = pipe($findAll("div.content"), map($remove));
 Todo.rmOne = pipe($closest("div.content"), $remove);
 
+Todo.conditionCheck = (el) => $attr("status", el) == "empty";
+
+const doneText = (check) => (els) => $toggleClass("done_text", els[1]);
+
+const replaceIcon = (check) => (els) =>
+  check
+    ? $replaceWith(
+        go(check_box_full(["button", "done", "fa-xl"]), head, $el),
+        head(els)
+      )
+    : $replaceWith(
+        go(check_box(["button", "empty", "fa-xl"]), head, $el),
+        head(els)
+      );
+
+Todo.check = ([el, check]) =>
+  go(
+    el,
+    $setAttr({ status: check ? "done" : "empty" }),
+    tap($closest("div.content"), $children, doneText(check)),
+    $children,
+    replaceIcon(check)
+  );
+
 Todo.initPipe = () => go(Data.todos, Todo.init);
 
 Todo.delegate = (container_el) =>
   go(
     container_el,
     $delegate("click", ".contents .delete", ({ target }) =>
-      go(target, Todo.rmOne, findNotId, Data.removeTodo)
+      go(target, Todo.rmOne, findAttrId, Data.removeTodo)
+    ),
+    $delegate("click", ".contents .checkbox", ({ target }) =>
+      go(
+        target,
+        $closest("button.checkbox"),
+        (el) => [el, Todo.conditionCheck(el)],
+        tap(
+          ([el, check]) => [$closest("div.content", el), check],
+          ([el, check]) => ({ id: $attr("id", el), checked: check }),
+          Data.editTodo
+        ),
+        Todo.check
+      )
     ),
     $delegate("click", ".top_bar .add", Todo.mkConAndSave),
     $delegate(

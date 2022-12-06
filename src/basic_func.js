@@ -1,8 +1,8 @@
 // 기초 함수들
 import { head, isEmpty, map, pipe, sortByDesc, take } from "fxjs";
-import { $addClass, $attr, $removeClass, $setVal } from "fxdom";
+import { $addClass, $attr, $removeClass } from "fxdom";
 
-export const applyToEl = (el, f) => (e) => f(el);
+export const applyToEl = (el, f) => (_) => f(el);
 export const applyToTarget = (f) => (e) => f(e.target);
 export const applyToElOnlyEnter = (el, f) => (e) => e.key == "Enter" && f(el);
 
@@ -13,8 +13,15 @@ export const toggleGhost = (value, el) =>
   !value || isEmpty(value) ? visible(el) : invisible(el);
 
 export const makeEmptyList = (list) => (list = []);
-export const findNotId = (el) => (a) => a.id != $attr("id", el);
-
+export const findAttrId = (el) => (a) => a.id == $attr("id", el);
+export const findId = (id) => (v) => v.id == id;
+export const editOne = (data) => (v) =>
+  findId(data.id)(v)
+    ? {
+        ...v,
+        ...data,
+      }
+    : v;
 export const expId = (v) => v.id;
 export const addToId1 = (v) => v.id + 1;
 export const getLastId = pipe(sortByDesc(expId), take(1), map(addToId1), head);

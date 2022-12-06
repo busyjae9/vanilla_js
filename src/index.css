@@ -49,7 +49,7 @@ body {
 .input_box label {
     position: absolute;
     top: 2px; /* input 요소의 border-top 설정값 만큼 */
-    left: 0px; /* input 요소의 border-left 설정값 만큼 */
+    left: 0; /* input 요소의 border-left 설정값 만큼 */
     padding: .4em .4em; /* input 요소의 padding 값 만큼 */
     color: darkgray;
     cursor: text;
@@ -89,34 +89,34 @@ button {
     padding: .4em .4em;
 }
 
-.button.delete {
+.delete {
     color: #fca5a5;
     border-color: #fca5a5
 }
 
-.button.delete:hover {
+.delete:hover {
     border-color: #b91c1c;
     color: #b91c1c;
 }
 
-.button.check {
+.done {
     border-width: 0 0;
     border-color: #0891b2;
     color: #0891b2;
 }
 
-.button.check:hover {
-    border-color: #0891b2;
-    color: #0891b2;
+.done:hover {
+    color: #f9fafb;
+    border-color: darkgray;
 }
 
-.button.empty {
+.empty {
     border-width: 0 0;
     color: #f9fafb;
     border-color: darkgray;
 }
 
-.button.empty:hover {
+.empty:hover {
     border-color: #0891b2;
     color: #0891b2;
 }
@@ -141,7 +141,7 @@ button {
     max-height: 6em;
     padding: 1em 1em;
     border-radius: 1em;
-    box-shadow: 0em 0em .5em .2em rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 .5em .2em rgba(255, 255, 255, 0.2);
     background-color: #18181b;
 }
 
@@ -158,4 +158,9 @@ button {
     -webkit-line-clamp: 4; /* number of lines to show */
     -webkit-box-orient: vertical;
     display: -webkit-box;
+}
+
+.contents .done_text {
+    color: #6b7280;
+    text-decoration: line-through white;
 }

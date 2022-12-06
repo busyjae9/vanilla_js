@@ -203,6 +203,7 @@ button {
     padding: 0.2em 1em;
     text-align: center;
     font-size: 1em;
+    color: #e7e5e4;
 }
 
 .alert .buttons {
@@ -210,5 +211,35 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-evenly;
+    padding: .6em 1em;
+    font-size: 1.2em;
+}
+
+.alert button {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0.2em 1em;
+    font-size: 1em;
+}
+
+.ok {
+    color: #f9fafb;
+    border-color: #4ade80;
+}
+
+.ok:hover {
+    color: #22c55e;
+    border-color: #22c55e;
+}
+
+.cancel {
+    color: #f9fafb;
+    border-color: #f87171;
+}
+
+.cancel:hover {
+    color: #ef4444;
+    border-color: #ef4444;
 }
 

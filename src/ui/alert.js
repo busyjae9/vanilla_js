@@ -1,5 +1,5 @@
 import * as L from "fxjs/Lazy";
-import { go, head, isEmpty, log, map, pipe, strMap, tap } from "fxjs";
+import { find, go, head, isEmpty, log, map, pipe, strMap, tap } from "fxjs";
 import * as C from "fxjs/Concurrency";
 import {
   $appendTo,
@@ -8,7 +8,9 @@ import {
   $closest,
   $delegate,
   $el,
+  $find,
   $findAll,
+  $on,
   $prependTo,
   $qs,
   $remove,
@@ -25,7 +27,7 @@ import { findAttrId, logFast } from "../basic_func";
 const Alert = {};
 
 Alert.mkButtonTmp = (button) =>
-  `<button type="button" class="${button.classes}">${button.msg}</button>`;
+  `<button type="button" class="${button.class}">${button.msg}</button>`;
 
 Alert.mkAlertTmp = (data) => `
 <div class="alert">
@@ -36,14 +38,35 @@ Alert.mkAlertTmp = (data) => `
             ? `<div class="msg">${data.msg}</div>`
             : ""
         }
-        <div class="buttons">
-            ${strMap(Alert.mkButtonTmp, data.buttons)}
-        <div>
+        <div class="buttons">${strMap(Alert.mkButtonTmp, data.buttons)}</div>
     </div>
 </div>
 `;
 
-Alert.pop = (data) =>
-  go(data, Alert.mkAlertTmp, logFast, $el, $appendTo($qs("body")));
+Alert.asyncPop = (data) =>
+  new Promise((resolve) => {
+    const el = go(data, Alert.mkAlertTmp, $el, $appendTo($qs("body")));
+    go(
+      data.buttons,
+      map((v) => go(el, $find(`.${v.class}`))),
+      map(
+        $on("click", (e) =>
+          go(e.currentTarget, tap($closest(".alert"), $remove), (el) =>
+            resolve($attr("class", el))
+          )
+        )
+      )
+    );
+  });
+
+Alert.pop = async (data) => {
+  Alert.asyncPop(data).then((class_name) =>
+    go(
+      class_name,
+      (class_name) => (a) => a.class == class_name,
+      (f) => go(data.buttons, find(f), (v) => v.func())
+    )
+  );
+};
 
 export default Alert;

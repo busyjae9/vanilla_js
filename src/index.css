@@ -14,6 +14,10 @@ body {
     justify-content: center;
 }
 
+span {
+    vertical-align: middle;
+}
+
 .ghost {
     opacity: 0;
 }
@@ -86,18 +90,24 @@ button {
     border-width: 0 0 4px;
     border-color: darkgray;
     font-size: 1em;
-    padding: .4em .4em;
+    padding: .2em .2em;
 }
 
 .delete {
     color: #fca5a5;
-    border-color: #fca5a5
+    border-color: #fca5a5;
+    padding: .2em .5em;
 }
 
 .delete:hover {
     border-color: #b91c1c;
     color: #b91c1c;
 }
+
+.edit {
+    padding: .2em .5em;
+}
+
 
 .done {
     border-width: 0 0;
@@ -138,7 +148,6 @@ button {
     justify-content: space-between;
     color: black;
     width: 90%;
-    max-height: 6em;
     padding: 1em 1em;
     border-radius: 1em;
     box-shadow: 0 0 .5em .2em rgba(255, 255, 255, 0.2);
@@ -146,18 +155,11 @@ button {
 }
 
 .contents .title {
-    max-width: 70%;
-    font-size: 1em;
-    max-height: 4.8em; /* (Number of lines you want visible) * (line-height) */
+    width: 70%;
     line-height: 1.2em;
     text-align: justify;
-    text-overflow: ellipsis;
     word-break: break-word;
-    overflow: hidden;
     color: #fafafa;
-    -webkit-line-clamp: 4; /* number of lines to show */
-    -webkit-box-orient: vertical;
-    display: -webkit-box;
 }
 
 .contents .done_text {
@@ -183,10 +185,10 @@ button {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    background-color: #0ea5e9;
+    justify-content: space-evenly;
+    background-color: #27272a;
     box-shadow: 0 0 .6em .4em rgba(255, 255, 255, 0.3);
-    width: 20em;
+    width: 18em;
     height: 12em;
     border-radius: 2em;
 }

@@ -15,6 +15,8 @@ import {
   tap,
   reject,
   find,
+  insert,
+  prepend,
 } from "fxjs";
 import * as L from "fxjs/Lazy";
 import { editOne, findId, getLastId, makeEmptyList } from "../basic_func";
@@ -54,7 +56,7 @@ Todo_Data.updateData = tap((_todos = []) => {
 });
 
 Todo_Data.addTodoData = tap((todo) =>
-  go(Todo_Data.todos, append(todo), Todo_Data.updateData)
+  go(Todo_Data.todos, prepend(todo), Todo_Data.updateData)
 );
 
 // 아이템을 생성 시 확인 후 경고 문구 활성화

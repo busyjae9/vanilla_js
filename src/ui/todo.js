@@ -18,9 +18,9 @@ import {
   $toggleClass,
 } from "fxdom";
 
-import Data from "./data";
+import Todo from "../data/todo";
 import { check_box, check_box_full } from "./icons";
-import { applyToElOnlyEnter, findAttrId } from "./basic_func";
+import { findAttrId } from "../basic_func";
 
 const Todo = {};
 
@@ -60,7 +60,7 @@ Todo.init = pipe(Todo.initTmp, $el, $appendTo($qs("body")));
  *  */
 Todo.mkCon = pipe(Todo.mkConTmp, $el, (v) => $prependTo($qs(".contents"))(v));
 Todo.mkConAndSave = () =>
-  go($qs(".todo"), tap(Data.addTodo, Todo.mkCon), $setVal(""));
+  go($qs(".todo"), tap(Todo.addTodo, Todo.mkCon), $setVal(""));
 Todo.rmAll = pipe($findAll("div.content"), map($remove));
 Todo.rmOne = pipe($closest("div.content"), $remove);
 
@@ -88,13 +88,13 @@ Todo.check = ([el, check]) =>
     replaceIcon(check)
   );
 
-Todo.initPipe = () => go(Data.todos, Todo.init);
+Todo.initPipe = () => go(Todo.todos, Todo.init);
 
 Todo.delegate = (container_el) =>
   go(
     container_el,
     $delegate("click", ".contents .delete", ({ target }) =>
-      go(target, Todo.rmOne, findAttrId, Data.removeTodo)
+      go(target, Todo.rmOne, findAttrId, Todo.removeTodo)
     ),
     $delegate("click", ".contents .checkbox", ({ target }) =>
       go(
@@ -104,7 +104,7 @@ Todo.delegate = (container_el) =>
         tap(
           ([el, check]) => [$closest("div.content", el), check],
           ([el, check]) => ({ id: $attr("id", el), checked: check }),
-          Data.editTodo
+          Todo.editTodo
         ),
         Todo.check
       )
@@ -116,7 +116,7 @@ Todo.delegate = (container_el) =>
       (e) => e.key == "Enter" && Todo.mkConAndSave()
     ),
     $delegate("click", ".top_bar .delete_all", (_) =>
-      go($qs(".contents"), Todo.rmAll, Data.removeAllTodoData)
+      go($qs(".contents"), Todo.rmAll, Todo.removeAllTodoData)
     )
   );
 

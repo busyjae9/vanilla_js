@@ -1,4 +1,4 @@
-import Todo from "./tmp";
+import Todo from "./ui/todo";
 import { $qs } from "fxdom";
 
 Todo.initPipe();

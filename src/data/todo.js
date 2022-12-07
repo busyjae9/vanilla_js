@@ -17,10 +17,12 @@ import {
   find,
   insert,
   prepend,
+  each,
 } from "fxjs";
 import * as L from "fxjs/Lazy";
 import { editOne, findId, getLastId, makeEmptyList } from "../basic_func";
 import { $attr } from "fxdom";
+import Alert from "../ui/alert";
 
 const Todo_Data = {
   todos: [],
@@ -53,21 +55,21 @@ Todo_Data.getLastId = () => getLastId(Todo_Data.todos);
 Todo_Data.extendData = (data, els) =>
   go(
     els,
-    map((el) => {
+    each((el) => {
       data[$attr("id", el)] = el.value;
     }),
     (_) => data
   );
 
-Todo_Data.makeTodoData = (els) => {
-  let data = {
-    id: Todo_Data.getLastId() || 0,
-    checked: false,
-    regDate: new Date().toDateInputValue(),
-  };
-
-  return Todo_Data.extendData(data, els);
-};
+Todo_Data.makeTodoData = (els) =>
+  Todo_Data.extendData(
+    {
+      id: Todo_Data.getLastId() || 0,
+      checked: false,
+      regDate: new Date().toDateInputValue(),
+    },
+    els
+  );
 
 Todo_Data.updateData = tap((_todos = []) => {
   localStorage.setItem("todos", JSON.stringify(_todos));
@@ -76,16 +78,26 @@ Todo_Data.updateData = tap((_todos = []) => {
   log(_todos);
 });
 
+Todo_Data.get = function (id) {
+  return go(
+    this.todos,
+    find((todo) => Number(todo.id) == Number(id))
+  );
+};
+
 Todo_Data.addTodoData = tap((todo) =>
   go(Todo_Data.todos, prepend(todo), Todo_Data.updateData)
 );
 
 // 아이템을 생성 시 확인 후 경고 문구 활성화
-Todo_Data.addTodo = pipe(
-  Todo_Data.emptyCheck,
-  Todo_Data.makeTodoData,
-  Todo_Data.addTodoData
-);
+Todo_Data.addTodo = (els) => {
+  return go(
+    els,
+    Todo_Data.emptyCheck,
+    Todo_Data.makeTodoData,
+    Todo_Data.addTodoData
+  );
+};
 
 // 아이템 삭제
 Todo_Data.removeTodoData = (f) =>

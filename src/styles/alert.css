@@ -1,0 +1,57 @@
+.alert {
+    position: fixed;
+    display: flex;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert .body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    background-color: #27272a;
+    box-shadow: 0 0 .6em .4em rgba(255, 255, 255, 0.3);
+    width: 18em;
+    height: 12em;
+    border-radius: 2em;
+}
+
+.alert .title {
+    width: 100%;
+    padding: 0.5em 1em;
+    text-align: center;
+    font-size: 1.4em;
+}
+
+.alert .msg {
+    width: 100%;
+    padding: 0.2em 1em;
+    text-align: center;
+    font-size: 1em;
+    color: #e7e5e4;
+}
+
+.alert .buttons {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: .6em 1em;
+    font-size: 1.2em;
+}
+
+.alert button {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 0.2em 1em;
+    font-size: 1em;
+}

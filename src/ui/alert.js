@@ -41,7 +41,12 @@ Alert.mkAlertTmp = (data) => `
 
 Alert.asyncPop = (data) =>
   new Promise((resolve) => {
+    data = data?.buttons
+      ? data
+      : { ...data, buttons: [{ msg: "확인", class: "ok" }] };
+
     const el = go(data, Alert.mkAlertTmp, $el, $appendTo($qs("body")));
+
     go(
       data.buttons,
       map((v) => go(el, $find(`.${v.class}`))),
@@ -57,10 +62,10 @@ Alert.asyncPop = (data) =>
 
 Alert.pop = async (data) => {
   const class_name = await Alert.asyncPop(data);
-  go(
+  return go(
     class_name,
     (class_name) => (a) => a.class == class_name,
-    (f) => go(data.buttons, find(f), (v) => v?.func && v?.func())
+    (f) => go(data.buttons, find(f))
   );
 };
 

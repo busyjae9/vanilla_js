@@ -1,0 +1,46 @@
+
+.top_bar {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: end;
+    justify-content: space-evenly;
+}
+
+.input_box {
+    position: relative;
+    width: 60%;
+    display: flex;
+    justify-content: space-between;
+}
+
+
+.input_box input[class="todo"] {
+    width: 50%;
+    font-size: 1em;
+    background-color: transparent;
+    border-width: 0 0 4px;
+    outline-style: none;
+    line-height: normal;
+    padding: .4em .4em;
+    color: #f9fafb;
+    border-color: darkgray;
+}
+
+.input_box input[class="todo_date"] {
+    width: 40%;
+    font-size: 1em;
+    background-color: transparent;
+    border-width: 0 0 4px;
+    border-color: darkgray;
+    outline-style: none;
+    line-height: normal;
+    color: #f9fafb;
+    color-scheme: dark;
+    text-align: center;
+}
+
+.input_box input[class="todo"]:focus,
+.input_box input[class="todo_date"]:focus {
+    border-color: #0891b2;
+}

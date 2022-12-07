@@ -1,7 +1,7 @@
 import Todo from "./ui/todo";
 import { $qs } from "fxdom";
-import Alert from "./ui/alert";
-import { log } from "fxjs";
+import Prompt from "./ui/prompt";
+import Todo_Data from "./data/todo";
 
 Todo.initPipe();
 Todo.delegate($qs(".container"));

@@ -1,5 +1,5 @@
 import * as L from "fxjs/Lazy";
-import { go, head, log, map, pipe, strMap, tap } from "fxjs";
+import { go, head, log, map, pipe, reject, strMap, tap } from "fxjs";
 import * as C from "fxjs/Concurrency";
 import {
   $appendTo,
@@ -48,7 +48,9 @@ TodoUi.initTmp = (_todos) => `
 <div class="container">
     <header class="top_bar">
         <div class="input_box">
-            <input class="todo" type="text" id="todo" todo="todo" required
+            <input  class="todo_date" id="date"
+                    placeholder="날짜 선택" type="text" onfocus="(this.type='date')" onblur="(this.type='text')">
+            <input class="todo" type="text" id="content" todo="todo" required
                    minlength="1" placeholder="할 일 입력하기">
         </div>
         <button class="add button">추가하기</button>
@@ -60,7 +62,10 @@ TodoUi.initTmp = (_todos) => `
 </div>
 `;
 
-TodoUi.init = pipe(TodoUi.initTmp, $el, $appendTo($qs("body")));
+TodoUi.init = (todos) => {
+  go(todos, TodoUi.initTmp, $el, $appendTo($qs("body")));
+  $qs("#date").value = new Date().toDateInputValue();
+};
 /*
  * $prependTo가 $qs를 미리 받고 함수를 리턴한 상황이기 때문에 초기에 init이 되지 않았으면 null이 반환되기 때문
  *  */
@@ -68,7 +73,13 @@ TodoUi.mkCon = pipe(TodoUi.mkConTmp, $el, (v) =>
   $prependTo($qs(".contents"))(v)
 );
 TodoUi.mkConAndSave = () =>
-  go($qs(".todo"), tap(Todo_Data.addTodo, TodoUi.mkCon), $setVal(""));
+  go(
+    $qs(".input_box"),
+    $children,
+    tap(Todo_Data.addTodo, TodoUi.mkCon),
+    reject((el) => $attr("id", el) === "date"),
+    map((el) => $setVal("")(el))
+  );
 TodoUi.rmAll = pipe($findAll("div.content"), map($remove));
 TodoUi.rmOne = pipe($closest("div.content"), $remove);
 

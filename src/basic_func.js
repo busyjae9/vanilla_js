@@ -2,6 +2,12 @@
 import { head, isEmpty, log, map, pipe, sortByDesc, take } from "fxjs";
 import { $addClass, $attr, $removeClass } from "fxdom";
 
+Date.prototype.toDateInputValue = function () {
+  let local = new Date(this);
+  local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+  return local.toJSON().slice(0, 10);
+};
+
 export const applyToEl = (el, f) => (_) => f(el);
 export const applyToTarget = (f) => (e) => f(e.target);
 export const applyToElOnlyEnter = (el, f) => (e) => e.key == "Enter" && f(el);

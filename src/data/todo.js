@@ -20,6 +20,7 @@ import {
 } from "fxjs";
 import * as L from "fxjs/Lazy";
 import { editOne, findId, getLastId, makeEmptyList } from "../basic_func";
+import { $attr } from "fxdom";
 
 const Todo_Data = {
   todos: [],
@@ -36,17 +37,37 @@ Todo_Data.reload = function () {
 
 Todo_Data.reload();
 
-Todo_Data.emptyCheck = (el) =>
-  new Promise((resolve, reject) =>
-    !el.value || isEmpty(el.value) ? reject("비어있습니다!") : resolve(el)
+Todo_Data.emptyCheck = (els) =>
+  go(
+    els,
+    map(
+      (el) =>
+        new Promise((resolve, reject) =>
+          !el.value || isEmpty(el.value) ? reject("비어있습니다!") : resolve(el)
+        )
+    )
   );
+
 Todo_Data.getLastId = () => getLastId(Todo_Data.todos);
-Todo_Data.makeTodoData = ({ value }) => ({
-  id: Todo_Data.getLastId() || 0,
-  checked: false,
-  content: value,
-  regDate: new Date(),
-});
+
+Todo_Data.extendData = (data, els) =>
+  go(
+    els,
+    map((el) => {
+      data[$attr("id", el)] = el.value;
+    }),
+    (_) => data
+  );
+
+Todo_Data.makeTodoData = (els) => {
+  let data = {
+    id: Todo_Data.getLastId() || 0,
+    checked: false,
+    regDate: new Date().toDateInputValue(),
+  };
+
+  return Todo_Data.extendData(data, els);
+};
 
 Todo_Data.updateData = tap((_todos = []) => {
   localStorage.setItem("todos", JSON.stringify(_todos));

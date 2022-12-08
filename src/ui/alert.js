@@ -23,6 +23,7 @@ import {
 import Todo from "../data/todo";
 import { check_box, check_box_full } from "./icons";
 import { findAttrId, logFast } from "../basic_func";
+import MainUI from "./main";
 
 const Alert = {};
 
@@ -39,6 +40,7 @@ Alert.mkAlertTmp = (data) => `
           data.buttons
         )}</div>
     </div>
+    <input type="submit" class="ghost enter"></input>
 </div>
 `;
 
@@ -59,7 +61,9 @@ Alert.asyncPop = (data) =>
             resolve($attr("value", el))
           )
         )
-      )
+      ),
+      head,
+      (el) => el.focus()
     );
   });
 

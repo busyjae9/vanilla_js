@@ -16,3 +16,16 @@ export const check_box_full = (classes) =>
       classes,
     }
   ).html;
+
+export const left = (classes) =>
+  icon({ prefix: "fas", iconName: "chevron-left" }, { classes }).html;
+export const right = (classes) =>
+  icon(
+    {
+      prefix: "fas",
+      iconName: "chevron-right",
+    },
+    {
+      classes,
+    }
+  ).html;

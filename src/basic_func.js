@@ -36,3 +36,15 @@ export const logFast = (v) => {
   log(v);
   return v;
 };
+
+export const getPrevDay = (date = "") => {
+  const day = new Date(date);
+  day.setDate(day.getDate() - 1);
+  return day;
+};
+
+export const getNextDay = (date = "") => {
+  const day = new Date(date);
+  day.setDate(day.getDate() + 1);
+  return day;
+};

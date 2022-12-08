@@ -27,14 +27,17 @@ import { findAttrId, logFast } from "../basic_func";
 const Alert = {};
 
 Alert.mkButtonTmp = (button) =>
-  `<button type="button" class="${button.class}">${button.msg}</button>`;
+  `<button type="button" value="${button.class}" class="alert__body__buttons__button__${button.class}">${button.msg}</button>`;
 
 Alert.mkAlertTmp = (data) => `
 <div class="alert">
-    <div class="body">
-        <div class="title">${data.title}</div>
-        ${data?.msg ? `<div class="msg">${data.msg}</div>` : ""}
-        <div class="buttons">${strMap(Alert.mkButtonTmp, data.buttons)}</div>
+    <div class="alert__body">
+        <div class="alert__body__title">${data.title}</div>
+        ${data?.msg ? `<div class="alert__body__msg">${data.msg}</div>` : ""}
+        <div class="alert__body__buttons">${strMap(
+          Alert.mkButtonTmp,
+          data.buttons
+        )}</div>
     </div>
 </div>
 `;
@@ -49,11 +52,11 @@ Alert.asyncPop = (data) =>
 
     go(
       data.buttons,
-      map((v) => go(el, $find(`.${v.class}`))),
+      map((v) => go(el, $find(`.alert__body__buttons__button__${v.class}`))),
       map(
         $on("click", (e) =>
           go(e.currentTarget, tap($closest(".alert"), $remove), (el) =>
-            resolve($attr("class", el))
+            resolve($attr("value", el))
           )
         )
       )

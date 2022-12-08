@@ -1,0 +1,70 @@
+@import "index"
+
+on-color(color)
+  border-color color
+  color color
+
+.contents
+  display flex
+  flex-direction column
+  width 100%
+  align-items center
+  justify-content space-evenly
+  padding-top 1em
+  gap 1em
+
+
+.content
+  display flex
+  flex-direction row
+  align-items center
+  justify-content space-between
+  width 90%
+  padding 1em 1em
+  border-radius 1em
+  box-shadow 0 0 .5em .2em $black30
+  background-color $black100
+
+  .done_text
+    width 70%
+    line-height 1.2em
+    text-align justify
+    word-break break-word
+    color $grey100
+
+    text-decoration line-through white
+
+  &__checkbox
+    &__empty
+      border none
+      color $white
+
+      &:hover
+        on-color($blue)
+
+    &__done
+      border none
+      on-color($blue)
+
+      &:hover
+        on-color($white)
+
+
+  &__title
+    width 70%
+    line-height 1.2em
+    text-align justify
+    word-break break-word
+    color: $white
+
+
+  &__button
+    &__edit
+      padding .2em .5em
+
+    &__delete
+      on-color($red100)
+
+      &:hover
+        on-color($red)
+

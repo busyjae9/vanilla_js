@@ -52,34 +52,40 @@ TodoUi.defaultButtons = [
 ];
 
 TodoUi.mkConTmp = (todo) => html`
-  <div class="content" id="content_${todo.id}">
-    <button status="${todo.checked ? "done" : "empty"}" class="empty checkbox">
+  <div class="content content_${todo.id}" id="${todo.id}">
+    <button
+      status="${todo.checked ? "done" : "empty"}"
+      class="content__checkbox"
+    >
       ${todo.checked
-        ? check_box_full(["button", "done", "fa-xl"])
-        : check_box(["button", "empty", "fa-xl"])}
+        ? check_box_full(["content__checkbox__done", "fa-xl"])
+        : check_box(["content__checkbox__empty", "fa-xl"])}
     </button>
-    <span class="title ${todo.checked ? "done_text" : ""}">
+    <span class="content__title ${todo.checked ? "done_text" : ""}">
       ${todo.content}
     </span>
     <div>
-      <button class="button edit">수정</button>
-      <button class="button delete">삭제</button>
+      <button class="content__button__edit">수정</button>
+      <button class="content__button__delete">삭제</button>
     </div>
   </div>
 `;
 
 TodoUi.initTmp = (_todos) => `
 <div class="container">
-    <header class="top_bar">
-        <div class="input_box">
-            <input  class="todo_date" id="date"
+    <header>
+    
+    </header>
+    <section class="input">
+        <div class="input__input_box">
+            <input  class="input__input_box__todo_date" id="date"
                     placeholder="날짜 선택" type="text" onfocus="(this.type='date')" onblur="(this.type='text')">
-            <input class="todo" type="text" id="content" todo="todo" required
+            <input class="input__input_box__todo" type="text" id="content" todo="todo" required
                    minlength="1" placeholder="할 일 입력하기">
         </div>
-        <button class="add button">추가하기</button>
-        <button class="delete_all button">전부 삭제</button>
-    </header>
+        <button class="input__button__add">추가하기</button>
+        <button class="input__button__delete_all">전부 삭제</button>
+    </section>
     <section class="contents">
         ${strMap(TodoUi.mkConTmp, _todos)}
     </section>
@@ -89,6 +95,7 @@ TodoUi.initTmp = (_todos) => `
 TodoUi.init = (todos) => {
   go(todos, TodoUi.initTmp, $el, $appendTo($qs("body")));
   $qs("#date").value = new Date().toDateInputValue();
+  $qs("#date").min = new Date().toDateInputValue();
 };
 
 TodoUi.initPipe = () => go(Todo_Data.todos, TodoUi.init);
@@ -102,7 +109,7 @@ TodoUi.mkCon = pipe(TodoUi.mkConTmp, $el, (v) =>
 
 TodoUi.mkConAndSave = () =>
   go(
-    $qs(".input_box"),
+    $qs(".input__input_box"),
     $children,
     tap(Todo_Data.addTodo, TodoUi.mkCon),
     reject((el) => $attr("id", el) == "date"),
@@ -121,11 +128,11 @@ const doneText = (check) => (els) => $toggleClass("done_text", els[1]);
 const replaceIcon = (check) => (els) =>
   check
     ? $replaceWith(
-        go(check_box_full(["button", "done", "fa-xl"]), head, $el),
+        go(check_box_full(["content__checkbox__done", "fa-xl"]), head, $el),
         head(els)
       )
     : $replaceWith(
-        go(check_box(["button", "empty", "fa-xl"]), head, $el),
+        go(check_box(["content__checkbox__empty", "fa-xl"]), head, $el),
         head(els)
       );
 
@@ -139,18 +146,25 @@ TodoUi.check = ([el, check]) =>
   );
 
 TodoUi.update = (data) =>
-  go($qs(`#content_${data.id}`), $children, ([icon, content, buttons]) =>
+  go($qs(`.content_${data.id} `), $children, ([icon, content, buttons]) =>
     $setText(data.content)(content)
   );
 
 TodoUi.delegate = (container_el) =>
   go(
     container_el,
-    $delegate("click", ".contents .delete", ({ target }) =>
-      go(target, TodoUi.rmOne, findAttrId, Todo_Data.removeTodoData)
+    $delegate("click", ".content__button__delete", ({ currentTarget }) =>
+      go(
+        currentTarget,
+        $closest(".content"),
+        tap(findAttrId, Todo_Data.removeTodoData),
+        TodoUi.rmOne
+      )
     ),
-    $delegate("click", ".contents .edit", async ({ currentTarget }) => {
-      const todo = Todo_Data.get($attr("id", currentTarget));
+    $delegate("click", ".content__button__edit", async ({ currentTarget }) => {
+      const todo = Todo_Data.get(
+        $attr("id", $closest(".content")(currentTarget))
+      );
 
       const data = await Prompt.pop({
         title: "수정하기",
@@ -158,13 +172,14 @@ TodoUi.delegate = (container_el) =>
         buttons: TodoUi.defaultButtons,
       });
 
-      data.class == "ok" &&
+      if (data.class == "ok") {
         go(data.value, tap(Todo_Data.editTodoData), TodoUi.update);
+      }
     }),
-    $delegate("click", ".contents .checkbox", ({ target }) =>
+    $delegate("click", ".content__checkbox", ({ target }) =>
       go(
         target,
-        $closest("button.checkbox"),
+        $closest("button.content__checkbox"),
         (el) => [el, TodoUi.conditionCheck(el)],
         tap(
           ([el, check]) => [$closest("div.content", el), check],
@@ -174,20 +189,20 @@ TodoUi.delegate = (container_el) =>
         TodoUi.check
       )
     ),
-    $delegate("click", ".top_bar .add", TodoUi.mkConAndSave),
-    $delegate("keypress", ".top_bar .todo", (e) => {
-      if (e.key == "Enter") {
-        e.target.blur();
-        TodoUi.mkConAndSave();
-      }
-    }),
-    $delegate("click", ".top_bar .delete_all", async (_) => {
+    $delegate("click", ".input__button__add", TodoUi.mkConAndSave),
+    $delegate("click", ".input__button__delete_all", async (_) => {
       const button = await Alert.pop({
         title: "전부 삭제하시겠습니까?",
         buttons: TodoUi.defaultButtons,
       });
 
       button.class == "ok" && TodoUi.rmAllAndDel();
+    }),
+    $delegate("keypress", ".input__input_box__todo", (e) => {
+      if (e.key == "Enter") {
+        e.currentTarget.blur();
+        TodoUi.mkConAndSave();
+      }
     })
   );
 

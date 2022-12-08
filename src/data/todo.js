@@ -79,10 +79,12 @@ Todo_Data.updateData = tap((_todos = []) => {
 });
 
 Todo_Data.get = function (id) {
-  return go(
-    this.todos,
-    find((todo) => Number(todo.id) == Number(id))
-  );
+  return {
+    ...go(
+      this.todos,
+      find((todo) => Number(todo.id) == Number(id))
+    ),
+  };
 };
 
 Todo_Data.addTodoData = tap((todo) =>

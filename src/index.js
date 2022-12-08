@@ -1,7 +1,7 @@
 import Todo from "./ui/main";
-import { $qs } from "fxdom";
-import Todo_Data from "./data/todo";
+import {$qs} from "fxdom";
+import Data from "./data/todo";
 
-Todo_Data.reload();
+Data.reload();
 Todo.initPipe();
 Todo.delegate($qs("body"));

@@ -30,11 +30,12 @@ import {
 import { $attr } from "fxdom";
 import Alert from "../ui/alert";
 
-const Todo_Data = {
+const Data = {
   date: new Date().toDateInputValue(),
   todos: [],
   todayTodo: [],
   archives: [],
+
   log() {
     log({
       date: this.date,
@@ -45,7 +46,7 @@ const Todo_Data = {
   },
 };
 
-Todo_Data.reload = function () {
+Data.reload = function () {
   try {
     this.todos = JSON.parse(localStorage.getItem("todos")) || [];
     this.archives = JSON.parse(localStorage.getItem("archives")) || [];
@@ -58,10 +59,10 @@ Todo_Data.reload = function () {
     log(e);
   }
 
-  Todo_Data.log();
+  Data.log();
 };
 
-Todo_Data.emptyCheck = (els) =>
+Data.emptyCheck = (els) =>
   go(
     els,
     map(
@@ -72,9 +73,9 @@ Todo_Data.emptyCheck = (els) =>
     )
   );
 
-Todo_Data.getLastId = () => getLastId(Todo_Data.todos);
+Data.getLastId = () => getLastId(Data.todos);
 
-Todo_Data.extendData = (data, els) =>
+Data.extendData = (data, els) =>
   go(
     els,
     each((el) => {
@@ -83,44 +84,44 @@ Todo_Data.extendData = (data, els) =>
     (_) => data
   );
 
-Todo_Data.makeTodoData = (els) =>
-  Todo_Data.extendData(
+Data.makeTodoData = (els) =>
+  Data.extendData(
     {
-      id: Number(Todo_Data.getLastId()) || 0,
+      id: Number(Data.getLastId()) || 0,
       checked: false,
       regDate: new Date().toDateInputValue(),
     },
     els
   );
 
-Todo_Data.updateTodosData = tap((_todos = []) => {
+Data.updateTodosData = tap((_todos = []) => {
   localStorage.setItem("todos", JSON.stringify(_todos));
-  Todo_Data.todos = _todos;
+  Data.todos = _todos;
 
   log(_todos);
 });
 
-Todo_Data.updateArchivesData = tap((_archives = []) => {
+Data.updateArchivesData = tap((_archives = []) => {
   localStorage.setItem("archives", JSON.stringify(_archives));
-  Todo_Data.archives = _archives;
+  Data.archives = _archives;
 
   log(_archives);
 });
 
-Todo_Data.updateTodayTodo = () => {
-  Todo_Data.todayTodo = go(
-    Todo_Data.todos,
-    filter((todo) => todo.date == Todo_Data.date)
+Data.updateTodayTodo = () => {
+  Data.todayTodo = go(
+    Data.todos,
+    filter((todo) => todo.date == Data.date)
   );
 };
 
-Todo_Data.updateDay = (date = new Date().toDateInputValue()) => {
-  Todo_Data.date = date;
-  Todo_Data.updateTodayTodo();
-  Todo_Data.log();
+Data.updateDay = (date = new Date().toDateInputValue()) => {
+  Data.date = date;
+  Data.updateTodayTodo();
+  Data.log();
 };
 
-Todo_Data.get = function (id) {
+Data.get = function (id) {
   return {
     ...go(
       this.todos,
@@ -129,57 +130,49 @@ Todo_Data.get = function (id) {
   };
 };
 
-Todo_Data.addTodoData = tap((todo) => {
-  go(Todo_Data.todos, prepend(todo), Todo_Data.updateTodosData);
-  todo.date == Todo_Data.date && go(Todo_Data.todayTodo, prepend(todo));
+Data.addTodoData = tap((todo) => {
+  go(Data.todos, prepend(todo), Data.updateTodosData);
+  todo.date == Data.date && go(Data.todayTodo, prepend(todo));
 });
 
 // 아이템을 생성 시 확인 후 경고 문구 활성화
-Todo_Data.addTodo = (els) => {
-  return go(
-    els,
-    Todo_Data.emptyCheck,
-    Todo_Data.makeTodoData,
-    Todo_Data.addTodoData
-  );
+Data.addTodo = (els) => {
+  return go(els, Data.emptyCheck, Data.makeTodoData, Data.addTodoData);
 };
 
-// todo: 보관함에서 삭제
-Todo_Data.removeTodoData = (f) => {
-  go(Todo_Data.archives, reject(f), Todo_Data.updateArchivesData);
+Data.removeTodoData = (f) => {
+  go(Data.archives, reject(f), Data.updateArchivesData);
 };
 
 // it needs to change map to update
-Todo_Data.editTodoData = (data) => {
-  go(Todo_Data.todos, map(editOne(data)), Todo_Data.updateTodosData);
-  Todo_Data.todayTodo = go(Todo_Data.todayTodo, map(editOne(data)));
+Data.editTodoData = (data) => {
+  go(Data.todos, map(editOne(data)), Data.updateTodosData);
+  Data.todayTodo = go(Data.todayTodo, map(editOne(data)));
 };
 
-Todo_Data.removeAllTodoData = () =>
-  go(Todo_Data.archives, makeEmptyList, Todo_Data.updateArchivesData);
+Data.removeAllTodoData = () =>
+  go(Data.archives, makeEmptyList, Data.updateArchivesData);
 
-Todo_Data.moveToArchive = (f) => {
-  const archive = go(Todo_Data.todos, find(f), (todo) =>
-    prepend(todo, Todo_Data.archives)
+Data.moveToArchive = (f) => {
+  const archive = go(Data.todos, find(f), (todo) =>
+    prepend(todo, Data.archives)
   );
-  Todo_Data.updateArchivesData(archive);
-  go(Todo_Data.todos, reject(f), Todo_Data.updateTodosData);
-  go(Todo_Data.todayTodo, reject(f));
+  Data.updateArchivesData(archive);
+  go(Data.todos, reject(f), Data.updateTodosData);
+  go(Data.todayTodo, reject(f));
 };
 
-Todo_Data.returnToTodos = (f) => {
-  const todos = go(Todo_Data.archives, find(f), (todo) =>
-    prepend(todo, Todo_Data.todos)
-  );
+Data.returnToTodos = (f) => {
+  const todos = go(Data.archives, find(f), (todo) => prepend(todo, Data.todos));
 
-  Todo_Data.updateTodosData(todos);
+  Data.updateTodosData(todos);
 
-  Todo_Data.todayTodo = go(
+  Data.todayTodo = go(
     todos,
-    filter((todo) => todo.date == Todo_Data.date)
+    filter((todo) => todo.date == Data.date)
   );
 
-  go(Todo_Data.archives, reject(f), Todo_Data.updateArchivesData);
+  go(Data.archives, reject(f), Data.updateArchivesData);
 };
 
 /*
@@ -189,4 +182,4 @@ Todo_Data.returnToTodos = (f) => {
  *       변경된 값 배열 추가 - false는 맨 앞, true는 맨 뒤
  * */
 
-export default Todo_Data;
+export default Data;

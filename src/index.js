@@ -4,4 +4,4 @@ import Todo_Data from "./data/todo";
 
 Todo_Data.reload();
 Todo.initPipe();
-Todo.delegate($qs(".container"));
+Todo.delegate($qs("body"));

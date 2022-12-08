@@ -14,6 +14,7 @@ import {
 } from "fxjs";
 import * as C from "fxjs/Concurrency";
 import {
+  $append,
   $appendTo,
   $attr,
   $children,
@@ -23,6 +24,7 @@ import {
   $find,
   $findAll,
   $next,
+  $prepend,
   $prependTo,
   $prev,
   $qs,
@@ -68,6 +70,26 @@ MainUI.mkConTmp = (todo) => html`
     </span>
     <div>
       <button class="content__button__edit">수정</button>
+      <button class="content__button__archive">보관</button>
+    </div>
+  </div>
+`;
+
+MainUI.mkArchiveConTmp = (todo) => html`
+  <div class="content content_${todo.id}" id="${todo.id}">
+    <button
+      status="${todo.checked ? "done" : "empty"}"
+      class="content__checkbox"
+    >
+      ${todo.checked
+        ? check_box_full(["content__checkbox__done", "fa-xl"])
+        : check_box(["content__checkbox__empty", "fa-xl"])}
+    </button>
+    <span class="content__title ${todo.checked ? "done_text" : ""}">
+      ${todo.content}
+    </span>
+    <div>
+      <button class="content__button__return">복구</button>
       <button class="content__button__delete">삭제</button>
     </div>
   </div>
@@ -117,17 +139,33 @@ MainUI.initTmp = (_todos) => html`
         />
       </div>
       <button class="input__button__add">추가하기</button>
-      <button class="input__button__delete_all">전부 삭제</button>
+      <button class="input__button__archive">보관함</button>
     </section>
     <section class="contents">${strMap(MainUI.mkConTmp, _todos)}</section>
   </div>
 `;
 
-MainUI.init = (todos) => {
-  go(todos, MainUI.initTmp, $el, $appendTo($qs("body")));
+MainUI.archiveTmp = (_todos) => html`
+  <div class="container">
+    <section class="input">
+      <button class="input__button__back">돌아가기</button>
+      <button class="input__button__delete_all">전부 삭제</button>
+    </section>
+    <section class="contents">
+      ${strMap(MainUI.mkArchiveConTmp, _todos)}
+    </section>
+  </div>
+`;
+
+MainUI.initDate = () => {
   $qs("#date").value = Todo_Data.date;
   $qs("#today").value = Todo_Data.date;
   $qs("#date").min = Todo_Data.date;
+};
+
+MainUI.init = (todos) => {
+  go(todos, MainUI.initTmp, $el, $appendTo($qs("body")));
+  MainUI.initDate();
 };
 
 MainUI.initPipe = () => go(Todo_Data.todayTodo, MainUI.init);
@@ -230,6 +268,14 @@ MainUI.delegate = (container_el) =>
       )
     ),
 
+    $delegate("click", ".content__button__archive", ({ currentTarget }) =>
+      go(
+        currentTarget,
+        $closest(".content"),
+        tap(findAttrId, Todo_Data.moveToArchive),
+        MainUI.rmOne
+      )
+    ),
     $delegate("click", ".content__button__delete", ({ currentTarget }) =>
       go(
         currentTarget,
@@ -255,6 +301,14 @@ MainUI.delegate = (container_el) =>
         go(data.value, tap(Todo_Data.editTodoData), MainUI.update);
       }
     }),
+    $delegate("click", ".content__button__return", ({ currentTarget }) =>
+      go(
+        currentTarget,
+        $closest(".content"),
+        tap(findAttrId, Todo_Data.returnToTodos),
+        MainUI.rmOne
+      )
+    ),
     $delegate("click", ".content__checkbox", ({ currentTarget }) =>
       go(
         currentTarget,
@@ -280,7 +334,22 @@ MainUI.delegate = (container_el) =>
       if (e.key == "Enter") {
         MainUI.mkConAndSave();
       }
-    })
+    }),
+    $delegate("click", ".input__button__archive", (_) =>
+      go(
+        $qs("body"),
+        tap($children, ([_, container]) => $remove(container)),
+        $append(go(Todo_Data.archives, MainUI.archiveTmp, $el))
+      )
+    ),
+    $delegate("click", ".input__button__back", (_) =>
+      go(
+        $qs("body"),
+        tap($children, ([_, container]) => $remove(container)),
+        $append(go(Todo_Data.todayTodo, MainUI.initTmp, $el)),
+        (el) => MainUI.initDate()
+      )
+    )
   );
 
 export default MainUI;

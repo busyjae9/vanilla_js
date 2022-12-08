@@ -20,7 +20,13 @@ import {
   each,
 } from "fxjs";
 import * as L from "fxjs/Lazy";
-import { editOne, findId, getLastId, makeEmptyList } from "../basic_func";
+import {
+  editOne,
+  findId,
+  getLastId,
+  logFast,
+  makeEmptyList,
+} from "../basic_func";
 import { $attr } from "fxdom";
 import Alert from "../ui/alert";
 
@@ -96,7 +102,7 @@ Todo_Data.updateTodosData = tap((_todos = []) => {
 
 Todo_Data.updateArchivesData = tap((_archives = []) => {
   localStorage.setItem("archives", JSON.stringify(_archives));
-  Todo_Data.todos = _archives;
+  Todo_Data.archives = _archives;
 
   log(_archives);
 });
@@ -149,8 +155,38 @@ Todo_Data.editTodoData = (data) => {
   Todo_Data.todayTodo = go(Todo_Data.todayTodo, map(editOne(data)));
 };
 
-// todo: 보관함을 만들어서 보관함을 지우게 만들기
 Todo_Data.removeAllTodoData = () =>
   go(Todo_Data.archives, makeEmptyList, Todo_Data.updateArchivesData);
+
+Todo_Data.moveToArchive = (f) => {
+  const archive = go(Todo_Data.todos, find(f), (todo) =>
+    prepend(todo, Todo_Data.archives)
+  );
+  Todo_Data.updateArchivesData(archive);
+  go(Todo_Data.todos, reject(f), Todo_Data.updateTodosData);
+  go(Todo_Data.todayTodo, reject(f));
+};
+
+Todo_Data.returnToTodos = (f) => {
+  const todos = go(Todo_Data.archives, find(f), (todo) =>
+    prepend(todo, Todo_Data.todos)
+  );
+
+  Todo_Data.updateTodosData(todos);
+
+  Todo_Data.todayTodo = go(
+    todos,
+    filter((todo) => todo.date == Todo_Data.date)
+  );
+
+  go(Todo_Data.archives, reject(f), Todo_Data.updateArchivesData);
+};
+
+/*
+ * todo: 완료 시 데이터 순서를 변경하는 로직
+ *       checked를 기준으로 2개의 배열로 만들고
+ *       변경되기 전 값 배열에서 데이터를 지우고
+ *       변경된 값 배열 추가 - false는 맨 앞, true는 맨 뒤
+ * */
 
 export default Todo_Data;

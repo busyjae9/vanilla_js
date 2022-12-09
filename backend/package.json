@@ -1,0 +1,15 @@
+{
+  "name": "todo_api",
+  "version": "1.0.0",
+  "description": "todo의 정보를 저장하고 불러올 수 있는 서버입니다",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^2.0.20"
+  }
+}

@@ -48,3 +48,5 @@ export const getNextDay = (date = "") => {
   day.setDate(day.getDate() + 1);
   return day;
 };
+
+export const getCurrentTarget = (e) => e.currentTarget;

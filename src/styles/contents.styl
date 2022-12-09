@@ -10,8 +10,9 @@ on-color(color)
   width 100%
   align-items center
   justify-content space-evenly
-  padding-top 1em
   gap 1em
+  padding 2em
+  box-sizing border-box
 
 
 .content
@@ -26,7 +27,6 @@ on-color(color)
   background-color $black100
 
   .done_text
-    width 70%
     line-height 1.2em
     text-align justify
     word-break break-word
@@ -51,15 +51,42 @@ on-color(color)
 
 
   &__title
-    width 70%
+    max-width 70%
     line-height 1.2em
     text-align justify
     word-break break-word
     color: $white
 
+  &__archive
+    &__date
+      max-width 15%
+      line-height 1.2em
+      text-align justify
+      word-break break-word
+      color: $white
+
+    &__title
+      width 45%
+      line-height 1.2em
+      text-align justify
+      word-break break-word
+      color: $white
+
+  &__buttons
+    min-width 15%
+    justify-content space-between
+    display inherit
+    flex-direction row
+
 
   &__button
     &__edit
+      padding .2em .5em
+
+    &__return
+      padding .2em .5em
+
+    &__archive
       padding .2em .5em
 
     &__delete

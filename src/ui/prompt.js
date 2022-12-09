@@ -6,12 +6,15 @@ import {
   find,
   go,
   head,
+  hi,
   isEmpty,
   log,
   map,
+  object,
   pipe,
   strMap,
   tap,
+  values,
 } from "fxjs";
 import * as C from "fxjs/Concurrency";
 import {
@@ -41,7 +44,7 @@ import { findAttrId, logFast } from "../basic_func";
 const Prompt = {};
 
 Prompt.mkButtonTmp = (button) =>
-  `<button type="button" class="prompt__body__buttons__button__${button.class}" id="${button.class}">${button.msg}</button>`;
+  `<button type="button" class="prompt__body__buttons__button__${button.class}" status="${button.class}">${button.msg}</button>`;
 
 Prompt.mkPromptTmp = (data) => `
 <div class="prompt">
@@ -51,17 +54,21 @@ Prompt.mkPromptTmp = (data) => `
         ${
           data?.value
             ? `
-            <div class="prompt__body__values">
-                <div class="prompt__body__values__row">
-                    <span class="prompt__body__values__row__key">Until: </span>
-                    <input class="prompt__body__values__row__content" id="date"
-                        placeholder="날짜 선택" type="text" onfocus="(this.type='date')" onblur="(this.type='text')">
-                </div>
-                <div class="prompt__body__values__row">
-                    <span class="prompt__body__values__row__key">Todo: </span>
-                    <textarea class="prompt__body__values__row__content" id="content">${data.value.content}</textarea>
-                </div>
-            </div>
+                <form action="" class="prompt__body__values">
+                    <div class="prompt__body__values__row">
+                        <span class="prompt__body__values__row__key">Until: </span>
+                        <input class="prompt__body__values__row__content" name="date"
+                            placeholder="날짜 선택" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" value="${new Date(
+                              data.value.date
+                            ).toDateInputValue()}">
+                    </div>
+                    <div class="prompt__body__values__row">
+                        <span class="prompt__body__values__row__key">Todo: </span>
+                        <textarea class="prompt__body__values__row__content" name="content">${
+                          data.value.content
+                        }</textarea>
+                    </div>
+                </form>
             `
             : ""
         }
@@ -90,27 +97,27 @@ Prompt.asyncPop = (data) =>
             e.currentTarget,
             tap($closest(".prompt"), $remove),
             (currentTarget) => {
-              let new_data = data.value;
+              data.value.id = Number(data.value.id);
 
-              go(
-                el,
-                $find(".prompt__body__values"),
-                $children,
-                map(pipe($children, ([k, v]) => [$attr("id", v), v.value])),
-                each(([k, v]) => (new_data[k] = v))
+              extend(
+                data.value,
+                go(
+                  el,
+                  $find(".prompt__body__values"),
+                  (form_el) => new FormData(form_el).entries(),
+                  object
+                )
               );
 
               resolve({
-                class: $attr("id", currentTarget),
-                value: new_data,
+                class: $attr("status", currentTarget),
+                value: data.value,
               });
             }
           )
         )
       )
     );
-
-    $qs(".prompt #date").value = new Date(data.value.date).toDateInputValue();
   });
 
 Prompt.pop = async (data) => await Prompt.asyncPop(data);

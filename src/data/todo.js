@@ -18,6 +18,7 @@ import {
   insert,
   prepend,
   each,
+  hi,
 } from "fxjs";
 import * as L from "fxjs/Lazy";
 import {
@@ -79,7 +80,7 @@ Data.extendData = (data, els) =>
   go(
     els,
     each((el) => {
-      data[$attr("id", el)] = el.value;
+      data[$attr("key", el)] = el.value;
     }),
     (_) => data
   );
@@ -98,14 +99,14 @@ Data.updateTodosData = tap((_todos = []) => {
   localStorage.setItem("todos", JSON.stringify(_todos));
   Data.todos = _todos;
 
-  log(_todos);
+  Data.log();
 });
 
 Data.updateArchivesData = tap((_archives = []) => {
   localStorage.setItem("archives", JSON.stringify(_archives));
   Data.archives = _archives;
 
-  log(_archives);
+  Data.log();
 });
 
 Data.updateTodayTodo = () => {
@@ -121,21 +122,22 @@ Data.updateDay = (date = new Date().toDateInputValue()) => {
   Data.log();
 };
 
-Data.get = function (id) {
+Data.get = (id) => {
   return {
     ...go(
-      this.todos,
+      Data.todos,
       find((todo) => Number(todo.id) == Number(id))
     ),
   };
 };
 
 Data.addTodoData = tap((todo) => {
+  if (todo.date == Data.date) {
+    Data.todayTodo = go(Data.todayTodo, prepend(todo));
+  }
   go(Data.todos, prepend(todo), Data.updateTodosData);
-  todo.date == Data.date && go(Data.todayTodo, prepend(todo));
 });
 
-// 아이템을 생성 시 확인 후 경고 문구 활성화
 Data.addTodo = (els) => {
   return go(els, Data.emptyCheck, Data.makeTodoData, Data.addTodoData);
 };
@@ -146,8 +148,8 @@ Data.removeTodoData = (f) => {
 
 // it needs to change map to update
 Data.editTodoData = (data) => {
-  go(Data.todos, map(editOne(data)), Data.updateTodosData);
   Data.todayTodo = go(Data.todayTodo, map(editOne(data)));
+  go(Data.todos, map(editOne(data)), Data.updateTodosData);
 };
 
 Data.removeAllTodoData = () =>
@@ -159,7 +161,7 @@ Data.moveToArchive = (f) => {
   );
   Data.updateArchivesData(archive);
   go(Data.todos, reject(f), Data.updateTodosData);
-  go(Data.todayTodo, reject(f));
+  Data.todayTodo = go(Data.todayTodo, reject(f));
 };
 
 Data.returnToTodos = (f) => {

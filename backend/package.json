@@ -6,20 +6,22 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon index.js",
-    "migrate": "node migrate_fx.js",
+    "migrate": "node util/db/migrate_fx.js",
     "knex_create": "npx knex migrate:make $name",
-    "knex_up": "npx knex --esm migrate:up"
+    "knex_up": "npx knex migrate:up"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.19.6",
+    "bcrypt": "^5.1.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "fxjs": "^0.21.3",
     "fxsql": "^1.6.1",
     "knex": "^2.3.0",
     "nodemon": "^2.0.20",
-    "pg": "^8.8.0"
+    "pg": "^8.8.0",
+    "validator": "^13.7.0"
   }
 }

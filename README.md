@@ -23,7 +23,7 @@ pg_db_fx=todo_fx
 2. knex migrate:make
 
 ```
-npm run knex_create $name=[file_name]
+npm run knex_create [file_name]
 ```
 
 3. migration 파일 작성 후 migrate:up - todo_fx

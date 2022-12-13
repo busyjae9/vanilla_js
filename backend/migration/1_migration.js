@@ -1,5 +1,5 @@
 import {log, go, entries, values, each, hi, strMap, map} from "fxjs";
-import POOL from "../db_connect.js";
+import POOL from "../util/db/db_connect_fx.js";
 
 const Migration = {
     tables: {

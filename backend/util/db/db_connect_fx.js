@@ -12,6 +12,22 @@ const POOL = CONNECT({
     database: process.env.pg_db_fx,
 })
 
+const {
+    VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, FxSQL_DEBUG,
+    QUERY,
+    ASSOCIATE,
+    TRANSACTION,
+    END
+} = POOL;
+
 export default POOL
+
+export {
+    VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, FxSQL_DEBUG,
+    QUERY,
+    ASSOCIATE,
+    TRANSACTION,
+    END
+}
 
 

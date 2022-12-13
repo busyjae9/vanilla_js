@@ -1,6 +1,6 @@
 import fs from "fs"
 import {each, go, head, hi, log, map, reject, replace, sortBy, sortByDesc, sortDesc, split, tap} from "fxjs";
-import POOL from "./db_connect.js";
+import POOL from "./db_connect_fx.js";
 
 const migration_folder = "./migration"
 const exist = await POOL.QUERY`select count(*) from pg_class where relname = 'migrations';`

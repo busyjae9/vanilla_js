@@ -2,11 +2,13 @@
 
 ## 실행 방법
 
-### 서버
+- 데이터 베이스 먼저 생성
 
-- 데이터 베이스 먼저 생성 후 시작
+```
+cd todos
+```
 
-#### migration - knex
+### migration - knex
 
 1. env 파일 작성
 
@@ -32,28 +34,9 @@ npm run knex_create [file_name]
 npm run knex_up
 ```
 
-#### migration - FxSQL로 만든 모듈
-
-1. migration 폴더에 [number]_migration.js 파일 작성
-
-2. migration 실행 - todo_fx
-
-~~~
-npm run migrate
-~~~
-
-#### 서버 실행
+### 서버 실행
 
 ```
-cd backend
-npm install
-npm run dev
-```
-
-### 웹
-
-```
-cd frontend
 npm install
 npm run dev
 ```

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TODOS</title>
+    <link type='text/css' rel='stylesheet' href='<%= process.env.url; %>:<%= process.env.port; %>/dist/app.bundle.css'>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+</head>
+<body>
+<script type="module" src='<%= process.env.url; %>:<%= process.env.port; %>/dist/app.bundle.js'></script>
+<% if(locals.whoami) { %>
+    <div class="whoami">
+        <div class="whoami__info">
+            <ion-icon class="whoami__info__icon" name="person"></ion-icon>
+            <div class="whoami__info__name"><%= locals.whoami.name %></div>
+        </div>
+        <div class="whoami__buttons">
+            <button class="whoami__buttons__archive">보관함</button>
+            <button class="whoami__buttons__logout">로그아웃</button>
+        </div>
+    </div>
+<% } %>
+<% if(locals.body) { %>
+    <%- locals?.body; %>
+<% } %>
+</body>
+</html>

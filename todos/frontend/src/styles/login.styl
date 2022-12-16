@@ -1,0 +1,134 @@
+@import "main"
+
+.bg_dark
+  position fixed
+  display flex
+  top 0
+  left 0
+  width 100%
+  height 100%
+  background-color rgba(0, 0, 0, 0.6)
+  color white
+  z-index 1000
+  align-items center
+  justify-content center
+
+.login, .reg
+  display flex
+  flex-direction: column;
+  align-items center
+  justify-content space-evenly
+  background-color $grey
+  box-shadow 0 0 .6em .4em $black30
+  width 24em
+  min-height 18em
+  border-radius 2em
+
+  &__title
+    padding 1em 0
+    font-size 2em
+    font-weight 600
+
+  &__rows
+    width 100%
+    display flex
+    flex-direction column
+    align-items center
+    justify-items space-evenly
+
+  &__button
+    &__ok
+      color $white
+      border-color $green
+
+      &:hover
+        color $green100
+        border-color $green100
+
+    &__login
+      color $white
+      border-color $green
+      font-size 1.4em
+      font-weight 600
+
+      &:hover
+        color $green100
+        border-color $green100
+
+    &__reg
+      color $white
+      border-color $blue
+
+      &:hover
+        color $blue
+        border-color $blue
+
+    &__find
+      color $white
+      border-color $blue
+
+      &:hover
+        color $blue
+        border-color $blue
+
+    &__cancel
+      color $white
+      border-color $red
+
+      &:hover
+        color $red
+        border-color $red
+
+  &__buttons
+    display flex
+    flex-direction row
+    width 100%
+    padding 2em 2em
+    box-sizing border-box
+    align-items center
+    justify-content space-evenly
+
+    input
+      font-size 1.4em
+      font-weight 600
+      padding .2em .2em
+
+    button
+      font-size 1.4em
+      font-weight 600
+
+  &__row
+    display flex
+    flex-direction row
+    width 100%
+    min-height 3em
+    box-sizing border-box
+    padding .5em 2em
+    align-items center
+    justify-content space-between
+
+    input[type="checkbox"]
+      width 1em
+      height 1em
+
+    &__key
+      text-align center
+      font-size 1.2em
+
+    &__text
+      border-radius 1em
+      padding 1em
+      background-color $grey100
+      text-align left
+      font-size 1.2em
+      color $grey
+
+    &__value
+      font-size 1.2em
+      outline-style none
+      border none
+      border-radius 1em
+      padding .5em .8em
+      color $white
+      color-scheme: dark
+      resize none

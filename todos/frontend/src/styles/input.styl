@@ -1,0 +1,71 @@
+@import 'main'
+.input
+  display flex
+  flex-direction row
+  width 100%
+  align-items flex-end
+  justify-content space-between
+  box-sizing border-box
+  padding .5em 0
+
+  &__input_box
+    position relative
+    width 100%
+    display flex
+    justify-content space-between
+
+    &__submit
+      width 20%
+      font-size 1.2em
+      color $white
+      color-scheme dark
+      text-align center
+      border-width 0 0 4px
+      border-color darkgray
+
+      &:hover
+        color $blue
+        border-color $blue
+
+    &__todo
+      width 50%
+      font-size 1.2em
+      background-color transparent
+      border-width 0 0 4px
+      outline-style none
+      line-height normal
+      padding .4em .4em
+      color $white
+      border-color darkgray
+      text-align center
+
+      &:focus
+        border-color $blue
+
+    &__todo_date
+      width 20%
+      font-size 1.2em
+      background-color transparent
+      border-width 0 0 4px
+      border-color darkgray
+      outline-style none
+      line-height normal
+      color $white
+      color-scheme dark
+      text-align center
+
+      &:focus
+        border-color $blue
+
+  &__button
+    &__delete_all
+      padding .2em .5em
+      color: $red100;
+      border-color: $red100;
+      padding: .2em .5em;
+
+      &:hover
+        border-color: $red;
+        color: $red;
+
+

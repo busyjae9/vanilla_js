@@ -15,7 +15,7 @@ on-color(color)
 
 
 .content
-  font-size 1.2em
+  font_size()
   display flex
   flex-direction row
   align-items center
@@ -28,7 +28,6 @@ on-color(color)
   background-color $black100
 
   .done_text
-    line-height 1.2em
     text-align justify
     word-break break-word
     color $grey100
@@ -36,6 +35,7 @@ on-color(color)
     text-decoration line-through white
 
   &__checkbox
+    padding 0
     border none
 
     &__empty
@@ -78,20 +78,20 @@ on-color(color)
     justify-content space-between
     display inherit
     flex-direction row
-    gap 1em
+    gap .5em
 
   &__button
     &__edit
-      padding .2em .5em
+      padding .2em .2em
 
     &__return
-      padding .2em .5em
+      padding .2em .2em
 
     &__archive
-      padding .2em .5em
+      padding .2em .2em
 
     &__delete
-      padding .2em .5em
+      padding .2em .2em
       on-color($red100)
 
       &:hover

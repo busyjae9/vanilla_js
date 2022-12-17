@@ -14,21 +14,25 @@ cd todos
 
 ```
 // default
-pg_host=localhost
-pg_port=5432
-pg_user=postgres
-pg_password=0523
-pg_db=todo
-pg_db_fx=todo_fx
+pg_host=[데이터 베이 호스트]
+pg_port=[데이터 베이스 포트]
+pg_user=[데이터 베이스 유저]
+pg_password=[데이터 베이스 비밀번호]
+pg_db=[데이터 베이스 이름]
+migration_folder=[마이그레이션 폴더]
+url=[서버 url]
+port=[서버 port]
+NODE_ENV=[nodejs 환경]
+TZ=[원하는 타임존]
 ```
 
-2. knex migrate:make
+2. knex migration 파일 만들기 - env.migration_folder에 생성
 
 ```
 npm run knex_create [file_name]
 ```
 
-3. migration 파일 작성 후 migrate:up - todo_fx
+3. migration 파일 작성 후 migrate:up
 
 ```
 npm run knex_up

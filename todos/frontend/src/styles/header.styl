@@ -1,20 +1,21 @@
 @import 'main'
+
 .header
   display flex
   width 100%
   align-items center
   justify-content center
-  padding .5em 0
+  padding_flex(2)
   box-sizing inherit
 
   &__button
 
     &__left
-      font-size 1.4em
       border none
       border-color $blue
 
       &__icon
+        font_size(3.4)
         color $white
 
         &:hover
@@ -22,11 +23,11 @@
 
 
     &__right
-      font-size 1.4em
       border none
       border-color $blue
 
       &__icon
+        font_size(3.4)
         color $white
 
         &:hover
@@ -34,10 +35,9 @@
 
 
   &__today
-    min-width: 100px;
-    width 30%
+    width 50%
     background-color transparent
-    font-size 1.4em
+    font_size(3.4)
     border none
     outline-style none
     line-height normal

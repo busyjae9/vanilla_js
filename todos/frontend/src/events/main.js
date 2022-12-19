@@ -2,9 +2,7 @@ import {
     go,
     pipe,
     tap,
-    find,
     each,
-    hi,
     object, log, curry
 } from "fxjs";
 import {
@@ -16,7 +14,6 @@ import {
     $el, $find,
     $findAll,
     $prependTo,
-    $prev,
     $qs,
     $remove,
     $replaceWith,
@@ -26,10 +23,7 @@ import {
     $toggleClass,
 } from "fxdom";
 
-import Data from "../data/todo.js";
 import {
-    findAttrId,
-    getCurrentTarget,
     getNextDay,
     getPrevDay,
 } from "../basic_func.js";
@@ -59,38 +53,17 @@ Main.error = (err) => err
         : Alert.pop({title: "일시 오류가 발생했습니다."}).then(() => log(err))
     : log("취소");
 
-
-Main.initDate = () => {
-    $qs("input[key=date]").value = Data.date;
-    $qs("input[key=date]").min = Data.date;
-    $qs("#today").value = Data.date;
-};
-
-Main.init = (todos) =>
-    go(todos, Main.initTmp, $el, $appendTo($qs("body")), Main.initDate);
-
 /*
  * $prependTo가 $qs를 미리 받고 함수를 리턴한 상황이기 때문에 초기에 init이 되지 않았으면 null이 반환되기 때문
  *  */
 Main.mkCon = (todoData) =>
     go(todoData, Main.mkConTmp, $el, (v) => $prependTo($qs(".contents"))(v));
 
-Main.mkConAndSave = () =>
-    go(
-        $qs(".input__input_box"),
-        $children,
-        tap(
-            Data.addTodo,
-            (todoData) => todoData.date == Data.date && Main.mkCon(todoData)
-        ),
-        find((el) => $attr("key", el) == "content"),
-        $setVal("")
-    ).catch((msg) => Alert.pop({title: msg}));
 
 Main.rmAll = pipe($findAll("div.content"), each($remove));
 Main.rmOne = pipe($closest("div.content"), $remove);
 Main.rmAllAndDel = () =>
-    go($qs(".contents"), tap(Data.removeAllTodoData), Main.rmAll);
+    go($qs(".contents"), Main.rmAll);
 
 Main.check = curry((check, el) =>
     go(
@@ -204,18 +177,12 @@ Main.delegate = (container_el) =>
         $delegate(
             "change",
             ".header__today",
-            async (e) => {
-                const render = await go(
+            async (e) =>
+                go(
                     e.currentTarget,
                     (el) => axios.get(`/todo/list/${el.value}`),
                     (res) => Main.contentViewUpdate(res.data.result),
-                ).catch(Main.error);
-
-                render && go(
-                    $qs(".input__input_box__todo_date"),
-                    $setVal(e.delegateTarget.value)
-                );
-            }
+                ).catch(Main.error)
         ),
         $delegate(
             "click",
@@ -230,12 +197,12 @@ Main.delegate = (container_el) =>
         $delegate(
             "click",
             ".content__button__delete",
-            pipe(
-                getCurrentTarget,
+            (e) => go(
+                e.currentTarget,
                 $closest(".content"),
-                tap(findAttrId, Data.removeTodoData),
+                tap($attr("id"), (id) => axios.post(`/todo/data/delete/${id}`)),
                 Main.rmOne
-            )
+            ).catch(Main.error)
         ),
         $delegate(
             "click",
@@ -263,12 +230,12 @@ Main.delegate = (container_el) =>
         $delegate(
             "click",
             ".content__button__return",
-            pipe(
-                getCurrentTarget,
+            (e) => go(
+                e.currentTarget,
                 $closest(".content"),
-                tap(findAttrId, Data.returnToTodos),
+                tap($attr("id"), (id) => axios.post(`/todo/data/return/${id}`)),
                 Main.rmOne
-            )
+            ).catch(Main.error)
         ),
         $delegate(
             "click",
@@ -290,17 +257,21 @@ Main.delegate = (container_el) =>
                         Main.check(res.data.result.checked),
                     )
                 ).catch(Main.error);
-
-
             }
         ),
-        $delegate("click", ".input__button__delete_all", async (_) => {
-            const button = await Alert.pop({
-                title: "전부 삭제하시겠습니까?",
-                buttons: Main.defaultButtons,
-            });
-
-            button.class == "ok" && Main.rmAllAndDel();
+        $delegate("click", ".whoami__buttons__del_all", async () => {
+            go(
+                Alert.pop({
+                    title: "전부 삭제하시겠습니까?",
+                    buttons: Main.defaultButtons,
+                }),
+                (data) => new Promise((resolve, reject) =>
+                    data.class == "cancel"
+                        ? reject()
+                        : resolve(data)),
+                () => axios.post(`todo/data/delete_all`),
+                () => Main.rmAllAndDel(),
+            ).catch(Main.error);
         }),
         $delegate("submit", ".input__input_box", (e) => {
             e.originalEvent.preventDefault();
@@ -317,22 +288,14 @@ Main.delegate = (container_el) =>
                 $setVal("")
             ).catch(Main.error);
         }),
-
-        // $delegate("click", ".whoami__buttons__archive", (e) =>
-        //     go(
-        //         $qs("body"),
-        //         tap($children, ([_, container]) => $remove(container)),
-        //         $append(go(Data.archives, MainUI.archiveTmp, $el))
-        //     )
-        // ),
-        // $delegate("click", ".input__button__back", (e) =>
-        //     go(
-        //         $qs("body"),
-        //         tap($children, ([_, container]) => $remove(container)),
-        //         $append(go(Data.todayTodo, MainUI.initTmp, $el)),
-        //         () => Main.initDate()
-        //     )
-        // )
+        $delegate("click", ".whoami__buttons__archive", () =>
+            // 데이터 받아와서 템플릿 그려주기
+            window.location.replace("/todo/archive")
+        ),
+        $delegate("click", ".whoami__buttons__return", () =>
+            // 데이터 받아와서 템플릿 그려주기
+            window.location.replace("/todo")
+        )
     );
 
 export default Main;

@@ -6,6 +6,7 @@ import {
 
 } from "fxjs";
 import {check_box, check_box_full, left, right} from "./icons.js";
+import {format} from "date-fns";
 
 Date.prototype.toDateInputValue = function () {
     let local = new Date(this);
@@ -42,20 +43,12 @@ MainUI.mkConTmp = (todo) => html`
 
 MainUI.mkArchiveConTmp = (todo) => html`
     <div class="content content_${todo.id}" id="${todo.id}">
-        <button
-                status="${todo.checked ? "done" : "empty"}"
-                class="content__checkbox"
-        >
-            ${todo.checked
-                    ? check_box_full(["content__checkbox__done", "fa-xl"])
-                    : check_box(["content__checkbox__empty", "fa-xl"])}
-        </button>
         <span class="content__archive__title ${todo.checked ? "done_text" : ""}">
-      ${todo.content}
-    </span>
+          ${todo.content}
+        </span>
         <span class="content__archive__date ${todo.checked ? "done_text" : ""}">
-      ${todo.date}
-    </span>
+          ${format(new Date(todo.date), "yy-MM-dd")}
+        </span>
         <div class="content__buttons">
             <button class="content__button__return">복구</button>
             <button class="content__button__delete">삭제</button>

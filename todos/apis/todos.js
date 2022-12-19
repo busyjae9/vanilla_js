@@ -6,7 +6,7 @@ import {zonedTimeToUtc} from "date-fns-tz/esm";
 import LoginUI from "../frontend/src/templates/login.js";
 import MainUI from "../frontend/src/templates/main.js";
 import {go, isEmpty, log, tap} from "fxjs";
-import {EQ, QUERY, QUERY1} from "../util/db/db_connect.js";
+import {EQ, QUERY, QUERY1, SET, TB} from "../util/db/db_connect.js";
 import {validCheck} from "../util/valid.js";
 import Query from "../queries/query_v1.js";
 
@@ -62,30 +62,58 @@ router.patch('/data/:id', (req, res) => isEmpty(req.params)
         Query.update("todos", req.body),
         Query.success(res, "업데이트되었습니다.")
     ).catch(Query.error(res)));
+
 router.post('/data/archive/:pk', (req, res) => isEmpty(req.params)
     ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
     : go(
         req.params.pk,
         Query.update("todos", {archived_date: zonedTimeToUtc(new Date(), "Asia/Seoul")}),
-        (data) => {
-            data.todo_id = data.id;
-            delete data.id;
-            delete data.archived_date;
-            return data;
-        },
-        Query.insert("archives"),
+        (data) => ({
+            todo_id: data.id,
+            user_id: data.user_id,
+        }),
+        Query.insert("archive"),
         Query.success(res, "보관되었습니다.")
     ).catch(Query.error(res)));
+
+router.post('/data/return/:pk', (req, res) => isEmpty(req.params)
+    ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
+    : go(
+        req.params.pk,
+        Query.update("todos", {archived_date: null}),
+        (todo) => QUERY1`DELETE FROM ${TB("archive")} WHERE ${EQ({todo_id:todo.id})}`,
+        Query.success(res, "복구되었습니다.")
+    ).catch(Query.error(res)));
+
+router.post('/data/delete/:pk', (req, res) => isEmpty(req.params)
+    ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
+    : go(
+        Query.updateWhere("archive", {delete_date: zonedTimeToUtc(new Date(), "Asia/Seoul")}, {todo_id: req.params.pk}),
+        Query.success(res, "삭제되었습니다.")
+    ).catch(Query.error(res)));
+
+
+router.post('/data/delete_all', (req, res) => go(
+    Query.updateWhere(
+        "archive",
+        {delete_date: zonedTimeToUtc(new Date(), "Asia/Seoul")},
+        {
+            user_id: req.session.user.id,
+            delete_date: null
+        }),
+    Query.success(res, "전부 삭제되었습니다.")
+).catch(Query.error(res)));
 
 router.get('/archive', (req, res) =>
     // 만들기
     go(
-        QUERY`SELECT * FROM todos WHERE ${EQ({user_id:req.session.user.id})} AND delete_date IS NULL ORDER BY id DESC`,
-        (todos) => res.json({
-            code: '0001',
-            result: todos,
-            message: "리스트가 조회되었습니다."
-        })
+        QUERY`SELECT a.* FROM todos AS a 
+                INNER JOIN (
+                    SELECT * FROM archive WHERE ${EQ({user_id:req.session.user.id})} AND delete_date IS NULL
+                ) AS b 
+                ON a.id = b.todo_id 
+                ORDER BY id DESC`,
+        (archive) => res.render("index", {body: MainUI.archiveTmp(archive)})
     ));
 
 

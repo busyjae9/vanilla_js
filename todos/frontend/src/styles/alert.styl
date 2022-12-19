@@ -19,8 +19,8 @@
     justify-content space-evenly
     background-color $grey
     box-shadow 0 0 .6em .4em $black30
-    min-width 18em
-    max-width 24em
+    padding_flex(1, 1)
+    width_flex(90)
     min-height 12em
     border-radius 2em
 
@@ -28,16 +28,18 @@
       width 100%
       padding 1em 1em
       text-align center
-      font-size 1.4em
+      font_size(3)
 
     &__msg
       width 100%
+      font_size(2.4)
       padding .2em 1em
       text-align center
       font-size 1em
       color $grey
 
     &__buttons
+      font_size(2.4)
       width 100%
       display flex
       align-items center

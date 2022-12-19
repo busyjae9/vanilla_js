@@ -1,4 +1,3 @@
-@import 'main'
 .prompt
   position fixed
   display flex
@@ -21,27 +20,28 @@
     box-shadow 0 0 .6em .4em $black30
     width 24em
     border-radius 2em
-    padding 1em 0
+    padding_flex(1, 1)
+    width_flex(90)
 
     &__title
       width 100%
       text-align center
-      font-size 2em
+      font_size(3)
 
     &__msg
       width 100%
       padding .2em 1em
       text-align center
-      font-size 1em
+      font_size(2.4)
       color $grey
 
     &__buttons
+      font_size(2.4)
       width 100%
       display flex
       flex-direction row
       align-items center
       justify-content space-evenly
-      font-size 1.2em
 
       ok_cancel()
 
@@ -65,11 +65,11 @@
 
         &__key
           text-align center
-          font-size 1.4em
+          font_size(2.4)
 
         &__content
           width 75%
-          font-size 1.2em
+          font_size(2.4)
           outline-style none
           border none
           border-radius 1em

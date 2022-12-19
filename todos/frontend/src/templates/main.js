@@ -69,34 +69,26 @@ MainUI.mkConAllTmp = (todos) => html`
 
 MainUI.initTmp = (todos, date) => html`
     <div class="container">
-        <header class="header">
-            <button class="header__button__left">
-                ${left(["header__button__left__icon", "fa-xl"])}
-            </button>
-            <input
-                    value="${date}"
-                    class="header__today"
-                    id="today"
-                    placeholder="날짜 선택"
-                    type="text"
-                    onfocus="(this.type='date')"
-                    onblur="(this.type='text')"
-            />
-            <button class="header__button__right">
-                ${right(["header__button__right__icon", "fa-xl"])}
-            </button>
-        </header>
-        <section class="input">
-            <form class="input__input_box">
+        <form class="input__input_box">
+            <header class="header">
+                <button type="button" class="header__button__left">
+                    ${left(["header__button__left__icon", "fa-xl"])}
+                </button>
                 <input
                         value="${date}"
-                        class="input__input_box__todo_date"
-                        name="date"
+                        class="header__today"
+                        id="today"
                         placeholder="날짜 선택"
                         type="text"
                         onfocus="(this.type='date')"
                         onblur="(this.type='text')"
+                        name="date"
                 />
+                <button type="button" class="header__button__right">
+                    ${right(["header__button__right__icon", "fa-xl"])}
+                </button>
+            </header>
+            <section class="input">
                 <input
                         class="input__input_box__todo"
                         type="text"
@@ -105,9 +97,9 @@ MainUI.initTmp = (todos, date) => html`
                         minlength="1"
                         placeholder="할 일 입력하기"
                 />
-                <input type="submit" class="input__input_box__submit" value="추가하기">
-            </form>
-        </section>
+                <input type="submit" class="input__input_box__submit" value="추가">
+            </section>
+        </form>
         <section class="contents">${strMap(MainUI.mkConTmp, todos)}</section>
     </div>
 `;

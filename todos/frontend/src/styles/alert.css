@@ -1,0 +1,134 @@
+ok_cancel,
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  background-color: #171717;
+  color: #f9fafb;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+ok_cancel svg,
+html svg,
+body svg {
+  color: #f9fafb;
+}
+ok_cancel span,
+html span,
+body span {
+  vertical-align: middle;
+}
+ok_cancel button,
+html button,
+body button {
+  background-color: transparent;
+  color: #f9fafb;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  font-size: 1em;
+  padding: 0.2em 0.2em;
+}
+ok_cancel input[type="submit"],
+html input[type="submit"],
+body input[type="submit"] {
+  background-color: transparent;
+  border-width: 0 0 4px;
+}
+ok_cancel button:hover,
+html button:hover,
+body button:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+ok_cancel .ghost,
+html .ghost,
+body .ghost {
+  opacity: 0;
+}
+ok_cancel .active,
+html .active,
+body .active {
+  opacity: 1;
+  transition: 0.3s;
+}
+ok_cancel .container,
+html .container,
+body .container {
+  flex: 1;
+  max-width: 800px;
+  min-width: 500px;
+  padding: 2em;
+  align-items: center;
+  justify-content: center;
+}
+.alert {
+  position: fixed;
+  display: flex;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  color: #f9fafb;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.alert__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: #27272a;
+  box-shadow: 0 0 0.6em 0.4em rgba(255,255,255,0.3);
+  min-width: 18em;
+  max-width: 24em;
+  min-height: 12em;
+  border-radius: 2em;
+}
+.alert__body__title {
+  width: 100%;
+  padding: 1em 1em;
+  text-align: center;
+  font-size: 1.4em;
+}
+.alert__body__msg {
+  width: 100%;
+  padding: 0.2em 1em;
+  text-align: center;
+  font-size: 1em;
+  color: #27272a;
+}
+.alert__body__buttons {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0.6em 1em;
+  font-size: 1.2em;
+}
+.alert__body__buttons__button__ok {
+  color: #f9fafb;
+  border-color: #4ade80;
+}
+.alert__body__buttons__button__ok:hover {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+.alert__body__buttons__button__cancel {
+  color: #f9fafb;
+  border-color: #f87171;
+}
+.alert__body__buttons__button__cancel:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+.alert button {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0.2em 1em;
+}

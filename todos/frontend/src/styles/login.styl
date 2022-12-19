@@ -1,5 +1,3 @@
-@import "main"
-
 .bg_dark
   position fixed
   display flex
@@ -20,13 +18,15 @@
   justify-content space-evenly
   background-color $grey
   box-shadow 0 0 .6em .4em $black30
-  width 24em
-  min-height 18em
   border-radius 2em
+  max-width 800px
+  box-sizing border-box
+  padding_flex(0, 1)
+  width_flex(90)
 
   &__title
-    padding 1em 0
-    font-size 2em
+    padding .5em 0
+    font_size(3)
     font-weight 600
 
   &__rows
@@ -37,7 +37,10 @@
     justify-items space-evenly
 
   &__button
+    font-weight 600
+
     &__ok
+      padding .2em .2em
       color $white
       border-color $green
 
@@ -46,16 +49,16 @@
         border-color $green100
 
     &__login
+      padding .2em .2em
       color $white
       border-color $green
-      font-size 1.4em
-      font-weight 600
 
       &:hover
         color $green100
         border-color $green100
 
     &__reg
+      padding .2em .2em
       color $white
       border-color $blue
 
@@ -64,6 +67,7 @@
         border-color $blue
 
     &__find
+      padding .2em .2em
       color $white
       border-color $blue
 
@@ -72,6 +76,7 @@
         border-color $blue
 
     &__cancel
+      padding .2em .2em
       color $white
       border-color $red
 
@@ -80,10 +85,11 @@
         border-color $red
 
   &__buttons
+    font_size(1.6)
     display flex
     flex-direction row
     width 100%
-    padding 2em 2em
+    padding 2em 0
     box-sizing border-box
     align-items center
     justify-content space-evenly
@@ -99,7 +105,11 @@
 
   &__row
     display flex
-    flex-direction row
+    flex-direction column
+
+    @media $tablet
+      flex-direction row
+
     width 100%
     min-height 3em
     box-sizing border-box
@@ -113,18 +123,28 @@
 
     &__key
       text-align center
-      font-size 1.2em
+      font_size(2.4)
+      padding .5em
 
     &__text
       border-radius 1em
+      margin 1em 0
       padding 1em
       background-color $grey100
       text-align left
-      font-size 1.2em
+      font_size(2)
       color $grey
 
     &__value
-      font-size 1.2em
+      width 100%
+
+      @media $tablet
+        width 70%
+
+      @media $desktop
+        width 60%
+
+      font_size(2)
       outline-style none
       border none
       border-radius 1em

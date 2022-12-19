@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>TODOS</title>
+    <meta name="theme-color" content="#6b7280">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-status-bar-style" content="#6b7280">
+    <meta name="theme-color" content="black">
     <link type='text/css' rel='stylesheet' href='<%= process.env.url; %>:<%= process.env.port; %>/dist/app.bundle.css'>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
 </head>
@@ -10,22 +14,24 @@
 <script type="module" src='<%= process.env.url; %>:<%= process.env.port; %>/dist/app.bundle.js'></script>
 <% if(locals.whoami) { %>
     <div class="whoami">
-        <div class="whoami__info">
-            <ion-icon class="whoami__info__icon" name="person"></ion-icon>
-            <div class="whoami__info__name"><%= locals.whoami.name %></div>
+        <div class="whoami__container">
+            <div class="whoami__info">
+                <ion-icon class="whoami__info__icon" name="person"></ion-icon>
+                <div class="whoami__info__name"><%= locals.whoami.name %></div>
+            </div>
+            <% if(locals.url.includes("archive")) { %>
+                <div class="whoami__buttons">
+                    <button class="whoami__buttons__return">돌아가기</button>
+                    <button class="whoami__buttons__archive">전체 삭제</button>
+                    <button class="whoami__buttons__logout">로그아웃</button>
+                </div>
+            <% } else { %>
+                <div class="whoami__buttons">
+                    <button class="whoami__buttons__archive">보관함</button>
+                    <button class="whoami__buttons__logout">로그아웃</button>
+                </div>
+            <% } %>
         </div>
-        <% if(locals.url.includes("archive")) { %>
-            <div class="whoami__buttons">
-                <button class="whoami__buttons__return">돌아가기</button>
-                <button class="whoami__buttons__archive">전체 삭제</button>
-                <button class="whoami__buttons__logout">로그아웃</button>
-            </div>
-        <% } else { %>
-            <div class="whoami__buttons">
-                <button class="whoami__buttons__archive">보관함</button>
-                <button class="whoami__buttons__logout">로그아웃</button>
-            </div>
-        <% } %>
     </div>
 <% } %>
 <% if(locals.body) { %>

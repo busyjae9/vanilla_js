@@ -1,0 +1,1153 @@
+ok_cancel,
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  background-color: #171717;
+  color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+ok_cancel svg,
+html svg,
+body svg {
+  color: #f9fafb;
+}
+ok_cancel span,
+html span,
+body span {
+  vertical-align: middle;
+}
+ok_cancel button,
+html button,
+body button {
+  background-color: transparent;
+  color: #f9fafb;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  font-size: 1em;
+  padding: 0.2em 0.2em;
+}
+ok_cancel input[type="submit"],
+html input[type="submit"],
+body input[type="submit"] {
+  background-color: transparent;
+  border-width: 0 0 4px;
+}
+ok_cancel button:hover,
+html button:hover,
+body button:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+ok_cancel .ghost,
+html .ghost,
+body .ghost {
+  opacity: 0;
+}
+ok_cancel .active,
+html .active,
+body .active {
+  opacity: 1;
+  transition: 0.3s;
+}
+ok_cancel .container,
+html .container,
+body .container {
+  flex: 1;
+  padding: 2em;
+  align-items: center;
+  justify-content: center;
+}
+ok_cancel .whoami,
+html .whoami,
+body .whoami {
+  display: flex;
+  width: 100%;
+  height: 6em;
+  background-color: #6b7280;
+}
+.alert {
+  position: fixed;
+  display: flex;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  color: #f9fafb;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.alert__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: #27272a;
+  box-shadow: 0 0 0.6em 0.4em rgba(255,255,255,0.3);
+  min-width: 18em;
+  max-width: 24em;
+  min-height: 12em;
+  border-radius: 2em;
+}
+.alert__body__title {
+  width: 100%;
+  padding: 1em 1em;
+  text-align: center;
+  font-size: 1.4em;
+}
+.alert__body__msg {
+  width: 100%;
+  padding: 0.2em 1em;
+  text-align: center;
+  font-size: 1em;
+  color: #27272a;
+}
+.alert__body__buttons {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0.6em 1em;
+  font-size: 1.2em;
+}
+.alert__body__buttons__button__ok {
+  color: #f9fafb;
+  border-color: #4ade80;
+}
+.alert__body__buttons__button__ok:hover {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+.alert__body__buttons__button__cancel {
+  color: #f9fafb;
+  border-color: #f87171;
+}
+.alert__body__buttons__button__cancel:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+.alert button {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0.2em 1em;
+}
+ok_cancel,
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  background-color: #171717;
+  color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+ok_cancel svg,
+html svg,
+body svg {
+  color: #f9fafb;
+}
+ok_cancel span,
+html span,
+body span {
+  vertical-align: middle;
+}
+ok_cancel button,
+html button,
+body button {
+  background-color: transparent;
+  color: #f9fafb;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  font-size: 1em;
+  padding: 0.2em 0.2em;
+}
+ok_cancel input[type="submit"],
+html input[type="submit"],
+body input[type="submit"] {
+  background-color: transparent;
+  border-width: 0 0 4px;
+}
+ok_cancel button:hover,
+html button:hover,
+body button:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+ok_cancel .ghost,
+html .ghost,
+body .ghost {
+  opacity: 0;
+}
+ok_cancel .active,
+html .active,
+body .active {
+  opacity: 1;
+  transition: 0.3s;
+}
+ok_cancel .container,
+html .container,
+body .container {
+  flex: 1;
+  padding: 2em;
+  align-items: center;
+  justify-content: center;
+}
+ok_cancel .whoami,
+html .whoami,
+body .whoami {
+  display: flex;
+  width: 100%;
+  height: 6em;
+  background-color: #6b7280;
+}
+.contents {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 1em;
+  padding: 2em;
+  box-sizing: border-box;
+}
+.content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 90%;
+  padding: 1em 1em;
+  border-radius: 1em;
+  box-shadow: 0 0 0.5em 0.2em rgba(255,255,255,0.3);
+  background-color: #18181b;
+}
+.content .done_text {
+  line-height: 1.2em;
+  text-align: justify;
+  word-break: break-word;
+  color: #6b7280;
+  text-decoration: line-through #fff;
+}
+.content__checkbox__empty {
+  border: none;
+  color: #f9fafb;
+}
+.content__checkbox__empty:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+.content__checkbox__done {
+  border: none;
+  border-color: #0891b2;
+  color: #0891b2;
+}
+.content__checkbox__done:hover {
+  border-color: #f9fafb;
+  color: #f9fafb;
+}
+.content__title {
+  max-width: 70%;
+  line-height: 1.2em;
+  text-align: justify;
+  word-break: break-word;
+  color: #f9fafb;
+}
+.content__archive__date {
+  max-width: 15%;
+  line-height: 1.2em;
+  text-align: justify;
+  word-break: break-word;
+  color: #f9fafb;
+}
+.content__archive__title {
+  width: 45%;
+  line-height: 1.2em;
+  text-align: justify;
+  word-break: break-word;
+  color: #f9fafb;
+}
+.content__buttons {
+  min-width: 15%;
+  justify-content: space-between;
+  display: inherit;
+  flex-direction: row;
+}
+.content__button__edit {
+  padding: 0.2em 0.5em;
+}
+.content__button__return {
+  padding: 0.2em 0.5em;
+}
+.content__button__archive {
+  padding: 0.2em 0.5em;
+}
+.content__button__delete {
+  padding: 0.2em 0.5em;
+  border-color: #fca5a5;
+  color: #fca5a5;
+}
+.content__button__delete:hover {
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+ok_cancel,
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  background-color: #171717;
+  color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+ok_cancel svg,
+html svg,
+body svg {
+  color: #f9fafb;
+}
+ok_cancel span,
+html span,
+body span {
+  vertical-align: middle;
+}
+ok_cancel button,
+html button,
+body button {
+  background-color: transparent;
+  color: #f9fafb;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  font-size: 1em;
+  padding: 0.2em 0.2em;
+}
+ok_cancel input[type="submit"],
+html input[type="submit"],
+body input[type="submit"] {
+  background-color: transparent;
+  border-width: 0 0 4px;
+}
+ok_cancel button:hover,
+html button:hover,
+body button:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+ok_cancel .ghost,
+html .ghost,
+body .ghost {
+  opacity: 0;
+}
+ok_cancel .active,
+html .active,
+body .active {
+  opacity: 1;
+  transition: 0.3s;
+}
+ok_cancel .container,
+html .container,
+body .container {
+  flex: 1;
+  padding: 2em;
+  align-items: center;
+  justify-content: center;
+}
+ok_cancel .whoami,
+html .whoami,
+body .whoami {
+  display: flex;
+  width: 100%;
+  height: 6em;
+  background-color: #6b7280;
+}
+.header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5em 0;
+  box-sizing: inherit;
+}
+.header__button__left {
+  color: #0891b2;
+  border-color: #0891b2;
+}
+.header__button__left__icon {
+  color: #0891b2;
+}
+.header__button__right {
+  color: #0891b2;
+  border-color: #0891b2;
+}
+.header__button__right__icon {
+  color: #0891b2;
+}
+.header__today {
+  min-width: 100px;
+  width: 30%;
+  background-color: transparent;
+  font-size: 1.2em;
+  border: none;
+  outline-style: none;
+  line-height: normal;
+  color: #f9fafb;
+  border-color: #a9a9a9;
+  color-scheme: dark;
+  text-align: center;
+  margin: 0 1em;
+}
+ok_cancel,
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  background-color: #171717;
+  color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+ok_cancel svg,
+html svg,
+body svg {
+  color: #f9fafb;
+}
+ok_cancel span,
+html span,
+body span {
+  vertical-align: middle;
+}
+ok_cancel button,
+html button,
+body button {
+  background-color: transparent;
+  color: #f9fafb;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  font-size: 1em;
+  padding: 0.2em 0.2em;
+}
+ok_cancel input[type="submit"],
+html input[type="submit"],
+body input[type="submit"] {
+  background-color: transparent;
+  border-width: 0 0 4px;
+}
+ok_cancel button:hover,
+html button:hover,
+body button:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+ok_cancel .ghost,
+html .ghost,
+body .ghost {
+  opacity: 0;
+}
+ok_cancel .active,
+html .active,
+body .active {
+  opacity: 1;
+  transition: 0.3s;
+}
+ok_cancel .container,
+html .container,
+body .container {
+  flex: 1;
+  padding: 2em;
+  align-items: center;
+  justify-content: center;
+}
+ok_cancel .whoami,
+html .whoami,
+body .whoami {
+  display: flex;
+  width: 100%;
+  height: 6em;
+  background-color: #6b7280;
+}
+.input {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: flex-end;
+  justify-content: space-evenly;
+  box-sizing: border-box;
+  padding: 0.5em 0;
+}
+.input__input_box {
+  position: relative;
+  width: 60%;
+  display: flex;
+  justify-content: space-between;
+}
+.input__input_box__todo {
+  width: 60%;
+  font-size: 1em;
+  background-color: transparent;
+  border-width: 0 0 4px;
+  outline-style: none;
+  line-height: normal;
+  padding: 0.4em 0.4em;
+  color: #f9fafb;
+  border-color: #a9a9a9;
+}
+.input__input_box__todo:focus {
+  border-color: #0891b2;
+}
+.input__input_box__todo_date {
+  width: 30%;
+  font-size: 1em;
+  background-color: transparent;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  outline-style: none;
+  line-height: normal;
+  color: #f9fafb;
+  color-scheme: dark;
+  text-align: center;
+}
+.input__input_box__todo_date:focus {
+  border-color: #0891b2;
+}
+.input__button__delete_all {
+  padding: 0.2em 0.5em;
+  color: #fca5a5;
+  border-color: #fca5a5;
+  padding: 0.2em 0.5em;
+}
+.input__button__delete_all:hover {
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+.loader {
+  position: absolute;
+  top: calc(50% - 32px);
+  left: calc(50% - 32px);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  perspective: 800px;
+}
+.inner {
+  position: absolute;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.inner.one {
+  left: 0%;
+  top: 0%;
+  animation: rotate-one 1s linear infinite;
+  border-bottom: 3px solid #efeffa;
+}
+.inner.two {
+  right: 0%;
+  top: 0%;
+  animation: rotate-two 1s linear infinite;
+  border-right: 3px solid #efeffa;
+}
+.inner.three {
+  right: 0%;
+  bottom: 0%;
+  animation: rotate-three 1s linear infinite;
+  border-top: 3px solid #efeffa;
+}
+@-moz-keyframes rotate-one {
+  0% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+  }
+}
+@-webkit-keyframes rotate-one {
+  0% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+  }
+}
+@-o-keyframes rotate-one {
+  0% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+  }
+}
+@keyframes rotate-one {
+  0% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+  }
+}
+@-moz-keyframes rotate-two {
+  0% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+  }
+}
+@-webkit-keyframes rotate-two {
+  0% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+  }
+}
+@-o-keyframes rotate-two {
+  0% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+  }
+}
+@keyframes rotate-two {
+  0% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+  }
+}
+@-moz-keyframes rotate-three {
+  0% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+  }
+}
+@-webkit-keyframes rotate-three {
+  0% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+  }
+}
+@-o-keyframes rotate-three {
+  0% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+  }
+}
+@keyframes rotate-three {
+  0% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+  }
+  100% {
+    transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+  }
+}
+ok_cancel,
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  background-color: #171717;
+  color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+ok_cancel svg,
+html svg,
+body svg {
+  color: #f9fafb;
+}
+ok_cancel span,
+html span,
+body span {
+  vertical-align: middle;
+}
+ok_cancel button,
+html button,
+body button {
+  background-color: transparent;
+  color: #f9fafb;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  font-size: 1em;
+  padding: 0.2em 0.2em;
+}
+ok_cancel input[type="submit"],
+html input[type="submit"],
+body input[type="submit"] {
+  background-color: transparent;
+  border-width: 0 0 4px;
+}
+ok_cancel button:hover,
+html button:hover,
+body button:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+ok_cancel .ghost,
+html .ghost,
+body .ghost {
+  opacity: 0;
+}
+ok_cancel .active,
+html .active,
+body .active {
+  opacity: 1;
+  transition: 0.3s;
+}
+ok_cancel .container,
+html .container,
+body .container {
+  flex: 1;
+  padding: 2em;
+  align-items: center;
+  justify-content: center;
+}
+ok_cancel .whoami,
+html .whoami,
+body .whoami {
+  display: flex;
+  width: 100%;
+  height: 6em;
+  background-color: #6b7280;
+}
+.bg_dark {
+  position: fixed;
+  display: flex;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  color: #fff;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.login,
+.reg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: #27272a;
+  box-shadow: 0 0 0.6em 0.4em rgba(255,255,255,0.3);
+  width: 24em;
+  min-height: 18em;
+  border-radius: 2em;
+}
+.login__title,
+.reg__title {
+  padding: 1em 0;
+  font-size: 2em;
+  font-weight: 600;
+}
+.login__rows,
+.reg__rows {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-items: space-evenly;
+}
+.login__button__ok,
+.reg__button__ok {
+  color: #f9fafb;
+  border-color: #4ade80;
+}
+.login__button__ok:hover,
+.reg__button__ok:hover {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+.login__button__login,
+.reg__button__login {
+  color: #f9fafb;
+  border-color: #4ade80;
+  font-size: 1.4em;
+  font-weight: 600;
+}
+.login__button__login:hover,
+.reg__button__login:hover {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+.login__button__reg,
+.reg__button__reg {
+  color: #f9fafb;
+  border-color: #0891b2;
+}
+.login__button__reg:hover,
+.reg__button__reg:hover {
+  color: #0891b2;
+  border-color: #0891b2;
+}
+.login__button__find,
+.reg__button__find {
+  color: #f9fafb;
+  border-color: #0891b2;
+}
+.login__button__find:hover,
+.reg__button__find:hover {
+  color: #0891b2;
+  border-color: #0891b2;
+}
+.login__button__cancel,
+.reg__button__cancel {
+  color: #f9fafb;
+  border-color: #b91c1c;
+}
+.login__button__cancel:hover,
+.reg__button__cancel:hover {
+  color: #b91c1c;
+  border-color: #b91c1c;
+}
+.login__buttons,
+.reg__buttons {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  padding: 2em 2em;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.login__buttons input,
+.reg__buttons input {
+  font-size: 1.4em;
+  font-weight: 600;
+  padding: 0.2em 0.2em;
+}
+.login__buttons button,
+.reg__buttons button {
+  font-size: 1.4em;
+  font-weight: 600;
+}
+.login__row,
+.reg__row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 3em;
+  box-sizing: border-box;
+  padding: 0.5em 2em;
+  align-items: center;
+  justify-content: space-between;
+}
+.login__row input[type="checkbox"],
+.reg__row input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+}
+.login__row__key,
+.reg__row__key {
+  text-align: center;
+  font-size: 1.2em;
+}
+.login__row__text,
+.reg__row__text {
+  border-radius: 1em;
+  padding: 1em;
+  background-color: #6b7280;
+  text-align: left;
+  font-size: 1.2em;
+  color: #27272a;
+}
+.login__row__value,
+.reg__row__value {
+  font-size: 1.2em;
+  outline-style: none;
+  border: none;
+  border-radius: 1em;
+  padding: 0.5em 0.8em;
+  color: #f9fafb;
+  color-scheme: dark;
+  resize: none;
+}
+ok_cancel,
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  background-color: #171717;
+  color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+ok_cancel svg,
+html svg,
+body svg {
+  color: #f9fafb;
+}
+ok_cancel span,
+html span,
+body span {
+  vertical-align: middle;
+}
+ok_cancel button,
+html button,
+body button {
+  background-color: transparent;
+  color: #f9fafb;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  font-size: 1em;
+  padding: 0.2em 0.2em;
+}
+ok_cancel input[type="submit"],
+html input[type="submit"],
+body input[type="submit"] {
+  background-color: transparent;
+  border-width: 0 0 4px;
+}
+ok_cancel button:hover,
+html button:hover,
+body button:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+ok_cancel .ghost,
+html .ghost,
+body .ghost {
+  opacity: 0;
+}
+ok_cancel .active,
+html .active,
+body .active {
+  opacity: 1;
+  transition: 0.3s;
+}
+ok_cancel .container,
+html .container,
+body .container {
+  flex: 1;
+  padding: 2em;
+  align-items: center;
+  justify-content: center;
+}
+ok_cancel .whoami,
+html .whoami,
+body .whoami {
+  display: flex;
+  width: 100%;
+  height: 6em;
+  background-color: #6b7280;
+}
+ok_cancel,
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  background-color: #171717;
+  color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+ok_cancel svg,
+html svg,
+body svg {
+  color: #f9fafb;
+}
+ok_cancel span,
+html span,
+body span {
+  vertical-align: middle;
+}
+ok_cancel button,
+html button,
+body button {
+  background-color: transparent;
+  color: #f9fafb;
+  border-width: 0 0 4px;
+  border-color: #a9a9a9;
+  font-size: 1em;
+  padding: 0.2em 0.2em;
+}
+ok_cancel input[type="submit"],
+html input[type="submit"],
+body input[type="submit"] {
+  background-color: transparent;
+  border-width: 0 0 4px;
+}
+ok_cancel button:hover,
+html button:hover,
+body button:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+ok_cancel .ghost,
+html .ghost,
+body .ghost {
+  opacity: 0;
+}
+ok_cancel .active,
+html .active,
+body .active {
+  opacity: 1;
+  transition: 0.3s;
+}
+ok_cancel .container,
+html .container,
+body .container {
+  flex: 1;
+  padding: 2em;
+  align-items: center;
+  justify-content: center;
+}
+ok_cancel .whoami,
+html .whoami,
+body .whoami {
+  display: flex;
+  width: 100%;
+  height: 6em;
+  background-color: #6b7280;
+}
+.prompt {
+  position: fixed;
+  display: flex;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.6);
+  color: #fff;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.prompt__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  background-color: #27272a;
+  box-shadow: 0 0 0.6em 0.4em rgba(255,255,255,0.3);
+  width: 24em;
+  border-radius: 2em;
+  padding: 1em 0;
+}
+.prompt__body__title {
+  width: 100%;
+  text-align: center;
+  font-size: 2em;
+}
+.prompt__body__msg {
+  width: 100%;
+  padding: 0.2em 1em;
+  text-align: center;
+  font-size: 1em;
+  color: #27272a;
+}
+.prompt__body__buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  font-size: 1.2em;
+}
+.prompt__body__buttons__button__ok {
+  color: #f9fafb;
+  border-color: #4ade80;
+}
+.prompt__body__buttons__button__ok:hover {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+.prompt__body__buttons__button__cancel {
+  color: #f9fafb;
+  border-color: #f87171;
+}
+.prompt__body__buttons__button__cancel:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+.prompt__body__values {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0.5em 1em;
+  min-height: 6em;
+}
+.prompt__body__values__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0.5em 1em;
+  width: 100%;
+}
+.prompt__body__values__row__key {
+  text-align: center;
+  font-size: 1.4em;
+}
+.prompt__body__values__row__content {
+  width: 75%;
+  font-size: 1.2em;
+  outline-style: none;
+  border: none;
+  border-radius: 1em;
+  padding: 0.5em 0.5em;
+  color: #f9fafb;
+  color-scheme: dark;
+  text-align: center;
+  resize: none;
+}
+.prompt textarea {
+  height: 6em;
+  outline-style: none;
+  border: none;
+  color: #f9fafb;
+  color-scheme: dark;
+  text-align: center;
+  resize: none;
+  scrollbar-width: none;
+}
+.prompt button {
+  display: flex;
+  align-items: center;
+  padding: 0.2em 1em;
+  font-size: 1em;
+}
+@import "@fortawesome/fontawesome-svg-core/styles.css";

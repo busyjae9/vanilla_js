@@ -14,10 +14,18 @@
             <ion-icon class="whoami__info__icon" name="person"></ion-icon>
             <div class="whoami__info__name"><%= locals.whoami.name %></div>
         </div>
-        <div class="whoami__buttons">
-            <button class="whoami__buttons__archive">보관함</button>
-            <button class="whoami__buttons__logout">로그아웃</button>
-        </div>
+        <% if(locals.url.includes("archive")) { %>
+            <div class="whoami__buttons">
+                <button class="whoami__buttons__return">돌아가기</button>
+                <button class="whoami__buttons__archive">전체 삭제</button>
+                <button class="whoami__buttons__logout">로그아웃</button>
+            </div>
+        <% } else { %>
+            <div class="whoami__buttons">
+                <button class="whoami__buttons__archive">보관함</button>
+                <button class="whoami__buttons__logout">로그아웃</button>
+            </div>
+        <% } %>
     </div>
 <% } %>
 <% if(locals.body) { %>

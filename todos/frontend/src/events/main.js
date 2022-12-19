@@ -5,7 +5,7 @@ import {
     find,
     each,
     hi,
-    object, log
+    object, log, curry
 } from "fxjs";
 import {
     $appendTo,
@@ -53,10 +53,12 @@ Main.defaultButtons = [
     },
 ];
 
-Main.error = (err) =>
-    err.response
+Main.error = (err) => err
+    ? err?.response
         ? Alert.pop({title: err.response.data.message})
-        : Alert.pop({title: "일시 오류가 발생했습니다."}).then(() => log(err));
+        : Alert.pop({title: "일시 오류가 발생했습니다."}).then(() => log(err))
+    : log("취소");
+
 
 Main.initDate = () => {
     $qs("input[key=date]").value = Data.date;
@@ -90,26 +92,25 @@ Main.rmOne = pipe($closest("div.content"), $remove);
 Main.rmAllAndDel = () =>
     go($qs(".contents"), tap(Data.removeAllTodoData), Main.rmAll);
 
-Main.check = ({el, check}) =>
+Main.check = curry((check, el) =>
     go(
         el,
-        hi,
         $setAttr({status: check ? "done" : "empty"}),
         $closest("div.content"),
         $children,
         ([icon, title, ..._]) => (
             go(icon, $children, ([iconEl, ..._]) =>
                 check
-                    ? $replaceWith(go(Main.checkFullTmp(), $el), iconEl)
-                    : $replaceWith(go(Main.checkTmp(), $el), iconEl)
+                    ? $replaceWith(go(MainUI.checkFullTmp(), $el), iconEl)
+                    : $replaceWith(go(MainUI.checkTmp(), $el), iconEl)
             ),
                 $toggleClass("done_text", title)
         )
-    );
+    ));
 
 Main.update = (data) =>
     go($qs(`.content_${data.id} `), (content) =>
-        data.date == Data.date
+        $qs(".header__today").value === format(new Date(data.date), "yyyy-MM-dd")
             ? go(content, $children, ([icon, content, buttons]) =>
                 $setText(data.content)(content)
             )
@@ -172,7 +173,7 @@ Main.delegate = (container_el) =>
                     $qs(".header__today"),
                     (el) => el.value,
                     getPrevDay,
-                    (prev) => axios.get(`/todo/data/${prev.toDateInputValue()}`),
+                    (prev) => axios.get(`/todo/list/${prev.toDateInputValue()}`),
                     (res) => Main.contentViewUpdate(res.data.result),
                 ).catch(Main.error);
 
@@ -190,7 +191,7 @@ Main.delegate = (container_el) =>
                     $qs(".header__today"),
                     (el) => el.value,
                     getNextDay,
-                    (prev) => axios.get(`/todo/data/${prev.toDateInputValue()}`),
+                    (prev) => axios.get(`/todo/list/${prev.toDateInputValue()}`),
                     (res) => Main.contentViewUpdate(res.data.result),
                 ).catch(Main.error);
 
@@ -206,7 +207,7 @@ Main.delegate = (container_el) =>
             async (e) => {
                 const render = await go(
                     e.currentTarget,
-                    (el) => axios.get(`/todo/data/${el.value}`),
+                    (el) => axios.get(`/todo/list/${el.value}`),
                     (res) => Main.contentViewUpdate(res.data.result),
                 ).catch(Main.error);
 
@@ -219,12 +220,12 @@ Main.delegate = (container_el) =>
         $delegate(
             "click",
             ".content__button__archive",
-            pipe(
-                getCurrentTarget,
+            (e) => go(
+                e.currentTarget,
                 $closest(".content"),
-                tap(findAttrId, Data.moveToArchive),
+                tap($attr("id"), (id) => axios.post(`/todo/data/archive/${id}`)),
                 Main.rmOne
-            )
+            ).catch(Main.error)
         ),
         $delegate(
             "click",
@@ -239,22 +240,25 @@ Main.delegate = (container_el) =>
         $delegate(
             "click",
             ".content__button__edit",
-            pipe(
-                getCurrentTarget,
-                tap((ct) => (ct.blur(), ct)),
+            (e) => go(
+                e.currentTarget,
+                tap(el => el.blur()),
                 $closest(".content"),
                 $attr("id"),
-                Data.get,
-                (todo) =>
+                (id) => axios.get(`/todo/data/${id}`),
+                (res) =>
                     Prompt.pop({
                         title: "수정하기",
-                        value: todo,
+                        value: res.data.result,
                         buttons: Main.defaultButtons,
                     }),
-                (data) =>
-                    data.class == "ok" &&
-                    go(data.value, tap(Data.editTodoData), Main.update)
-            )
+                (data) => new Promise((resolve, reject) =>
+                    data.class == "cancel"
+                        ? reject()
+                        : resolve(data)),
+                (data) => axios.patch(`todo/data/${data.value.id}`, data.value),
+                (res) => Main.update(res.data.result),
+            ).catch(Main.error)
         ),
         $delegate(
             "click",
@@ -269,19 +273,26 @@ Main.delegate = (container_el) =>
         $delegate(
             "click",
             ".content__checkbox",
-            pipe(
-                getCurrentTarget,
-                (el) => ({
-                    el: el,
-                    checked: $attr("status", el) == "empty",
-                }),
-                tap(Main.check),
-                (data) => ({
-                    id: $attr("id", data.el),
-                    checked: data.checked,
-                }),
-                Data.editTodoData
-            )
+            (e) => {
+                const checked = go(
+                    e.currentTarget,
+                    el => $attr("status", el) === "empty"
+                );
+
+                go(
+                    e.currentTarget,
+                    $closest(".content"),
+                    $attr("id"),
+                    (id) => axios.patch(`/todo/data/${id}`, {checked}),
+                ).then(res =>
+                    go(
+                        e.currentTarget,
+                        Main.check(res.data.result.checked),
+                    )
+                ).catch(Main.error);
+
+
+            }
         ),
         $delegate("click", ".input__button__delete_all", async (_) => {
             const button = await Alert.pop({
@@ -300,14 +311,14 @@ Main.delegate = (container_el) =>
                     object,
                     (obj) => axios.post('todo/add', obj),
                     ({data}) => {
-                        format(new Date(), "yyyy-MM-dd") == format(new Date(data.result.reg_date), "yyyy-MM-dd") && go(data.result, MainUI.mkConTmp, $el, $prependTo($qs(".contents")));
+                        $qs(".header__today").value == format(new Date(data.result.date), "yyyy-MM-dd") && go(data.result, MainUI.mkConTmp, $el, $prependTo($qs(".contents")));
                     }),
                 $find(".input__input_box__todo"),
                 $setVal("")
             ).catch(Main.error);
         }),
 
-        // $delegate("click", ".input__button__archive", (e) =>
+        // $delegate("click", ".whoami__buttons__archive", (e) =>
         //     go(
         //         $qs("body"),
         //         tap($children, ([_, container]) => $remove(container)),

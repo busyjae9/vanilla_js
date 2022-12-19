@@ -94,21 +94,17 @@ Prompt.pop = (data) =>
                         e.currentTarget,
                         tap($closest(".prompt"), $remove),
                         (currentTarget) => {
-                            data.value.id = Number(data.value.id);
-
-                            extend(
-                                data.value,
-                                go(
-                                    el,
-                                    $find(".prompt__body__values"),
-                                    (form_el) => new FormData(form_el).entries(),
-                                    object
-                                )
-                            );
-
                             resolve({
                                 class: $attr("status", currentTarget),
-                                value: data.value,
+                                value: extend(
+                                    data.value,
+                                    go(
+                                        el,
+                                        $find(".prompt__body__values"),
+                                        (form_el) => new FormData(form_el).entries(),
+                                        object
+                                    )
+                                ),
                             });
                         }
                     )

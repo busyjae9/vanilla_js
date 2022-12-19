@@ -114,10 +114,6 @@ MainUI.initTmp = (todos, date) => html`
 
 MainUI.archiveTmp = (todos) => html`
     <div class="container">
-        <section class="input">
-            <button class="input__button__back">돌아가기</button>
-            <button class="input__button__delete_all">전부 삭제</button>
-        </section>
         <section class="contents">${strMap(MainUI.mkArchiveConTmp, todos)}</section>
     </div>
 `;

@@ -1,4 +1,4 @@
-import {COLUMN, EQ, QUERY, QUERY1, TB, VALUES} from "../util/db/db_connect.js";
+import {COLUMN, EQ, QUERY, QUERY1, SET, TB, VALUES} from "../util/db/db_connect.js";
 import {curry, curry2, includes, isEmpty} from "fxjs";
 import bcrypt from "bcrypt";
 
@@ -35,6 +35,8 @@ Query.get = curry((tb, data) => QUERY1`SELECT * FROM ${TB(tb)} WHERE ${EQ(data)}
 Query.getColumns = curry2((tb, col, data) => QUERY1`SELECT ${COLUMN(...col)} FROM ${TB(tb)} WHERE ${EQ(data)}`);
 Query.getById = curry((tb, id) => QUERY1`SELECT * FROM ${TB(tb)} WHERE ${EQ({id})}`);
 Query.getByIdColumns = curry2((tb, col, id) => QUERY1`SELECT ${COLUMN(...col)} FROM ${TB(tb)} WHERE ${EQ({id})}`);
+
 Query.insert = curry((tb, data) => QUERY1`INSERT INTO ${TB(tb)} ${VALUES(data)} RETURNING *`);
+Query.update = curry2((tb, data, id) => QUERY1`UPDATE ${TB(tb)} ${SET(data)} WHERE ${EQ({id})} RETURNING *`);
 
 export default Query;

@@ -103,6 +103,9 @@ app.get('/', (req, res) => {
 app.use(function (req, res, next) {
     if (req.session?.user) res.locals.whoami = req.session.user;
     else res.locals.whoami = undefined;
+
+    res.locals.url = req.url;
+    
     next();
 });
 

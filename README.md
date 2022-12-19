@@ -4,6 +4,7 @@
 
 ```
 cd todos
+npm install
 npm run knex_up // 생성되어 있는 마이그레이션 실시
 ```
 
@@ -13,7 +14,7 @@ npm run knex_up // 생성되어 있는 마이그레이션 실시
 
 ```
 // default
-pg_host=[데이터 베이 호스트]
+pg_host=[데이터 베이스 호스트]
 pg_port=[데이터 베이스 포트]
 pg_user=[데이터 베이스 유저]
 pg_password=[데이터 베이스 비밀번호]
@@ -40,7 +41,6 @@ npm run knex_up
 ### 서버 실행
 
 ```
-npm install
 npm run dev
 ```
 

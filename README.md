@@ -2,10 +2,9 @@
 
 ## 실행 방법
 
-- 데이터 베이스 먼저 생성
-
 ```
 cd todos
+npm run knex_up // 생성되어 있는 마이그레이션 실시
 ```
 
 ### migration - knex

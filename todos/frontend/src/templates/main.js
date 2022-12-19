@@ -41,6 +41,19 @@ MainUI.mkConTmp = (todo) => html`
     </div>
 `;
 
+MainUI.mkConOtherTmp = (todo) => html`
+    <div class="content content_${todo.id}" id="${todo.id}">
+        ${todo.checked ? MainUI.checkFullTmp() : MainUI.checkTmp()}
+        <span class="content__title ${todo.checked ? "done_text" : ""}">
+            ${todo.content}
+        </span>
+        <div class="content__buttons">
+            <button class="content__button__comment">댓글</button>
+            <button class="content__button__heart">좋아요</button>
+        </div>
+    </div>
+`;
+
 MainUI.mkArchiveConTmp = (todo) => html`
     <div class="content content_${todo.id}" id="${todo.id}">
         <span class="content__archive__title ${todo.checked ? "done_text" : ""}">
@@ -100,6 +113,30 @@ MainUI.initTmp = (todos, date) => html`
 MainUI.archiveTmp = (todos) => html`
     <div class="container">
         <section class="contents">${strMap(MainUI.mkArchiveConTmp, todos)}</section>
+    </div>
+`;
+
+MainUI.initOtherTmp = (todos, date) => html`
+    <div class="container">
+        <header class="header">
+            <button type="button" class="header__button__left">
+                ${left(["header__button__left__icon", "fa-xl"])}
+            </button>
+            <input
+                    value="${date}"
+                    class="header__today"
+                    id="today"
+                    placeholder="날짜 선택"
+                    type="text"
+                    onfocus="(this.type='date')"
+                    onblur="(this.type='text')"
+                    name="date"
+            />
+            <button type="button" class="header__button__right">
+                ${right(["header__button__right__icon", "fa-xl"])}
+            </button>
+        </header>
+        <section class="contents">${strMap(MainUI.mkConOtherTmp, todos)}</section>
     </div>
 `;
 

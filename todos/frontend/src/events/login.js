@@ -47,7 +47,7 @@ Login.delegate = (container_el) =>
                     tap((el) => new FormData(el).entries(),
                         object,
                         Login.validCheck,
-                        (obj) => axios.post("todo/login", obj)),
+                        (obj) => axios.post("/todo/api/login", obj)),
                     () => window.location.href = "/todo"
                 ).catch((err) => {
                     err.response
@@ -77,7 +77,7 @@ Login.delegate = (container_el) =>
                     tap((el) => new FormData(el).entries(),
                         object,
                         Login.regCheck,
-                        (obj) => axios.post("todo/login/reg", obj),
+                        (obj) => axios.post("todo/api/reg", obj),
                     ),
                     () => window.location.href = "/todo/login"
                 ).catch((err) => {
@@ -94,7 +94,7 @@ Login.delegate = (container_el) =>
                 go(e.currentTarget, $closest(".login"), $remove,);
                 const container = go(e.delegateTarget, $find('.bg_dark'));
                 go(LoginUI.regTmp(), $el, $appendTo(container));
-                history.replaceState({}, "회원가입", "/todo/login/reg");
+                history.replaceState({}, "회원가입", "/todo/reg");
             }
         )
     );

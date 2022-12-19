@@ -53,17 +53,11 @@ Main.error = (err) => err
         : Alert.pop({title: "일시 오류가 발생했습니다."}).then(() => log(err))
     : log("취소");
 
-/*
- * $prependTo가 $qs를 미리 받고 함수를 리턴한 상황이기 때문에 초기에 init이 되지 않았으면 null이 반환되기 때문
- *  */
 Main.mkCon = (todoData) =>
     go(todoData, Main.mkConTmp, $el, (v) => $prependTo($qs(".contents"))(v));
-
-
 Main.rmAll = pipe($findAll("div.content"), each($remove));
 Main.rmOne = pipe($closest("div.content"), $remove);
-Main.rmAllAndDel = () =>
-    go($qs(".contents"), Main.rmAll);
+Main.rmAllAndDel = () => go($qs(".contents"), Main.rmAll);
 
 Main.check = curry((check, el) =>
     go(
@@ -71,14 +65,14 @@ Main.check = curry((check, el) =>
         $setAttr({status: check ? "done" : "empty"}),
         $closest("div.content"),
         $children,
-        ([icon, title, ..._]) => (
-            go(icon, $children, ([iconEl, ..._]) =>
+        ([icon, title]) => {
+            go(icon, $children, ([iconEl]) =>
                 check
                     ? $replaceWith(go(MainUI.checkFullTmp(), $el), iconEl)
                     : $replaceWith(go(MainUI.checkTmp(), $el), iconEl)
-            ),
-                $toggleClass("done_text", title)
-        )
+            );
+            $toggleClass("done_text", title);
+        }
     ));
 
 Main.update = (data) =>
@@ -100,9 +94,7 @@ Main.updateElValue = (f) => (el) => f(el.value);
 
 Main.contentViewUpdate = (todos) => {
     go($qs(".contents"), $remove);
-
     go(todos, MainUI.mkConAllTmp, $el, $appendTo($qs(".container")));
-
     return true;
 };
 
@@ -114,7 +106,7 @@ Main.delegate = (container_el) =>
             ".whoami__buttons__logout",
             async (e) => {
                 try {
-                    const res = await axios.post('/todo/logout');
+                    const res = await axios.post('/todo/api/logout');
 
                     go(
                         e.delegateTarget,
@@ -128,7 +120,7 @@ Main.delegate = (container_el) =>
                         $appendTo(e.delegateTarget)
                     );
 
-                    history.replaceState({}, "로그인", "/todo/login");
+                    history.replaceState({}, "로그인", "/todo/api/login");
 
                     await Alert.pop({title: res.data.message});
 
@@ -146,13 +138,13 @@ Main.delegate = (container_el) =>
                     $qs(".header__today"),
                     (el) => el.value,
                     getPrevDay,
-                    (prev) => axios.get(`/todo/list/${prev.toDateInputValue()}`),
+                    (prev) => axios.get(`/todo/api/todo/list/?date=${prev.toDateInputValue()}`),
                     (res) => Main.contentViewUpdate(res.data.result),
                 ).catch(Main.error);
 
                 render && go(
-                    [$qs(".header__today"), $qs(".input__input_box__todo_date")],
-                    each(Main.setPrevDate),
+                    $qs(".header__today"),
+                    Main.setPrevDate,
                 );
             }
         ),
@@ -164,13 +156,13 @@ Main.delegate = (container_el) =>
                     $qs(".header__today"),
                     (el) => el.value,
                     getNextDay,
-                    (prev) => axios.get(`/todo/list/${prev.toDateInputValue()}`),
+                    (prev) => axios.get(`/todo/api/todo/list/?date=${prev.toDateInputValue()}`),
                     (res) => Main.contentViewUpdate(res.data.result),
                 ).catch(Main.error);
 
                 render && go(
-                    [$qs(".header__today"), $qs(".input__input_box__todo_date")],
-                    each(Main.setNextDate),
+                    $qs(".header__today"),
+                    Main.setNextDate,
                 );
             }
         ),
@@ -180,7 +172,7 @@ Main.delegate = (container_el) =>
             async (e) =>
                 go(
                     e.currentTarget,
-                    (el) => axios.get(`/todo/list/${el.value}`),
+                    (el) => axios.get(`/todo/api/todo/list/?date=${el.value}`),
                     (res) => Main.contentViewUpdate(res.data.result),
                 ).catch(Main.error)
         ),
@@ -190,7 +182,7 @@ Main.delegate = (container_el) =>
             (e) => go(
                 e.currentTarget,
                 $closest(".content"),
-                tap($attr("id"), (id) => axios.post(`/todo/data/archive/${id}`)),
+                tap($attr("id"), (id) => axios.post(`/todo/api/archive/?id=${id}`)),
                 Main.rmOne
             ).catch(Main.error)
         ),
@@ -200,7 +192,7 @@ Main.delegate = (container_el) =>
             (e) => go(
                 e.currentTarget,
                 $closest(".content"),
-                tap($attr("id"), (id) => axios.post(`/todo/data/delete/${id}`)),
+                tap($attr("id"), (id) => axios.post(`/todo/api/archive/delete/${id}`)),
                 Main.rmOne
             ).catch(Main.error)
         ),
@@ -212,7 +204,7 @@ Main.delegate = (container_el) =>
                 tap(el => el.blur()),
                 $closest(".content"),
                 $attr("id"),
-                (id) => axios.get(`/todo/data/${id}`),
+                (id) => axios.get(`/todo/api/todo/${id}`),
                 (res) =>
                     Prompt.pop({
                         title: "수정하기",
@@ -223,7 +215,7 @@ Main.delegate = (container_el) =>
                     data.class == "cancel"
                         ? reject()
                         : resolve(data)),
-                (data) => axios.patch(`todo/data/${data.value.id}`, data.value),
+                (data) => axios.patch(`todo/api/todo/${data.value.id}`, data.value),
                 (res) => Main.update(res.data.result),
             ).catch(Main.error)
         ),
@@ -233,7 +225,7 @@ Main.delegate = (container_el) =>
             (e) => go(
                 e.currentTarget,
                 $closest(".content"),
-                tap($attr("id"), (id) => axios.post(`/todo/data/return/${id}`)),
+                tap($attr("id"), (id) => axios.post(`/todo/api/archive/return/${id}`)),
                 Main.rmOne
             ).catch(Main.error)
         ),
@@ -250,7 +242,7 @@ Main.delegate = (container_el) =>
                     e.currentTarget,
                     $closest(".content"),
                     $attr("id"),
-                    (id) => axios.patch(`/todo/data/${id}`, {checked}),
+                    (id) => axios.patch(`/todo/api/todo/${id}`, {checked}),
                 ).then(res =>
                     go(
                         e.currentTarget,
@@ -269,7 +261,7 @@ Main.delegate = (container_el) =>
                     data.class == "cancel"
                         ? reject()
                         : resolve(data)),
-                () => axios.post(`todo/data/delete_all`),
+                () => axios.post(`todo/api/archive/delete_all`),
                 () => Main.rmAllAndDel(),
             ).catch(Main.error);
         }),
@@ -280,20 +272,19 @@ Main.delegate = (container_el) =>
                 e.currentTarget,
                 tap((el) => new FormData(el).entries(),
                     object,
-                    (obj) => axios.post('todo/add', obj),
+                    (obj) => axios.post('todo/api/todo', obj),
                     ({data}) => {
-                        $qs(".header__today").value == format(new Date(data.result.date), "yyyy-MM-dd") && go(data.result, MainUI.mkConTmp, $el, $prependTo($qs(".contents")));
+                        $qs(".header__today").value == format(new Date(data.result.date), "yyyy-MM-dd")
+                        && go(data.result, MainUI.mkConTmp, $el, $prependTo($qs(".contents")));
                     }),
                 $find(".input__input_box__todo"),
                 $setVal("")
             ).catch(Main.error);
         }),
         $delegate("click", ".whoami__buttons__archive", () =>
-            // 데이터 받아와서 템플릿 그려주기
             window.location.replace("/todo/archive")
         ),
         $delegate("click", ".whoami__buttons__return", () =>
-            // 데이터 받아와서 템플릿 그려주기
             window.location.replace("/todo")
         )
     );

@@ -15,21 +15,37 @@
 <% if(locals.whoami) { %>
     <div class="whoami">
         <div class="whoami__container">
-            <div class="whoami__info">
-                <ion-icon class="whoami__info__icon" name="person"></ion-icon>
-                <div class="whoami__info__name"><%= locals.whoami.name %></div>
-            </div>
-            <% if(locals.url.includes("archive")) { %>
-                <div class="whoami__buttons">
-                    <button class="whoami__buttons__del_all">전체 삭제</button>
-                    <button class="whoami__buttons__return">돌아가기</button>
+            <% if(locals.user && locals.whoami.id !== locals.user?.id) { %>
+                <div class="whoami__info">
+                    <ion-icon class="whoami__info__icon" name="person"></ion-icon>
+                    <div class="whoami__info__name"><%= locals.user?.name %> 님의 TODOS</div>
                 </div>
             <% } else { %>
-                <div class="whoami__buttons">
-                    <button class="whoami__buttons__archive">보관함</button>
-                    <button class="whoami__buttons__logout">로그아웃</button>
+                <div class="whoami__info">
+                    <ion-icon class="whoami__info__icon" name="person"></ion-icon>
+                    <div class="whoami__info__name"><%= locals.whoami.name %></div>
                 </div>
             <% } %>
+            <% if(locals.user && locals.whoami.id !== locals.user?.id) { %>
+                <div class="whoami__buttons">
+                    <button class="whoami__buttons__search">검색(작업중)</button>
+                    <button class="whoami__buttons__my_page">내 페이지</button>
+                </div>
+            <% } else { %>
+                <% if(locals.url.includes("archive")) { %>
+                    <div class="whoami__buttons">
+                        <button class="whoami__buttons__del_all">전체 삭제</button>
+                        <button class="whoami__buttons__return">돌아가기</button>
+                    </div>
+                <% } else { %>
+                    <div class="whoami__buttons">
+                        <button class="whoami__buttons__search">검색(작업중)</button>
+                        <button class="whoami__buttons__archive">보관함</button>
+                        <button class="whoami__buttons__logout">로그아웃</button>
+                    </div>
+                <% } %>
+            <% } %>
+
         </div>
     </div>
 <% } %>

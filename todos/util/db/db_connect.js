@@ -17,6 +17,7 @@ const {
     QUERY,
     QUERY1,
     ASSOCIATE,
+    ASSOCIATE1,
     TRANSACTION,
     END
 } = POOL;
@@ -28,6 +29,7 @@ export {
     QUERY,
     QUERY1,
     ASSOCIATE,
+    ASSOCIATE1,
     TRANSACTION,
     END
 };

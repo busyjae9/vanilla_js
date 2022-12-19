@@ -11,14 +11,15 @@ import webpackConfig from "./webpack.config.js";
 
 import livereload from 'livereload';
 import livereloadMiddleware from 'connect-livereload';
-import {includes} from "fxjs";
+import {includes, log} from "fxjs";
 
 import geoip from "geoip-lite";
 
 const PORT = process.env.port;
 const URL = process.env.url;
 
-import todos_1 from "./apis/todos.js";
+import todos_api from "./apis/todos.js";
+import todos_tmp from "./templates/todos.js";
 
 let build_done = false;
 
@@ -89,8 +90,8 @@ app.use((req, res, next) => {
     const geo = geoip.lookup(req.ip);
 
     geo
-        ? req.headers["timezone"] = geo.timezone
-        : req.headers["timezone"] = "Asia/Seoul";
+        ? req.headers.timezone = geo.timezone
+        : req.headers.timezone = "Asia/Seoul";
 
     next();
 });
@@ -105,16 +106,17 @@ app.use(function (req, res, next) {
     else res.locals.whoami = undefined;
 
     res.locals.url = req.url;
-    
+
     next();
 });
 
 app.use(function (req, res, next) {
-    if (!req.session?.user && !includes('/todo/login', req.url)) return res.redirect('/todo/login');
+    if (!req.session?.user && !includes('/todo/login', req.url) && req.method == "GET") return res.redirect('/todo/login');
     next();
 });
 
-app.use("/todo", todos_1);
+app.use("/todo", todos_tmp);
+app.use("/todo/api", todos_api);
 
 app.listen(PORT, () => {
     console.log(`서버 구동중 ${URL}:${PORT}`);

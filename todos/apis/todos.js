@@ -3,10 +3,8 @@ import bcrypt from "bcrypt";
 import {format} from 'date-fns';
 import {zonedTimeToUtc} from "date-fns-tz/esm";
 
-import LoginUI from "../frontend/src/templates/login.js";
-import MainUI from "../frontend/src/templates/main.js";
-import {go, isEmpty, log, tap} from "fxjs";
-import {EQ, QUERY, QUERY1, SET, TB} from "../util/db/db_connect.js";
+import {go, isEmpty, tap} from "fxjs";
+import {ASSOCIATE, ASSOCIATE1, COLUMN, EQ, QUERY, QUERY1, SET, SQL, TB} from "../util/db/db_connect.js";
 import {validCheck} from "../util/valid.js";
 import Query from "../queries/query_v1.js";
 
@@ -14,40 +12,63 @@ const USER_COLUMNS = ["name", "email", "password"];
 
 const router = express.Router();
 
-/*
-* 1. 아이피를 확인한 후 타임존을 가져와서 그에 맞춰 utc로 변환해서 sql을 날리는 방법
-*   - 일단 해당 방법으로 구현을 했는데, 혹시 다른 방법이 있다면 적용해보고 후보군 알아보기
-* 2. 로컬에서 타임존을 보내서 그에 맞춰 utc로 변환하는 방법
-* */
-
-router.get('/', (req, res) => {
-
-    const date = req.query?.date ? new Date(req.query?.date) : new Date();
-    const tz = req.headers["timezone"];
+router.get('/todo/list/', (req, res) => {
+    const date = req.query?.date ? new Date(req.params.date) : new Date();
+    const tz = req.headers.timezone;
     const now = format(zonedTimeToUtc(date, tz), "yyyy-MM-dd");
 
-    go(
-        QUERY`SELECT * FROM todos WHERE ${EQ({user_id:req.session.user.id})} AND archived_date IS NULL AND date BETWEEN ${now + ' 00:00:00'} AND ${now + ' 23:59:59'} ORDER BY id DESC`,
-        (todos) => res.render("index", {body: MainUI.initTmp(todos, now)})
-    );
+    !req.query?.id && req.query?.id !== req.session.user.id
+        ? go(
+            QUERY`SELECT * FROM todos WHERE ${EQ({user_id:req.session.user.id})} AND archived_date IS NULL AND date BETWEEN ${now + ' 00:00:00'} AND ${now + ' 23:59:59'} ORDER BY id DESC`,
+            (todos) => res.json({
+                code: '0001',
+                result: todos,
+                message: "리스트가 조회되었습니다."
+            })
+        )
+        : go(
+            req.query?.id,
+            (id) => ASSOCIATE1`
+                users ${{
+                column: COLUMN("name", "id"),
+                query: SQL`WHERE ${EQ({id})}`
+            }}
+                    < todos ${{query: SQL`WHERE ${EQ({date: now})} AND archived_date IS NULL`}}
+            `,
+            (data) => res.json({
+                code: '0001',
+                result: data._.todos,
+                message: `${data.name}님의 리스트가 조회되었습니다.`
+            })
+        );
+
+
 });
 
-router.get('/list/:date', (req, res) => {
-    const date = req.params.date ? new Date(req.params.date) : new Date();
-    const tz = req.headers["timezone"];
-    const now = format(zonedTimeToUtc(date, tz), "yyyy-MM-dd");
+router.get('/user', (req, res) => isEmpty(req.query)
+    ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
+    : go(
+        req.query,
+        validCheck(["id", "date"]),
+        (valid_data) => ASSOCIATE`
+            users ${{
+            column: COLUMN("id", "name"),
+            query: SQL`WHERE ${EQ({id: valid_data.id})}`
+        }}
+                < todos ${{query: SQL`WHERE ${EQ({date: format(zonedTimeToUtc(valid_data.date, req.headers.timezone), "yyyy-MM-dd")})} AND archived_date IS NULL`}}
+        `,
+        Query.success(res, "조회되었습니다.")
+    ).catch(Query.error(res)));
 
+router.post('/todo', (req, res) =>
     go(
-        QUERY`SELECT * FROM todos WHERE ${EQ({user_id:req.session.user.id})} AND archived_date IS NULL AND date BETWEEN ${now + ' 00:00:00'} AND ${now + ' 23:59:59'} ORDER BY id DESC`,
-        (todos) => res.json({
-            code: '0001',
-            result: todos,
-            message: "리스트가 조회되었습니다."
-        })
-    );
-});
+        req.body,
+        validCheck(["content", "date"]),
+        (valid_data) => Query.insert("todos")({...valid_data, user_id: req.session.user.id}),
+        Query.success(res, "등록이 완료되었습니다.")
+    ).catch(Query.error(res)));
 
-router.get('/data/:id', (req, res) => isEmpty(req.params)
+router.get('/todo/:id', (req, res) => isEmpty(req.params)
     ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
     : go(
         req.params.id,
@@ -55,7 +76,7 @@ router.get('/data/:id', (req, res) => isEmpty(req.params)
         Query.success(res, "조회되었습니다.")
     ).catch(Query.error(res)));
 
-router.patch('/data/:id', (req, res) => isEmpty(req.params)
+router.patch('/todo/:id', (req, res) => isEmpty(req.params)
     ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
     : go(
         req.params.id,
@@ -63,10 +84,11 @@ router.patch('/data/:id', (req, res) => isEmpty(req.params)
         Query.success(res, "업데이트되었습니다.")
     ).catch(Query.error(res)));
 
-router.post('/data/archive/:pk', (req, res) => isEmpty(req.params)
+
+router.post('/archive', (req, res) => isEmpty(req.query)
     ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
     : go(
-        req.params.pk,
+        req.query.id,
         Query.update("todos", {archived_date: zonedTimeToUtc(new Date(), "Asia/Seoul")}),
         (data) => ({
             todo_id: data.id,
@@ -76,7 +98,7 @@ router.post('/data/archive/:pk', (req, res) => isEmpty(req.params)
         Query.success(res, "보관되었습니다.")
     ).catch(Query.error(res)));
 
-router.post('/data/return/:pk', (req, res) => isEmpty(req.params)
+router.post('/archive/return/:pk', (req, res) => isEmpty(req.params)
     ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
     : go(
         req.params.pk,
@@ -85,7 +107,7 @@ router.post('/data/return/:pk', (req, res) => isEmpty(req.params)
         Query.success(res, "복구되었습니다.")
     ).catch(Query.error(res)));
 
-router.post('/data/delete/:pk', (req, res) => isEmpty(req.params)
+router.post('/archive/delete/:pk', (req, res) => isEmpty(req.params)
     ? res.status(400).json({code: 'E001', message: "데이터 형식이 맞지 않습니다."})
     : go(
         Query.updateWhere("archive", {delete_date: zonedTimeToUtc(new Date(), "Asia/Seoul")}, {todo_id: req.params.pk}),
@@ -93,28 +115,10 @@ router.post('/data/delete/:pk', (req, res) => isEmpty(req.params)
     ).catch(Query.error(res)));
 
 
-router.post('/data/delete_all', (req, res) => go(
-    Query.updateWhere(
-        "archive",
-        {delete_date: zonedTimeToUtc(new Date(), "Asia/Seoul")},
-        {
-            user_id: req.session.user.id,
-            delete_date: null
-        }),
+router.post('/archive/delete_all', (req, res) => go(
+    QUERY`UPDATE ${TB("archive")} ${SET({delete_date: zonedTimeToUtc(new Date(), "Asia/Seoul")})} WHERE ${EQ({user_id: req.session.user.id})} AND delete_date IS NULL`,
     Query.success(res, "전부 삭제되었습니다.")
 ).catch(Query.error(res)));
-
-router.get('/archive', (req, res) =>
-    // 만들기
-    go(
-        QUERY`SELECT a.* FROM todos AS a 
-                INNER JOIN (
-                    SELECT * FROM archive WHERE ${EQ({user_id:req.session.user.id})} AND delete_date IS NULL
-                ) AS b 
-                ON a.id = b.todo_id 
-                ORDER BY id DESC`,
-        (archive) => res.render("index", {body: MainUI.archiveTmp(archive)})
-    ));
 
 
 router.post('/logout', (req, res) => {
@@ -124,15 +128,6 @@ router.post('/logout', (req, res) => {
         code: '0001',
         message: "로그아웃이 완료되었습니다."
     });
-});
-
-router.get('/login', (req, res) => {
-    req.session.user
-        ? res.redirect('/todo')
-        : res.render(
-            "index",
-            {body: LoginUI.loginTmp()}
-        );
 });
 
 router.post('/login', async function (req, res) {
@@ -146,7 +141,7 @@ router.post('/login', async function (req, res) {
     go(
         valid_data,
         ({email}) => Query.getColumns("users", ['id', 'name', 'email', 'password'], {email}),
-        Query.emptyCheck({code: "E002", message: "일치하는 계정이 없습니다."}),
+        tap(Query.emptyCheck({code: "E002", message: "일치하는 계정이 없습니다."})),
         tap((user) =>
             Query.passwordCheck({
                 code: "E002",
@@ -160,20 +155,7 @@ router.post('/login', async function (req, res) {
     ).catch(Query.error(res));
 });
 
-router.get('/login/reg', (req, res) => {
-    // const user = await QUERY1`
-    //     SELECT * FROM users where id = ${req.params.user_id}
-    // `;
-
-    req.session.user
-        ? res.redirect('/todo')
-        : res.render(
-            "index",
-            {body: LoginUI.regTmp()}
-        );
-});
-
-router.post('/login/reg', (req, res) =>
+router.post('/reg', (req, res) =>
     go(
         req.body,
         validCheck(USER_COLUMNS),
@@ -185,15 +167,6 @@ router.post('/login/reg', (req, res) =>
         },
         Query.insert("users"),
         Query.success(res, "회원가입이 완료되었습니다.")
-    ).catch(Query.error(res)));
-
-
-router.post('/add', (req, res) =>
-    go(
-        req.body,
-        validCheck(["content", "date"]),
-        (valid_data) => Query.insert("todos")({...valid_data, user_id: req.session.user.id}),
-        Query.success(res, "등록이 완료되었습니다.")
     ).catch(Query.error(res)));
 
 

@@ -195,6 +195,16 @@ html, body
           color $green
           border-color $green
 
+      &__search
+        padding none
+        border none
+        color $white
+        border-color $white
+
+        &:hover
+          color $green
+          border-color $green
+
       &__return
         padding none
         border none
@@ -216,9 +226,13 @@ html, body
           border-color $red
 
     &__info
+      max-width 30%
       display flex
       align-items center
       font_size(3)
+
+      &__icon
+        min-width 10%
 
       &__name
         box-sizing border-box

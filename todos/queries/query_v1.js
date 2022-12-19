@@ -22,10 +22,6 @@ Query.success = curry2((res, message, data) => res.status(200).json({
     message: message
 }));
 
-Query.duplicateCheck = curry((err, res) => new Promise((resolve, reject) => {
-    res ? reject(err) : resolve();
-}));
-
 Query.passwordCheck = curry2((err, password, hash) => new Promise((resolve, reject) =>
     bcrypt.compare(password, hash).then(
         (result) => result ? resolve(result) : reject(err)
@@ -33,6 +29,10 @@ Query.passwordCheck = curry2((err, password, hash) => new Promise((resolve, reje
 
 Query.emptyCheck = curry((err, res) => new Promise((resolve, reject) =>
     isEmpty(res) ? reject(err) : resolve(res)));
+
+Query.duplicateCheck = curry((err, res) => new Promise((resolve, reject) => {
+    res ? reject(err) : resolve();
+}));
 
 Query.get = curry((tb, data) => QUERY1`SELECT * FROM ${TB(tb)} WHERE ${EQ(data)}`);
 Query.getColumns = curry2((tb, col, data) => QUERY1`SELECT ${COLUMN(...col)} FROM ${TB(tb)} WHERE ${EQ(data)}`);

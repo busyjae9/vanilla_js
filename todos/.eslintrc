@@ -16,9 +16,17 @@
     "history": true,
     "FormData": true,
     "process": true,
-    "console": true
+    "console": true,
+    "URLSearchParams": true
   },
   "rules": {
-    "semi": "warn"
+    "semi": "warn",
+    "max-len": [
+      1,
+      {
+        "code": 100
+      }
+    ],
+    "no-unused-vars": "warn"
   }
 }

@@ -1,97 +1,107 @@
-import express from "express";
+import express from 'express';
 import cors from 'cors';
-import {createClient} from 'redis';
-import session from "express-session";
+import { createClient } from 'redis';
+import session from 'express-session';
 import connect from 'connect-redis';
-import {v1} from "uuid";
-import webpackDevMiddleware from "webpack-dev-middleware";
-import webpackHotMiddleware from "webpack-hot-middleware";
-import webpack from "webpack";
-import webpackConfig from "./webpack.config.js";
+import { v1 } from 'uuid';
+import webpackDevMiddleware from 'webpack-dev-middleware';
+import webpackHotMiddleware from 'webpack-hot-middleware';
+import webpack from 'webpack';
+import webpackConfig from './webpack.config.js';
 
 import livereload from 'livereload';
 import livereloadMiddleware from 'connect-livereload';
-import {includes, log} from "fxjs";
+import { includes } from 'fxjs';
 
-import geoip from "geoip-lite";
+import geoip from 'geoip-lite';
+import todos_api from './apis/todos.js';
+import todos_tmp from './templates/todos.js';
+import { join } from 'path';
 
-const PORT = process.env.port;
+const DEV = process.env.ENV === 'dev';
+const PORT = DEV ? process.env.port_test : process.env.port;
 const URL = process.env.url;
-
-import todos_api from "./apis/todos.js";
-import todos_tmp from "./templates/todos.js";
 
 let build_done = false;
 
-// 라이브 서버 설정
-const liveServer = livereload.createServer({
-    // 변경시 다시 로드할 파일 확장자들 설정
-    exts: ['html', 'css', 'ejs', 'js'],
-    debug: true
-});
-
-liveServer.watch(process.cwd());
-
+const app = express();
 
 const makeStatic = () => {
-    const config = webpackConfig({url: URL, port: PORT});
+    const config = webpackConfig({ url: URL, port: PORT });
     const compiler = webpack(config);
-    const webpackDevMiddlewareInstance = webpackDevMiddleware(compiler);
 
-    app.use(webpackDevMiddlewareInstance);
-    app.use(webpackHotMiddleware(compiler));
+    if (DEV) {
+        const webpackDevMiddlewareInstance = webpackDevMiddleware(compiler);
 
-
-    return new Promise((resolve) => {
-        webpackDevMiddlewareInstance.waitUntilValid(() => {
-            resolve(true);
+        app.use(webpackDevMiddlewareInstance);
+        app.use(webpackHotMiddleware(compiler));
+        return new Promise((resolve) => {
+            webpackDevMiddlewareInstance.waitUntilValid(() => {
+                resolve(true);
+            });
         });
-    });
+    } else {
+        const DIST_DIR = join(process.cwd(),'/frontend/dist');
+        app.use('/dist', express.static(DIST_DIR));
+        return new Promise((resolve) => resolve(true));
+    }
 };
 
 const redisStore = connect(session);
 const redisClient = createClient({
     url: 'redis://localhost:6379',
-    legacyMode: true
+    legacyMode: true,
 });
 redisClient.connect().catch(console.error);
 
-const app = express();
-
 const maxAge = 1000 * 60 * 60 * 24;
 
-app.use(livereloadMiddleware());
+if (DEV) {
+    // 라이브 서버 설정
+    const liveServer = livereload.createServer({
+        // 변경시 다시 로드할 파일 확장자들 설정
+        exts: ['html', 'css', 'ejs', 'js'],
+        debug: true,
+    });
 
-app.use(cors({
-    origin: `${URL}`,
-    credentials: true
-}));
+    liveServer.watch(process.cwd());
+    app.use(livereloadMiddleware());
+}
 
-app.use(session({
-    secret: 'busy',
-    genid: function () {
-        return v1(); // use UUIDs for session IDs
-    },
-    store: new redisStore({client: redisClient}),
-    saveUninitialized: false,
-    resave: false,
-    cookie: {
-        maxAge
-    }
-}));
+app.use(
+    cors({
+        origin: `${URL}`,
+        credentials: true,
+    }),
+);
+
+app.use(
+    session({
+        secret: 'busy',
+        genid: function () {
+            return v1(); // use UUIDs for session IDs
+        },
+        store: new redisStore({ client: redisClient }),
+        saveUninitialized: false,
+        resave: false,
+        cookie: {
+            maxAge,
+        },
+    }),
+);
 
 app.set('view engine', 'ejs');
 app.set('views', './frontend');
 app.use('/static', express.static('./node_modules/font-awesome'));
 app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
     const geo = geoip.lookup(req.ip);
 
     geo
-        ? req.headers.timezone = geo.timezone
-        : req.headers.timezone = "Asia/Seoul";
+        ? (req.headers.timezone = geo.timezone)
+        : (req.headers.timezone = 'Asia/Seoul');
 
     next();
 });
@@ -111,12 +121,17 @@ app.use(function (req, res, next) {
 });
 
 app.use(function (req, res, next) {
-    if (!req.session?.user && !includes('/todo/login', req.url) && req.method == "GET") return res.redirect('/todo/login');
+    if (
+        !req.session?.user &&
+        !includes('/todo/login', req.url) &&
+        req.method === 'GET'
+    )
+        return res.redirect('/todo/login');
     next();
 });
 
-app.use("/todo", todos_tmp);
-app.use("/todo/api", todos_api);
+app.use('/todo', todos_tmp);
+app.use('/todo/api', todos_api);
 
 app.listen(PORT, () => {
     console.log(`서버 구동중 ${URL}:${PORT}`);

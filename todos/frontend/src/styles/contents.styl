@@ -33,6 +33,28 @@ on-color(color)
 
     text-decoration line-through white
 
+  &__heart
+    display flex
+    align-items center
+    gap .4em
+    padding 0
+    border none
+
+    &:hover
+      on-color($white)
+
+    &__empty
+      color $white
+
+      &:hover
+        on-color($red)
+
+    &__full
+      on-color($red)
+
+      &:hover
+        on-color($white)
+
   &__checkbox
     padding 0
     border none
@@ -44,7 +66,6 @@ on-color(color)
         on-color($blue)
 
     &__done
-      border none
       on-color($blue)
 
       &:hover
@@ -60,7 +81,7 @@ on-color(color)
 
   &__archive
     &__date
-      max-width 15%
+      max-width 30%
       line-height 1.2em
       text-align justify
       word-break break-word
@@ -80,6 +101,12 @@ on-color(color)
     gap .5em
 
   &__button
+    &__comment
+      padding .2em .2em
+
+    &__heart
+      padding .2em .2em
+
     &__edit
       padding .2em .2em
 

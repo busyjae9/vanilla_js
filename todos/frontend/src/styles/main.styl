@@ -1,4 +1,5 @@
 $white = #f9fafb
+$white100 = #BDBDBD
 $grey = #e7e5e4
 $grey100 = #6b7280
 $blue = #0891b2
@@ -73,6 +74,25 @@ padding_flex(vertical = 0, horizontal = 0)
   @media $desktop
     padding vertical * 0.7em horizontal * 0.8em
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: $white;
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+  box-shadow: 0 0 0px 1000px transparent inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:autofill,
+input:autofill:hover,
+input:autofill:focus,
+input:autofill:active {
+  -webkit-text-fill-color: $white;
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+  box-shadow: 0 0 0px 1000px transparent inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
 
 body::-webkit-scrollbar
   width .4em
@@ -83,6 +103,32 @@ body::-webkit-scrollbar
 
   &-thumb
     background-color $grey
+
+.bg_dark
+  position fixed
+  display flex
+  top 0
+  left 0
+  width 100%
+  height 100%
+  background-color rgba(0, 0, 0, 0.6)
+  color white
+  z-index 1000
+  align-items center
+  justify-content center
+
+.bg_transparent
+  position fixed
+  display flex
+  top 0
+  left 0
+  width 100%
+  height 100%
+  background-color transparent
+  color white
+  z-index 1000
+  align-items center
+  justify-content center
 
 html, body
   touch-action manipulation
@@ -131,12 +177,37 @@ html, body
     border-color $blue
     color $blue
 
+  .mini__text
+    position absolute
+    left -.5em
+    bottom -1em
+
+    font_size(0.6)
+    color $white100
+
+    @media (max-device-width: 768px)
+      display none
+
   .ghost
     opacity 0
 
   .active
     opacity 1
     transition 0.3s
+
+  .container_404
+    height 100%
+    width 100%
+    display flex
+    flex-direction column
+    align-items center
+    justify-content center
+
+    h1
+      font_size(10)
+
+    .message
+      font_size(4)
 
   .container
     width 100%
@@ -179,54 +250,52 @@ html, body
         padding none
         border none
         color $white
-        border-color $white
 
         &:hover
           color $red
-          border-color $red
 
       &__archive
         padding none
         border none
         color $white
-        border-color $white
 
         &:hover
           color $green
-          border-color $green
 
       &__search
+        position relative
         padding none
         border none
         color $white
-        border-color $white
 
         &:hover
           color $green
-          border-color $green
 
       &__return
         padding none
         border none
         color $white
-        border-color $white
 
         &:hover
           color $green
-          border-color $green
+
+      &__my_page
+        padding none
+        border none
+        color $white
+
+        &:hover
+          color $green
 
       &__logout
         padding none
         border none
         color $white
-        border-color $white
 
         &:hover
           color $red
-          border-color $red
 
     &__info
-      max-width 30%
       display flex
       align-items center
       font_size(3)

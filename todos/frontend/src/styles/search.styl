@@ -1,0 +1,66 @@
+.search
+  flex-direction column
+  align-items center
+  justify-content space-evenly
+  background-color transparent
+  width_flex(90)
+
+  input
+    background-color transparent
+    border none
+    outline none
+    caret-color $white
+
+  &__body
+    background-color $grey
+    box-shadow 0 0 .2em .2em $black30
+    border-radius 2em
+    overflow hidden
+
+    &__form
+      width 100%
+      background-color $black
+      border-radius 2em
+      box-sizing border-box
+      padding_flex(2, 2)
+
+    &__data
+      width 100%
+      font_size(3)
+      color $white
+
+  &__results
+    width 100%
+
+  &__result
+    cursor pointer
+    display flex
+    border-radius 2em
+    background-color $grey
+    width 100%
+    box-sizing border-box
+    padding_flex(1, 1)
+    font_size(3)
+    align-items center
+    justify-content space-between
+
+    &__icon
+      width 10%
+
+    &__name
+      width 30%
+      text-align center
+      text-overflow ellipsis
+      white-space nowrap
+      overflow hidden
+
+    &__email
+      width 50%
+      font_size(1)
+      text-align end
+      text-overflow ellipsis
+      white-space nowrap
+      overflow hidden
+
+
+

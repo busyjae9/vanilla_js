@@ -30,6 +30,9 @@ const makeStatic = () => {
     const config = webpackConfig({ url: URL, port: PORT });
     const compiler = webpack(config);
 
+    const DIST_DIR = join(process.cwd(), '/frontend/dist');
+    app.use('/dist', express.static(DIST_DIR));
+
     if (DEV) {
         const webpackDevMiddlewareInstance = webpackDevMiddleware(compiler);
 
@@ -41,8 +44,7 @@ const makeStatic = () => {
             });
         });
     } else {
-        const DIST_DIR = join(process.cwd(),'/frontend/dist');
-        app.use('/dist', express.static(DIST_DIR));
+
         return new Promise((resolve) => resolve(true));
     }
 };
@@ -78,7 +80,7 @@ app.use(
 app.use(
     session({
         secret: 'busy',
-        genid: function () {
+        genid: function() {
             return v1(); // use UUIDs for session IDs
         },
         store: new redisStore({ client: redisClient }),
@@ -99,9 +101,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
     const geo = geoip.lookup(req.ip);
 
-    geo
-        ? (req.headers.timezone = geo.timezone)
-        : (req.headers.timezone = 'Asia/Seoul');
+    geo ? (req.headers.timezone = geo.timezone) : (req.headers.timezone = 'Asia/Seoul');
 
     next();
 });
@@ -111,7 +111,7 @@ app.get('/', (req, res) => {
     build_done ? res.status(200) : res.status(400);
 });
 
-app.use(function (req, res, next) {
+app.use(function(req, res, next) {
     if (req.session?.user) res.locals.whoami = req.session.user;
     else res.locals.whoami = undefined;
 
@@ -120,18 +120,33 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.use(function (req, res, next) {
-    if (
-        !req.session?.user &&
-        !includes('/todo/login', req.url) &&
-        req.method === 'GET'
-    )
+app.use(function(req, res, next) {
+    if (!req.session?.user && !includes('/todo/login', req.url) && req.method === 'GET')
         return res.redirect('/todo/login');
     next();
 });
 
 app.use('/todo', todos_tmp);
 app.use('/todo/api', todos_api);
+
+app.use(function(req, res, next) {
+    res.status(404);
+
+    // respond with html page
+    if (req.accepts('html')) {
+        res.render('404', { message: `${req.url} 페이지가 존재하지 않습니다.` });
+        return;
+    }
+
+    // respond with json
+    if (req.accepts('json')) {
+        res.json({ error: 'Not found' });
+        return;
+    }
+
+    // default to plain-text. send()
+    res.type('txt').send('Not found');
+});
 
 app.listen(PORT, () => {
     console.log(`서버 구동중 ${URL}:${PORT}`);

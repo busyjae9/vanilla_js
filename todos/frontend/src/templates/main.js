@@ -1,6 +1,15 @@
 import { go, head, strMap, html } from 'fxjs';
-import { check_box, check_box_full, heart, heart_full, left, right } from './icons.js';
+import {
+    check_box,
+    check_box_full,
+    comment_full,
+    heart,
+    heart_full,
+    left,
+    right,
+} from './icons.js';
 import { format } from 'date-fns';
+import numberToKorean from '../utils/numberToKor.js';
 
 Date.prototype.toDateInputValue = function () {
     let local = new Date(this);
@@ -14,57 +23,101 @@ MainUI.checkFullTmp = () => go(check_box_full(['content__checkbox__done', 'fa-xl
 
 MainUI.checkTmp = () => go(check_box(['content__checkbox__empty', 'fa-xl']), head);
 
-MainUI.heartTmp = () => go(heart(['content__heart__empty', 'fa-xl']), head);
-MainUI.heartFullTmp = () => go(heart_full(['content__heart__full', 'fa-xl']), head);
+MainUI.heartTmp = (like) =>
+    go(heart_full([`content__info__heart__${like ? 'full' : 'empty'}`, 'content__heart']), head);
+MainUI.commentFullTmp = () => go(comment_full(['content__info__comment__full']), head);
 
 MainUI.mkConTmp = (todo) => html`
     <div class="content content_${todo.id}" id="${todo.id}">
-        <button status="${todo.checked ? 'done' : 'empty'}" class="content__checkbox">
-            ${todo.checked ? MainUI.checkFullTmp() : MainUI.checkTmp()}
-        </button>
-        <span class="content__title ${todo.checked ? 'done_text' : ''}">${todo.content}</span>
-        <div class="content__buttons">
-            <button class="content__button__edit">수정</button>
-            <button class="content__button__archive">보관</button>
+        <div class="content__body">
+            ${todo.my_todo
+                ? `
+                    <button status='${todo.checked ? 'done' : 'empty'}' class='content__checkbox'>
+                        ${todo.checked ? MainUI.checkFullTmp() : MainUI.checkTmp()}
+                    </button>
+                `
+                : `
+                ${todo.checked ? MainUI.checkFullTmp() : MainUI.checkTmp()}
+                `}
+            <span class="content__title ${todo.checked ? 'done_text' : ''}">${todo.content}</span>
+            ${todo.my_todo
+                ? `
+                <div class='content__buttons'>
+                    <button class='content__button__edit'>수정</button>
+                    <button class='content__button__archive'>보관</button>
+                </div>
+            `
+                : `<div></div>`}
         </div>
+        <div class="content__info">
+            <div class="content__info__heart">
+                ${MainUI.heartTmp(todo.like)}
+                <span class="content__info__heart__count">
+                    ${numberToKorean(todo?.like_count) || 0}
+                </span>
+            </div>
+            <form class="content__info__input">
+                <input
+                    name="comment"
+                    type="text"
+                    class="content__info__input__text"
+                    placeholder="댓글 달기"
+                />
+                <input type="submit" class="content__info__input__submit" value="등록" />
+            </form>
+            <div class="content__info__comment">
+                ${MainUI.commentFullTmp()}
+                <span class="content__info__comment__count">
+                    ${numberToKorean(todo?.comment_count) || 0}
+                </span>
+            </div>
+        </div>
+        <div status="before" class="content__comments"></div>
     </div>
 `;
 
-MainUI.mkConOtherTmp = (todo) => html`
-    <div class="content content_${todo.id}" id="${todo.id}">
-        <button status="${todo.heart ? 'full' : 'empty'}" class="content__heart">
-            ${todo?.heart ? MainUI.heartFullTmp() : MainUI.heartTmp()}
-            <span> ${todo?.heart_count || 0} </span>
-        </button>
-        <span class="content__title ${todo.checked ? 'done_text' : ''}">${todo.content}</span>
-        <div class="content__buttons">
-            <button class="content__button__comment">댓글</button>
+MainUI.mkCommentTmpAll = ({ comments, next_page }) => html`
+    <div class="content__comments__all">
+        <div class="content__comments__all__body">${strMap(MainUI.mkCommentTmp, comments)}</div>
+        ${next_page
+            ? `<div page='${next_page}' class='content__comments__all__next'>더보기</div>`
+            : ''}
+    </div>
+`;
+
+MainUI.mkCommentTmp = (comment) => html`
+    <div class="content__comment" id="${comment.id}">
+        <div class="content__comment__body">
+            <div class="content__comment__body__user">${comment.user_name}</div>
+            <div class="content__comment__body__text">${comment.comment}</div>
+        </div>
+        <div class="content__comment__info">
+            <div class="content__comment__info__reg">
+                ${new Date(comment.reg_date).toLocaleDateString()}
+            </div>
         </div>
     </div>
 `;
 
 MainUI.mkArchiveConTmp = (todo) => html`
     <div class="content content_${todo.id}" id="${todo.id}">
-        <span class="content__archive__title ${todo.checked ? 'done_text' : ''}">
-            ${todo.content}
-        </span>
-        <span class="content__archive__date ${todo.checked ? 'done_text' : ''}">
-            ${format(new Date(todo.date), 'yy-MM-dd')}
-        </span>
-        <div class="content__buttons">
-            <button class="content__button__return">복구</button>
-            <button class="content__button__delete">삭제</button>
+        <div class="content__body">
+            <span class="content__archive__title ${todo.checked ? 'done_text' : ''}">
+                ${todo.content}
+            </span>
+            <span class="content__archive__date ${todo.checked ? 'done_text' : ''}">
+                ${format(new Date(todo.date), 'yy-MM-dd')}
+            </span>
+            <div class="content__buttons">
+                <button class="content__button__return">복구</button>
+                <button class="content__button__delete">삭제</button>
+            </div>
         </div>
     </div>
 `;
 
 MainUI.mkConAllTmp = (todos) => html`
-    <section class="contents">
-        ${strMap(
-            (todo) => (todo.my_todo ? MainUI.mkConTmp(todo) : MainUI.mkConOtherTmp(todo)),
-            todos,
-        )}
-    </section>
+    <section class="contents">${strMap(MainUI.mkConTmp, todos)}</section>
 `;
 
 MainUI.initTmp = (todos, date) => html`
@@ -130,7 +183,7 @@ MainUI.initOtherTmp = (todos, date) => html`
                 ${right(['header__button__right__icon', 'fa-xl'])}
             </button>
         </header>
-        <section class="contents">${strMap(MainUI.mkConOtherTmp, todos)}</section>
+        <section class="contents">${strMap(MainUI.mkConTmp, todos)}</section>
     </div>
 `;
 

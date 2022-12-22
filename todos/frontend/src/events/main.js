@@ -1,4 +1,4 @@
-import { curry, each, go, hi, log, object, pipe, tap } from 'fxjs';
+import { curry, delay, each, go, hi, log, map, object, pipe, strMap, tap } from 'fxjs';
 import {
     $appendTo,
     $attr,
@@ -8,10 +8,12 @@ import {
     $el,
     $find,
     $findAll,
+    $next,
     $prependTo,
     $qs,
     $remove,
     $replaceWith,
+    $scrollTop,
     $setAttr,
     $setText,
     $setVal,
@@ -26,6 +28,8 @@ import axios from '../data/axios.js';
 import LoginUI from '../templates/login.js';
 import { format } from 'date-fns';
 import Search from '../templates/search.js';
+import LoadingUi from './loading.js';
+import numberToKorean from '../utils/numberToKor.js';
 
 const Main = {};
 
@@ -58,7 +62,7 @@ Main.check = curry((check, el) =>
     go(
         el,
         $setAttr({ status: check ? 'done' : 'empty' }),
-        $closest('div.content'),
+        $closest('.content__body'),
         $children,
         ([icon, title]) => {
             go(icon, $children, ([iconEl]) =>
@@ -102,7 +106,7 @@ Main.delegate = (container_el) =>
                 go(e.delegateTarget, $findAll('div'), each($remove));
                 go(LoginUI.loginTmp(), $el, $appendTo(e.delegateTarget));
 
-                history.replaceState({}, '로그인', '/todo/api/login');
+                history.replaceState({}, '로그인', 'api/login');
 
                 await Alert.pop({ title: res.data.message });
             } catch (err) {
@@ -170,6 +174,126 @@ Main.delegate = (container_el) =>
                 Main.rmOne,
             ).catch(Main.error),
         ),
+        $delegate('click', '.content__info__heart', async (e) => {
+            const res = await go(e.currentTarget, $closest('.content'), $attr('id'), (id) =>
+                axios.post(`/todo/api/todo/${id}/like`),
+            ).catch(Main.error);
+
+            if (!res.data?.result) return;
+
+            go(
+                e.currentTarget,
+                tap(
+                    $find('.content__heart'),
+                    $replaceWith(go(MainUI.heartTmp(!res.data.result?.cancel_date), $el)),
+                ),
+                $find('.content__info__heart__count'),
+                $setText(res.data.result.like_count),
+            );
+        }),
+
+        $delegate('submit', '.content__info__input', (e) => {
+            e.originalEvent.preventDefault();
+
+            const id = go(e.currentTarget, $closest('.content'), $attr('id'));
+
+            go(
+                e.currentTarget,
+                (el) => new FormData(el).entries(),
+                object,
+                (obj) => axios.post(`/todo/api/todo/${id}/comment`, obj),
+            )
+                .then(({ data }) => {
+                    const comment = $qs(`.content_${id} .content__comments`);
+                    const status = go($qs(`.content_${id} .content__comments`), $attr('status'));
+
+                    go(
+                        $qs(`.content_${id} .content__info__comment__count`),
+                        $setText(numberToKorean(data.result.comment_count)),
+                    );
+
+                    if (status === 'after')
+                        go(
+                            data.result.comment,
+                            MainUI.mkCommentTmp,
+                            $el,
+                            $prependTo($qs(`.content_${id} .content__comments__all`)),
+                        );
+                    else
+                        go(axios.get(`/todo/api/todo/${id}/comment?page=1`), ({ data }) => {
+                            if (data.result.comment_count !== 0) {
+                                go(data.result, MainUI.mkCommentTmpAll, $el, $appendTo(comment));
+                                go(comment, $setAttr({ status: 'after' }));
+                            }
+                        });
+
+                    go(e.currentTarget, $find('.content__info__input__text'), $setVal(''));
+                    $qs(`.content_${id} .content__comments`).scroll(0, 0);
+                })
+                .catch(Main.error);
+        }),
+
+        $delegate('click', '.content__comments__all__next', (e) => {
+            const id = go(e.currentTarget, $closest('.content'), $attr('id'));
+            const page = $attr('page', e.currentTarget);
+
+            go(axios.get(`/todo/api/todo/${id}/comment?page=${page}`), ({ data }) => {
+                log(data);
+                go(
+                    $qs(`.content_${id} .content__info__comment__count`),
+                    $setText(numberToKorean(data.result.comment_count)),
+                );
+
+                go(
+                    data.result.comments,
+                    map(MainUI.mkCommentTmp),
+                    map($el),
+                    each($appendTo($qs(`.content_${id} .content__comments__all__body`))),
+                );
+
+                if (!data.result.next_page)
+                    go($qs(`.content_${id} .content__comments__all__next`), $remove);
+                else
+                    go(
+                        $qs(`.content_${id} .content__comments__all__next`),
+                        $setAttr({ page: data.result.next_page }),
+                    );
+            });
+        }),
+
+        $delegate('click', '.content__info__comment', (e) => {
+            const comment = go(e.currentTarget, $closest('.content__info'), $next);
+            const status = go(comment, $attr('status'));
+
+            if (status === 'after') {
+                return go(
+                    comment,
+                    $setAttr({ status: 'before' }),
+                    delay(1000),
+                    tap($children, each($remove)),
+                );
+            }
+
+            go(
+                e.currentTarget,
+                $closest('.content'),
+                $attr('id'),
+                (id) => axios.get(`/todo/api/todo/${id}/comment?page=1`),
+                hi,
+                ({ data }) => {
+                    go(
+                        e.currentTarget,
+                        $find('.content__info__comment__count'),
+                        $setText(numberToKorean(data.result.comment_count)),
+                    );
+
+                    if (data.result.comment_count !== 0) {
+                        go(data.result, MainUI.mkCommentTmpAll, $el, $appendTo(comment));
+                        go(comment, $setAttr({ status: 'after' }));
+                    }
+                },
+            );
+        }),
         $delegate('click', '.content__button__edit', (e) =>
             go(
                 e.currentTarget,
@@ -187,7 +311,7 @@ Main.delegate = (container_el) =>
                     new Promise((resolve, reject) =>
                         data.class === 'cancel' ? reject() : resolve(data),
                     ),
-                (data) => axios.patch(`todo/api/todo/${data.value.id}`, data.value),
+                (data) => axios.patch(`/todo/api/todo/${data.value.id}`, data.value),
                 (res) => Main.update(res.data.result),
             ).catch(Main.error),
         ),
@@ -218,7 +342,7 @@ Main.delegate = (container_el) =>
                     new Promise((resolve, reject) =>
                         data.class === 'cancel' ? reject() : resolve(data),
                     ),
-                () => axios.post(`todo/api/archive/delete_all`),
+                () => axios.post(`/todo/api/archive/delete_all`),
                 () => Main.rmAllAndDel(),
             ).catch(Main.error);
         }),
@@ -230,11 +354,21 @@ Main.delegate = (container_el) =>
                 tap(
                     (el) => new FormData(el).entries(),
                     object,
-                    (obj) => axios.post('todo/api/todo', obj),
+                    (obj) => axios.post('/todo/api/todo', obj),
                     ({ data }) => {
                         $qs('.header__today').value ===
                             format(new Date(data.result.date), 'yyyy-MM-dd') &&
-                            go(data.result, MainUI.mkConTmp, $el, $prependTo($qs('.contents')));
+                            go(
+                                {
+                                    ...data.result,
+                                    my_todo: true,
+                                    like_count: 0,
+                                    comment_count: 0,
+                                },
+                                MainUI.mkConTmp,
+                                $el,
+                                $prependTo($qs('.contents')),
+                            );
                     },
                 ),
                 $find('.input__input_box__todo'),

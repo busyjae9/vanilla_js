@@ -4,11 +4,12 @@ import { zonedTimeToUtc } from 'date-fns-tz/esm';
 
 import LoginUI from '../frontend/src/templates/login.js';
 import MainUI from '../frontend/src/templates/main.js';
-import { flatMap, go, hi } from 'fxjs';
+import { flatMap, go, hi, log } from 'fxjs';
 import { ASSOCIATE, ASSOCIATE1, COLUMN, EQ, QUERY, SQL } from '../util/db/db_connect.js';
+import Query from '../queries/query_v1.js';
 
 const router = express.Router();
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     /*
      * 1. 아이피를 확인한 후 타임존을 가져와서 그에 맞춰 utc로 변환해서 sql을 날리는 방법
      *   - 일단 해당 방법으로 구현을 했는데, 혹시 다른 방법이 있다면 적용해보고 후보군 알아보기
@@ -18,37 +19,78 @@ router.get('/', (req, res) => {
     const date = req.query?.date ? new Date(req.query?.date) : new Date();
     const tz = req.headers.timezone;
     const now = format(zonedTimeToUtc(date, tz), 'yyyy-MM-dd');
+    const user_id = req.query?.id || req.session.user.id;
+    console.time('sql');
+    const user = await Query.getById('users', user_id);
+    go(
+        QUERY`
+            SELECT
+                todos.*,
+                todos.user_id = ${req.session.user.id} AS my_todo,
+                COUNT(DISTINCT other_like.user_id) AS like_count,
+                COUNT(DISTINCT comments.id) AS comment_count,
+                CASE 
+                    WHEN my_like.user_id = ${req.session.user.id} THEN TRUE 
+                    ELSE FALSE 
+                END 
+                AS like
+            FROM todos
+            LEFT JOIN comments 
+                ON todos.id = comments.todo_id 
+                AND comments.deleted_date IS NULL
+            LEFT JOIN likes other_like 
+                ON todos.id = other_like.todo_id 
+                AND other_like.cancel_date IS NULL
+            LEFT JOIN likes my_like 
+                ON todos.id = my_like.todo_id 
+                AND my_like.user_id = ${req.session.user.id} 
+                AND my_like.cancel_date IS NULL
+            WHERE 
+                todos.user_id = ${user.id}
+                AND todos.archived_date IS NULL
+                AND ${EQ({ 'todos.date': now })}
+            GROUP BY todos.id, my_like.user_id
+            ORDER BY todos.id DESC
+        `,
+        (todos) =>
+            res.render('index', {
+                user: user,
+                body:
+                    user.id !== req.session.user.id
+                        ? MainUI.initOtherTmp(todos, now)
+                        : MainUI.initTmp(todos, now),
+            }),
+    );
+    console.timeEnd('sql');
 
-    !req.query?.id || Number(req.query?.id) === req.session.user.id
-        ? go(
-              QUERY`SELECT * FROM todos WHERE ${EQ({
-                  user_id: req.session.user.id,
-              })} AND archived_date IS NULL AND date BETWEEN ${now + ' 00:00:00'} AND ${
-                  now + ' 23:59:59'
-              } ORDER BY id DESC`,
-              (todos) => res.render('index', { body: MainUI.initTmp(todos, now) }),
-          )
-        : go(
-              req.query?.id,
-              (id) => ASSOCIATE1`
-                users ${{
-                    column: COLUMN('name', 'id'),
-                    query: SQL`WHERE ${EQ({ id })}`,
-                }}
-                    < todos ${{
-                        query: SQL`WHERE ${EQ({
-                            date: now,
-                        })} AND archived_date IS NULL`,
-                    }}
-            `,
-              (data) =>
-                  data
-                      ? res.render('index', {
-                            user: data,
-                            body: MainUI.initOtherTmp(data._.todos, now),
-                        })
-                      : res.render('404'),
-          );
+    // : go(
+    //       req.query?.id,
+    //         (id) => ASSOCIATE1`
+    //           users ${{
+    //               column: COLUMN('name', 'id'),
+    //               query: SQL`WHERE ${EQ({ id })}`,
+    //           }}
+    //               < todos ${{
+    //                   hook: (todos) =>
+    //                       todos.map((todo) =>
+    //                           Object.assign({}, todo, {
+    //                               my_todo: (todo.user_id = req.session.user.id),
+    //                           }),
+    //                       ),
+    //                   query: SQL`WHERE ${EQ({
+    //                       date: now,
+    //                   })} AND archived_date IS NULL`,
+    //               }}
+    //                   < likes
+    //       `,
+    //       (data) =>
+    //           data
+    //               ? res.render('index', {
+    //                     user: data,
+    //                     body: MainUI.initOtherTmp(data._.todos, now),
+    //                 })
+    //               : res.render('404'),
+    //   );
 });
 
 router.get('/archive', (req, res) =>

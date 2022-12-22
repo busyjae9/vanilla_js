@@ -6,6 +6,14 @@ library.add(fas, far);
 
 export const heart = (classes) => icon({ prefix: 'far', iconName: 'heart' }, { classes }).html;
 export const heart_full = (classes) => icon({ prefix: 'fas', iconName: 'heart' }, { classes }).html;
+export const comment_full = (classes) =>
+    icon(
+        {
+            prefix: 'fas',
+            iconName: 'comment',
+        },
+        { classes },
+    ).html;
 
 export const check_box = (classes) => icon({ prefix: 'far', iconName: 'square' }, { classes }).html;
 

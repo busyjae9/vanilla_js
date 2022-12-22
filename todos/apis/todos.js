@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { format } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz/esm';
 
-import { go, isEmpty, tap } from 'fxjs';
+import { go, isEmpty, log, tap } from 'fxjs';
 import {
     ASSOCIATE,
     ASSOCIATE1,
@@ -22,40 +22,51 @@ const USER_COLUMNS = ['name', 'email', 'password'];
 
 const router = express.Router();
 
-router.get('/todo/list/', (req, res) => {
+router.get('/todo/list/', async (req, res) => {
     const date = req.query?.date ? new Date(req.query.date) : new Date();
     const tz = req.headers.timezone;
     const now = format(zonedTimeToUtc(date, tz), 'yyyy-MM-dd');
+    const user_id = req.query?.id || req.session.user.id;
+    console.time('sql');
+    const user = await Query.getById('users', user_id);
 
-    !req.query?.id || Number(req.query?.id) === req.session.user.id
-        ? go(
-              QUERY`SELECT (TRUE) AS my_todo, * FROM todos WHERE ${EQ({
-                  user_id: req.session.user.id,
-              })} AND archived_date IS NULL AND date BETWEEN ${now + ' 00:00:00'} AND ${
-                  now + ' 23:59:59'
-              } ORDER BY id DESC`,
-              (todos) =>
-                  res.json({
-                      code: '0001',
-                      result: todos,
-                      message: '리스트가 조회되었습니다.',
-                  }),
-          )
-        : go(
-              QUERY`
-                SELECT (user_id = ${req.session.user.id}) AS my_todo, * FROM todos WHERE ${EQ({
-                  user_id: req.query?.id,
-              })} AND archived_date IS NULL AND date BETWEEN ${now + ' 00:00:00'} AND ${
-                  now + ' 23:59:59'
-              } ORDER BY id DESC
-                `,
-              (todos) =>
-                  res.json({
-                      code: '0001',
-                      result: todos,
-                      message: `리스트가 조회되었습니다.`,
-                  }),
-          );
+    go(
+        QUERY`
+            SELECT
+                todos.*,
+                todos.user_id = ${req.session.user.id} AS my_todo,
+                COUNT(DISTINCT other_like.user_id) AS like_count,
+                COUNT(DISTINCT comments.id) AS comment_count,
+                CASE 
+                    WHEN my_like.user_id = ${req.session.user.id} THEN TRUE 
+                    ELSE FALSE 
+                END 
+                AS like
+            FROM todos
+            LEFT JOIN comments 
+                ON todos.id = comments.todo_id 
+                AND comments.deleted_date IS NULL
+            LEFT JOIN likes other_like 
+                ON todos.id = other_like.todo_id 
+                AND other_like.cancel_date IS NULL
+            LEFT JOIN likes my_like 
+                ON todos.id = my_like.todo_id 
+                AND my_like.user_id = ${req.session.user.id} 
+                AND my_like.cancel_date IS NULL
+            WHERE todos.user_id = ${user.id}
+                AND todos.archived_date IS NULL
+                AND ${EQ({ 'todos.date': now })}
+            GROUP BY todos.id, my_like.user_id
+            ORDER BY todos.id DESC
+        `,
+        (todos) =>
+            res.json({
+                code: '0001',
+                result: todos,
+                message: '리스트가 조회되었습니다.',
+            }),
+    );
+    console.timeEnd('sql');
 });
 
 router.get('/user/list', (req, res) =>
@@ -131,6 +142,149 @@ router.patch('/todo/:id', (req, res) =>
           ).catch(Query.error(res)),
 );
 
+router.post('/todo/:id/like', (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              Query.get('likes', { todo_id: req.params.id, user_id: req.session.user.id }),
+              (like) =>
+                  !like
+                      ? Query.insert('likes', {
+                            todo_id: req.params.id,
+                            user_id: req.session.user.id,
+                        })
+                      : Query.updateWhere(
+                            'likes',
+                            {
+                                cancel_date: like.cancel_date
+                                    ? null
+                                    : zonedTimeToUtc(new Date(), 'Asia/Seoul'),
+                            },
+                            {
+                                todo_id: req.params.id,
+                                user_id: req.session.user.id,
+                            },
+                        ),
+              async (like) => {
+                  const like_count = await QUERY1`
+                            SELECT COUNT(user_id) AS like_count FROM likes 
+                            WHERE todo_id = ${req.params.id} AND cancel_date IS NULL`;
+
+                  return {
+                      ...like,
+                      ...like_count,
+                  };
+              },
+              Query.success(res, '업데이트되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.post('/todo/:id/comment', async (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.body,
+              validCheck(['comment']),
+              (valid_data) =>
+                  Query.insert('comments')({
+                      ...valid_data,
+                      todo_id: req.params.id,
+                      user_id: req.session.user.id,
+                  }),
+              async (inserted_comment) => {
+                  const comment_count = await QUERY1`
+                            SELECT
+                                COUNT(*)
+                            FROM comments
+                            WHERE
+                                comments.todo_id = ${req.params.id}
+                                AND comments.deleted_date IS NULL
+                    `.catch(Query.error(res));
+
+                  const comment = await QUERY1`
+                            SELECT
+                                comments.id,
+                                comments.reg_date,
+                                comments.modified_date,
+                                comments.comment,
+                                users.name AS user_name,
+                                users.id AS user_id
+                            FROM comments
+                            LEFT JOIN users 
+                                ON comments.user_id = users.id
+                            WHERE        
+                                comments.id = ${inserted_comment.id}
+                            GROUP BY comments.id, users.id
+                    `;
+
+                  return { comment, comment_count: Number(comment_count.count) };
+              },
+              Query.success(res, '댓글 등록이 완료되었습니다.'),
+          ).catch(Query.error(res)),
+);
+router.get('/todo/:id/comment', async (req, res) => {
+    if (isEmpty(req.params))
+        return res.status(400).json({
+            code: 'E001',
+            message: '데이터 형식이 맞지 않습니다.',
+        });
+
+    const page = Number(req.query.page || 1);
+
+    const comment_count = await QUERY1`
+        SELECT
+            COUNT(*)
+        FROM comments
+        WHERE
+            comments.todo_id = ${req.params.id}
+            AND comments.deleted_date IS NULL
+    `.catch(Query.error(res));
+
+    if (!comment_count)
+        return res.status(400).json({
+            code: 'E001',
+            message: '데이터 형식이 맞지 않습니다.',
+        });
+
+    const comments = await QUERY`
+                SELECT
+                    comments.id,
+                    comments.reg_date,
+                    comments.modified_date,
+                    comments.comment,
+                    users.name AS user_name,
+                    users.id AS user_id
+                FROM comments
+                LEFT JOIN users 
+                    ON comments.user_id = users.id
+                WHERE        
+                    comments.todo_id = ${req.params.id}
+                    AND comments.deleted_date IS NULL
+                GROUP BY comments.id, users.id
+                ORDER BY comments.id DESC
+                LIMIT 10
+                OFFSET ${(page - 1) * 10}
+            `.catch(Query.error(res));
+
+    if (!comments)
+        return res.status(400).json({
+            code: 'E001',
+            message: '데이터 형식이 맞지 않습니다.',
+        });
+
+    const last_page =
+        Number(comment_count.count) === 0 ? 1 : Math.ceil(Number(comment_count.count) / 10);
+
+    return Query.success(
+        res,
+        '조회되었습니다.',
+    )({
+        comments,
+        comment_count: Number(comment_count.count),
+        next_page: last_page === page ? null : page + 1,
+    });
+});
+
 // 좋아요와 댓글 추가 및 수정 기능 만들기
 // likes와 comments 테이블 추가
 // likes는 reg_date, user_id, todo_id, comment_id 혹은 comment_likes를 따로 만들어야하는지 확인
@@ -140,6 +294,7 @@ router.patch('/todo/:id', (req, res) =>
 
 // 댓글같은 경우 팝업보다는 기존의 todo가 아래로 확장되면서 comments에 관련된 내용이 확인되게 만들고 pagination을 구현해야한다.
 // 내가 보는 todo의 경우 밑에 작은 길이로 좋아요 갯수와 댓글 갯수 그리고 댓글 창을 볼 수 있는 공간 만들기
+
 router.post('/archive', (req, res) =>
     isEmpty(req.query)
         ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })

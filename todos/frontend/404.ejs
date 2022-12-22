@@ -8,6 +8,10 @@
     <meta name="apple-mobile-web-status-bar-style" content="#6b7280">
     <meta name="theme-color" content="black">
     <link
+            rel="manifest"
+            href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/dist/manifest.json'
+    />
+    <link
             type='text/css'
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
@@ -23,7 +27,11 @@
         src='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/dist/app.bundle.js'></script>
 <div class='container_404'>
     <h1>404</h1>
-    <div class='message'>데이터가 존재하지 않습니다</div>
+    <% if(locals.message) { %>
+        <div class='message'><%= locals.message %></div>
+    <% } else { %>
+        <div class='message'>데이터가 존재하지 않습니다</div>
+    <% } %>
 </div>
 </body>
 </html>

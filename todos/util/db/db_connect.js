@@ -1,7 +1,7 @@
-import {PostgreSQL} from "fxsql";
-import {config} from 'dotenv';
+import { PostgreSQL } from 'fxsql';
+import { config } from 'dotenv';
 
-const {CONNECT} = PostgreSQL;
+const { CONNECT } = PostgreSQL;
 config();
 
 const POOL = CONNECT({
@@ -13,25 +13,45 @@ const POOL = CONNECT({
 });
 
 const {
-    VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, FxSQL_DEBUG,
+    VALUES,
+    IN,
+    NOT_IN,
+    EQ,
+    SET,
+    COLUMN,
+    CL,
+    TABLE,
+    TB,
+    SQL,
+    FxSQL_DEBUG,
     QUERY,
     QUERY1,
     ASSOCIATE,
     ASSOCIATE1,
     TRANSACTION,
-    END
+    END,
 } = POOL;
 
 export default POOL;
 
+FxSQL_DEBUG.LOG = true;
+
 export {
-    VALUES, IN, NOT_IN, EQ, SET, COLUMN, CL, TABLE, TB, SQL, FxSQL_DEBUG,
+    VALUES,
+    IN,
+    NOT_IN,
+    EQ,
+    SET,
+    COLUMN,
+    CL,
+    TABLE,
+    TB,
+    SQL,
+    FxSQL_DEBUG,
     QUERY,
     QUERY1,
     ASSOCIATE,
     ASSOCIATE1,
     TRANSACTION,
-    END
+    END,
 };
-
-

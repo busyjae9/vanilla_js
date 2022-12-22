@@ -16,46 +16,220 @@ on-color(color)
 .content
   font_size()
   display flex
-  flex-direction row
+  flex-direction column
   align-items center
-  justify-content space-between
+  justify-content flex-start
   width 100%
-  box-sizing border-box
-  padding 1em 1em
   border-radius 1em
   box-shadow 0 0 .1em .1em $black30
   background-color $black100
+  overflow hidden
+  -moz-transition height 1s ease-in-out
+  -o-transition height 1s ease-in-out
+  transition height 1s ease-in-out
+  -webkit-transition height 1s ease-in-out
+  -ms-transition height 1s ease-in-out
+  height fit-content
+
+  &__comment
+    width 100%
+    text-overflow ellipsis
+    box-shadow 0 0 .1em .1em $black30
+    background-color $black100
+    border-radius .8em
+    box-sizing border-box
+    overflow hidden
+
+    &__body
+      padding 1em 1em
+
+      &__user
+        font_size(1.4)
+        font-weight 600
+
+    &__info
+      display flex
+      align-items center
+      justify-content flex-end
+      width 100%
+      box-sizing border-box
+      background-color $grey
+      padding .3em 1em
+      font_size(1)
+
+
+    &__body
+      display flex
+      align-items center
+      justify-content flex-start
+
+      &__user
+        overflow hidden
+        text-overflow ellipsis
+        width 20%
+
+  &__comments
+    display flex
+    align-items flex-start
+    justify-content center
+    width 100%
+    height fit-content
+    box-sizing border-box
+    background-color $grey
+    transition: all 1s ease-in-out;
+
+    &::-webkit-scrollbar
+      width .4em
+      background $grey
+
+      &-track
+        background-color $grey
+
+      &-thumb
+        background-color $black
+
+    &__all
+      width 100%
+      padding .2em .2em
+
+
+      &__body
+        width 100%
+        gap .5em
+        box-sizing border-box
+        display flex
+        flex-direction column
+        align-items center
+        justify-content center
+        width 100%
+        height auto
+
+
+      &__next
+        cursor pointer
+        width 100%
+        margin .5em 0
+        padding .5em 1em
+        text-overflow ellipsis
+        box-shadow 0 0 .1em .1em $black30
+        background-color $grey
+        border-radius 1em
+        box-sizing border-box
+        overflow hidden
+        text-align center
+        font-weight 600
+
+    &[status="before"]
+      padding 0em 1em
+      max-height 0
+      overflow: hidden;
+
+    &[status="after"]
+      padding .5em .5em
+      max-height 80vh
+      overflow auto
+
+  &__info
+    display flex
+    align-items center
+    justify-content space-between
+    width 100%
+    box-sizing border-box
+    background-color $grey
+    padding .5em 1em
+
+    &__input
+      padding .3em .4em
+      box-sizing border-box
+      border-radius .5em
+      box-shadow 0 0 .1em .1em $black30
+      background-color $black100
+      width 50%
+      display flex
+      justify-content space-between
+      align-items center
+
+
+      &__text
+        width 80%
+        border none
+        background-color transparent
+        outline-style none
+        color $white
+        font-size .8em
+
+      &__submit
+        border none
+        color $green
+        font-size .8em
+
+    &__comment
+      gap .2em
+      display flex
+      cursor pointer
+      width: 20%
+      justify-content flex-end
+
+      &__count
+        max-width 60%
+        overflow hidden
+        text-overflow ellipsis
+        text-wrap avoid
+
+      &__full:hover
+        on-color($green)
+        animation tada
+        animation-duration 2s
+
+
+    &__heart
+      gap .2em
+      display flex
+      cursor pointer
+      width: 20%
+      justify-content flex-start
+      overflow hidden
+
+      &__count
+        max-width 60%
+        overflow hidden
+        text-overflow ellipsis
+        text-wrap avoid
+
+      &:hover
+        on-color($white)
+
+      &__empty
+        color $white
+
+        &:hover
+          on-color($red)
+          animation tada
+          animation-duration 2s
+
+      &__full
+        on-color($red)
+
+        &:hover
+          animation tada
+          animation-duration 2s
+
+  &__body
+    display flex
+    align-items center
+    justify-content space-between
+    width 100%
+    box-sizing border-box
+    padding 1em 1em
 
   .done_text
     text-align justify
     word-break break-word
     color $grey100
-
     text-decoration line-through white
 
-  &__heart
-    display flex
-    align-items center
-    gap .4em
-    padding 0
-    border none
-
-    &:hover
-      on-color($white)
-
-    &__empty
-      color $white
-
-      &:hover
-        on-color($red)
-
-    &__full
-      on-color($red)
-
-      &:hover
-        on-color($white)
-
   &__checkbox
+    cursor pointer
     padding 0
     border none
 
@@ -101,22 +275,20 @@ on-color(color)
     gap .5em
 
   &__button
-    &__comment
-      padding .2em .2em
-
-    &__heart
-      padding .2em .2em
-
     &__edit
+      cursor pointer
       padding .2em .2em
 
     &__return
+      cursor pointer
       padding .2em .2em
 
     &__archive
+      cursor pointer
       padding .2em .2em
 
     &__delete
+      cursor pointer
       padding .2em .2em
       on-color($red100)
 

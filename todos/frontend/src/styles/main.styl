@@ -226,13 +226,16 @@ html, body
       max-width 1200px
 
   .whoami
+    position sticky
+    top 0
     display flex
     justify-content center
     box-sizing border-box
     width 100%
     background-color $grey100
+    z-index 1000
 
-    padding_flex(2, 2)
+    padding_flex(1.4, 2)
 
     &__container
       align-items center

@@ -120,6 +120,15 @@ Main.delegate = (container_el) =>
                 $qs('.header__today'),
                 (el) => el.value,
                 getPrevDay,
+                tap((day) => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('date', day.toDateInputValue());
+                    history.replaceState(
+                        {},
+                        day.toDateInputValue(),
+                        `todo?${urlParams.toString()}`,
+                    );
+                }),
                 (prev) =>
                     axios.get(
                         `/todo/api/todo/list?date=${prev.toDateInputValue()}${
@@ -138,6 +147,16 @@ Main.delegate = (container_el) =>
                 $qs('.header__today'),
                 (el) => el.value,
                 getNextDay,
+                tap((day) => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('date', day.toDateInputValue());
+
+                    history.replaceState(
+                        {},
+                        day.toDateInputValue(),
+                        `todo?${urlParams.toString()}`,
+                    );
+                }),
                 (prev) =>
                     axios.get(
                         `/todo/api/todo/list/?date=${prev.toDateInputValue()}${
@@ -154,6 +173,11 @@ Main.delegate = (container_el) =>
 
             go(
                 e.currentTarget,
+                tap((el) => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('date', el.value);
+                    history.replaceState({}, el.value, `todo?${urlParams.toString()}`);
+                }),
                 (el) => axios.get(`/todo/api/todo/list/?date=${el.value}${id ? `&id=${id}` : ''}`),
                 (res) => Main.contentViewUpdate(res.data.result),
             ).catch(Main.error);
@@ -238,7 +262,6 @@ Main.delegate = (container_el) =>
             const page = $attr('page', e.currentTarget);
 
             go(axios.get(`/todo/api/todo/${id}/comment?page=${page}`), ({ data }) => {
-                log(data);
                 go(
                     $qs(`.content_${id} .content__info__comment__count`),
                     $setText(numberToKorean(data.result.comment_count)),

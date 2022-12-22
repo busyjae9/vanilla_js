@@ -17,7 +17,8 @@
     "FormData": true,
     "process": true,
     "console": true,
-    "URLSearchParams": true
+    "URLSearchParams": true,
+    "URL": true
   },
   "rules": {
     "semi": "warn",

@@ -10,7 +10,7 @@ Login.delegate($qs('body'));
 go(
     html` <link id="favicon" rel="shortcut icon" type="image/png" /> `,
     $el,
-    (el) => ((el.href = 'http://192.168.0.7/dist/favicon.png'), el),
+    (el) => ((el.href = 'http://192.168.0.7/static/favicon.png'), el),
     $appendTo($qs('head')),
 );
 

@@ -30,8 +30,8 @@ const makeStatic = () => {
     const config = webpackConfig({ url: URL, port: PORT });
     const compiler = webpack(config);
 
-    const DIST_DIR = join(process.cwd(), '/frontend/dist');
-    app.use('/dist', express.static(DIST_DIR));
+    const DIST_DIR = join(process.cwd(), '/frontend/static');
+    app.use('/static', express.static(DIST_DIR));
 
     if (DEV) {
         const webpackDevMiddlewareInstance = webpackDevMiddleware(compiler);
@@ -44,7 +44,8 @@ const makeStatic = () => {
             });
         });
     } else {
-
+        const DIST_DIR = join(process.cwd(), '/frontend/dist');
+        app.use('/dist', express.static(DIST_DIR));
         return new Promise((resolve) => resolve(true));
     }
 };

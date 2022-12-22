@@ -31,6 +31,13 @@ on-color(color)
   -ms-transition height 1s ease-in-out
   height fit-content
 
+  isolation isolate
+  -webkit-backface-visibility hidden
+  -moz-backface-visibility hidden
+  -webkit-transform translate3d(0, 0, 0)
+  -moz-transform translate3d(0, 0, 0)
+  -webkit-overflow-scrolling touch
+
   &__comment
     width 100%
     text-overflow ellipsis
@@ -39,6 +46,7 @@ on-color(color)
     border-radius .8em
     box-sizing border-box
     overflow hidden
+
 
     &__body
       padding 1em 1em
@@ -68,6 +76,11 @@ on-color(color)
         text-overflow ellipsis
         width 20%
 
+      &__text
+        overflow hidden
+        text-overflow ellipsis
+        width 76%
+
   &__comments
     display flex
     align-items flex-start
@@ -91,7 +104,7 @@ on-color(color)
     &__all
       width 100%
       padding .2em .2em
-
+      overflow: hidden;
 
       &__body
         width 100%
@@ -128,6 +141,7 @@ on-color(color)
       padding .5em .5em
       max-height 80vh
       overflow auto
+
 
   &__info
     display flex

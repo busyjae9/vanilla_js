@@ -47,39 +47,91 @@ on-color(color)
     box-sizing border-box
     overflow hidden
 
-
-    &__body
-      padding 1em 1em
-
-      &__user
-        font_size(1.4)
-        font-weight 600
-
     &__info
       display flex
       align-items center
-      justify-content flex-end
+      justify-content space-between
       width 100%
       box-sizing border-box
       background-color $grey
-      padding .3em 1em
-      font_size(1)
+      padding .5em 1em
+      font_size(0.8)
+
+      &__buttons
+        display flex
+        gap .5em
+
+        &__reply,
+        &__fix,
+        &__delete
+          cursor pointer
+
+        &__delete:hover
+          color $red
 
 
     &__body
+      padding 1em 1em
       display flex
       align-items center
-      justify-content flex-start
+      justify-content space-between
 
       &__user
-        overflow hidden
-        text-overflow ellipsis
-        width 20%
+        cursor pointer
+        max-width 20%
+        font-weight 600
+
+        &:hover
+          color $green
+
+      &__fix
+        width 70%
+        box-sizing border-box
+
+        &__form
+          width 100%
+          display flex
+          align-items center
+          justify-content space-between
+          background-color $grey
+          padding .2em .4em
+          border-radius 1em
+
+          &__main
+            width 70%
+            font-size .6em
+            color $red100
+            background-color transparent
+            border none
+            outline none
+
+          &__submit
+            padding none
+            font-size .6em
+            color $green
+            background-color transparent
+            border none
 
       &__text
+        font-size .8em
+        box-sizing border-box
+        padding 0 .5em
+
+        &[status="normal"]
+          width 82%
+
+        &[status="more"]
+          width 70%
+
+      &__plus
+        cursor pointer
         overflow hidden
         text-overflow ellipsis
-        width 76%
+        text-wrap avoid
+        max-width 10%
+
+        &:hover
+          color $green
 
   &__comments
     display flex
@@ -114,7 +166,6 @@ on-color(color)
         flex-direction column
         align-items center
         justify-content center
-        width 100%
         height auto
 
 
@@ -138,7 +189,9 @@ on-color(color)
       overflow: hidden;
 
     &[status="after"]
-      padding .5em .5em
+      padding-left .5em
+      padding-right .5em
+      padding-bottom .5em
       max-height 80vh
       overflow auto
 
@@ -181,7 +234,7 @@ on-color(color)
       gap .2em
       display flex
       cursor pointer
-      width: 20%
+      max-width: 20%
       justify-content flex-end
 
       &__count
@@ -200,7 +253,7 @@ on-color(color)
       gap .2em
       display flex
       cursor pointer
-      width: 20%
+      max-width: 20%
       justify-content flex-start
       overflow hidden
 
@@ -266,6 +319,8 @@ on-color(color)
     text-align justify
     word-break break-word
     color: $white
+    box-sizing border-box
+    padding 0 .5em
 
   &__archive
     &__date

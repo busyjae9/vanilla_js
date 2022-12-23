@@ -1,25 +1,13 @@
-import {delay, go, html, object, tap} from "fxjs";
-import {$appendTo, $closest, $delegate, $el, $find, $qs, $remove} from "fxdom";
+import { delay, go, html, object, tap } from 'fxjs';
+import { $appendTo, $closest, $delegate, $el, $find, $qs, $remove } from 'fxdom';
+import LoadingUi from '../templates/loading.js';
 
-const LoadingUi = {}
+const Loading = {};
 
-LoadingUi.makeTmp = () => html`
-    <div class="loader">
-        <div class="inner one"></div>
-        <div class="inner two"></div>
-        <div class="inner three"></div>
-    </div>
-`
+Loading.init = () => go(LoadingUi.makeTmp(), $el, $appendTo($qs('body')));
 
-LoadingUi.init = () =>
-    go(LoadingUi.makeTmp(), $el, $appendTo($qs("body")));
+Loading.remove = () => go($qs('.loader'), $remove);
 
-LoadingUi.remove = () =>
-    go($qs(".loader"), $remove);
+Loading.load = (sec) => go(Loading.init(), delay(sec * 1000), $remove);
 
-LoadingUi.load = (sec) => go(
-    LoadingUi.init(),
-    delay(sec * 1000),
-    $remove)
-
-export default LoadingUi
+export default Loading;

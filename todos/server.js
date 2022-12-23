@@ -81,7 +81,7 @@ app.use(
 app.use(
     session({
         secret: 'busy',
-        genid: function() {
+        genid: function () {
             return v1(); // use UUIDs for session IDs
         },
         store: new redisStore({ client: redisClient }),
@@ -112,7 +112,7 @@ app.get('/', (req, res) => {
     build_done ? res.status(200) : res.status(400);
 });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     if (req.session?.user) res.locals.whoami = req.session.user;
     else res.locals.whoami = undefined;
 
@@ -121,7 +121,7 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     if (!req.session?.user && !includes('/todo/login', req.url) && req.method === 'GET')
         return res.redirect('/todo/login');
     next();
@@ -130,7 +130,7 @@ app.use(function(req, res, next) {
 app.use('/todo', todos_tmp);
 app.use('/todo/api', todos_api);
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     res.status(404);
 
     // respond with html page

@@ -130,7 +130,7 @@ body::-webkit-scrollbar
   align-items center
   justify-content center
 
-html, body
+body
   touch-action manipulation
   margin 0
   width 100%
@@ -178,6 +178,13 @@ html, body
   button:hover
     border-color $blue
     color $blue
+
+  .mini__text__flex
+    font_size(1)
+    color $white100
+
+    @media (max-device-width: 768px)
+      display none
 
   .mini__text
     position absolute
@@ -233,7 +240,7 @@ html, body
     box-sizing border-box
     width 100%
     background-color $grey100
-    z-index 1000
+    z-index 2000
 
     padding_flex(1.4, 2)
 

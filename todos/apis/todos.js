@@ -179,12 +179,127 @@ router.post('/todo/:id/like', (req, res) =>
           ).catch(Query.error(res)),
 );
 
+router.post('/todo/comment/:id/reply', async (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.body,
+              validCheck(['comment']),
+              tap(() => console.time('답글 입력하기')),
+              (valid_data) =>
+                  Query.insert('replys')({
+                      ...valid_data,
+                      comment_id: req.params.id,
+                      user_id: req.session.user.id,
+                  }),
+              async (inserted_reply) => {
+                  const reply_count = await QUERY1`
+                            SELECT
+                                COUNT(*)
+                            FROM replys
+                            WHERE
+                                replys.comment_id = ${req.params.id}
+                                AND replys.deleted_date IS NULL
+                    `.catch(Query.error(res));
+
+                  const reply = await QUERY1`
+                            SELECT
+                                replys.id,
+                                replys.reg_date,
+                                replys.modified_date,
+                                replys.comment,
+                                replys.user_id,
+                                (replys.user_id = ${req.session.user.id}) AS my_reply,
+                                users.name AS user_name
+                            FROM replys
+                            LEFT JOIN users 
+                                ON replys.user_id = users.id
+                            WHERE        
+                                replys.id = ${inserted_reply.id}
+                            GROUP BY replys.id, users.id
+                    `;
+
+                  return { reply, reply_count: Number(reply_count.count) };
+              },
+              tap(() => console.timeEnd('답글 입력하기')),
+              Query.success(res, '답글 등록이 완료되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.get('/todo/comment/:id/reply', async (req, res) => {
+    if (isEmpty(req.params))
+        return res.status(400).json({
+            code: 'E001',
+            message: '데이터 형식이 맞지 않습니다.',
+        });
+
+    const page = Number(req.query.page || 1);
+
+    console.time('답글 페이지로 가져오기');
+    const reply_count = await QUERY1`
+        SELECT
+            COUNT(*)
+        FROM replys
+        WHERE
+            replys.comment_id = ${req.params.id}
+            AND replys.deleted_date IS NULL
+    `.catch(Query.error(res));
+
+    if (!reply_count)
+        return res.status(400).json({
+            code: 'E001',
+            message: '데이터 형식이 맞지 않습니다.',
+        });
+
+    const replys = await QUERY`
+                SELECT
+                    replys.id,
+                    replys.reg_date,
+                    replys.modified_date,
+                    replys.comment,
+                    replys.user_id,
+                    (replys.user_id = ${req.session.user.id}) AS my_reply,
+                    users.name AS user_name
+                FROM replys
+                LEFT JOIN users 
+                    ON replys.user_id = users.id
+                WHERE
+                    replys.comment_id = ${req.params.id}
+                    AND replys.deleted_date IS NULL
+                GROUP BY replys.id, users.id
+                ORDER BY replys.id DESC
+                LIMIT 10
+                OFFSET ${(page - 1) * 10}
+            `.catch(Query.error(res));
+
+    console.timeEnd('답글 페이지로 가져오기');
+
+    if (!replys)
+        return res.status(400).json({
+            code: 'E001',
+            message: '데이터 형식이 맞지 않습니다.',
+        });
+
+    const last_page =
+        Number(reply_count.count) === 0 ? 1 : Math.ceil(Number(reply_count.count) / 10);
+
+    return Query.success(
+        res,
+        '조회되었습니다.',
+    )({
+        replys,
+        reply_count: Number(reply_count.count),
+        next_page: last_page === page ? null : page + 1,
+    });
+});
+
 router.post('/todo/:id/comment', async (req, res) =>
     isEmpty(req.params)
         ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
         : go(
               req.body,
               validCheck(['comment']),
+              tap(() => console.time('코멘트 입력하기')),
               (valid_data) =>
                   Query.insert('comments')({
                       ...valid_data,
@@ -207,11 +322,15 @@ router.post('/todo/:id/comment', async (req, res) =>
                                 comments.reg_date,
                                 comments.modified_date,
                                 comments.comment,
+                                comments.user_id,
+                                (comments.user_id = ${req.session.user.id}) AS my_comment,
                                 users.name AS user_name,
-                                users.id AS user_id
+                                COUNT(DISTINCT replys.user_id) AS reply_count
                             FROM comments
                             LEFT JOIN users 
                                 ON comments.user_id = users.id
+                            LEFT JOIN replys
+                                ON comments.id = replys.comment_id
                             WHERE        
                                 comments.id = ${inserted_comment.id}
                             GROUP BY comments.id, users.id
@@ -219,9 +338,122 @@ router.post('/todo/:id/comment', async (req, res) =>
 
                   return { comment, comment_count: Number(comment_count.count) };
               },
+              tap(() => console.timeEnd('코멘트 입력하기')),
               Query.success(res, '댓글 등록이 완료되었습니다.'),
           ).catch(Query.error(res)),
 );
+
+router.get('/todo/comment/:id', async (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.params.id,
+              tap(() => console.time('코멘트 가져오기')),
+              (id) => QUERY1`
+                            SELECT
+                                comments.id,
+                                comments.reg_date,
+                                comments.modified_date,
+                                comments.comment,
+                                comments.user_id,
+                                (comments.user_id = ${req.session.user.id}) AS my_comment,
+                                users.name AS user_name,
+                                COUNT(DISTINCT replys.user_id) AS reply_count
+                            FROM comments
+                            LEFT JOIN users 
+                                ON comments.user_id = users.id
+                            LEFT JOIN replys
+                                ON comments.id = replys.comment_id
+                            WHERE        
+                                comments.id = ${id}
+                            GROUP BY comments.id, users.id
+                    `,
+              tap(() => console.timeEnd('코멘트 가져오기')),
+              Query.success(res, '댓글이 조회되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.delete('/todo/comment/:id', async (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.params.id,
+              tap(() => console.time('코멘트 삭하기')),
+              Query.update('comments')({
+                  deleted_date: zonedTimeToUtc(new Date(), 'Asia/Seoul'),
+              }),
+              async (updated_comment) => {
+                  const comment_count = await QUERY1`
+                            SELECT
+                                COUNT(*)
+                            FROM comments
+                            WHERE
+                                comments.todo_id = ${req.params.id}
+                                AND comments.deleted_date IS NULL
+                    `;
+
+                  const comment = await QUERY1`
+                            SELECT id
+                            FROM comments
+                            WHERE comments.id = ${updated_comment.id}
+                    `;
+
+                  return { comment, comment_count: Number(comment_count.count) };
+              },
+              tap(() => console.timeEnd('코멘트 삭제하기')),
+              Query.success(res, '댓글 삭제 완료되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.patch('/todo/comment/:id', async (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.body,
+              validCheck(['comment']),
+              tap(() => console.time('코멘트 수정하기')),
+              (valid_data) =>
+                  Query.update('comments')({
+                      ...valid_data,
+                      modified_date: zonedTimeToUtc(new Date(), 'Asia/Seoul'),
+                  })(req.params.id),
+              async (updated_comment) => {
+                  const comment_count = await QUERY1`
+                            SELECT
+                                COUNT(*)
+                            FROM comments
+                            WHERE
+                                comments.todo_id = ${req.params.id}
+                                AND comments.deleted_date IS NULL
+                    `;
+
+                  const comment = await QUERY1`
+                            SELECT
+                                comments.id,
+                                comments.reg_date,
+                                comments.modified_date,
+                                comments.comment,
+                                comments.user_id,
+                                (comments.user_id = ${req.session.user.id}) AS my_comment,
+                                users.name AS user_name,
+                                COUNT(DISTINCT replys.user_id) AS reply_count
+                            FROM comments
+                            LEFT JOIN users 
+                                ON comments.user_id = users.id
+                            LEFT JOIN replys
+                                ON comments.id = replys.comment_id
+                            WHERE        
+                                comments.id = ${updated_comment.id}
+                            GROUP BY comments.id, users.id
+                    `;
+
+                  return { comment, comment_count: Number(comment_count.count) };
+              },
+              tap(() => console.timeEnd('코멘트 수정하기')),
+              Query.success(res, '댓글 수정이 완료되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
 router.get('/todo/:id/comment', async (req, res) => {
     if (isEmpty(req.params))
         return res.status(400).json({
@@ -231,6 +463,7 @@ router.get('/todo/:id/comment', async (req, res) => {
 
     const page = Number(req.query.page || 1);
 
+    console.time('코멘트 페이지로 가져오기');
     const comment_count = await QUERY1`
         SELECT
             COUNT(*)
@@ -252,12 +485,16 @@ router.get('/todo/:id/comment', async (req, res) => {
                     comments.reg_date,
                     comments.modified_date,
                     comments.comment,
+                    comments.user_id,
+                    (comments.user_id = ${req.session.user.id}) AS my_comment,
                     users.name AS user_name,
-                    users.id AS user_id
+                    COUNT(DISTINCT replys.user_id) AS reply_count
                 FROM comments
                 LEFT JOIN users 
                     ON comments.user_id = users.id
-                WHERE        
+                LEFT JOIN replys
+                    ON comments.id = replys.comment_id
+                WHERE
                     comments.todo_id = ${req.params.id}
                     AND comments.deleted_date IS NULL
                 GROUP BY comments.id, users.id
@@ -265,6 +502,8 @@ router.get('/todo/:id/comment', async (req, res) => {
                 LIMIT 10
                 OFFSET ${(page - 1) * 10}
             `.catch(Query.error(res));
+
+    console.timeEnd('코멘트 페이지로 가져오기');
 
     if (!comments)
         return res.status(400).json({
@@ -284,16 +523,6 @@ router.get('/todo/:id/comment', async (req, res) => {
         next_page: last_page === page ? null : page + 1,
     });
 });
-
-// 좋아요와 댓글 추가 및 수정 기능 만들기
-// likes와 comments 테이블 추가
-// likes는 reg_date, user_id, todo_id, comment_id 혹은 comment_likes를 따로 만들어야하는지 확인
-// comments는 comment, reg_date, modified_date, user_id, todo_id, reply_id(self)
-// todos나 comments를 불러올 때는 불러오는 유저의 id를 가지고 눌렀는지 안눌렀는지를 확인하는 heart 데이터를 생성하고,
-// likes, comments의 갯수를 확인하여 like_count, comment_count를 만들어서 보내준다
-
-// 댓글같은 경우 팝업보다는 기존의 todo가 아래로 확장되면서 comments에 관련된 내용이 확인되게 만들고 pagination을 구현해야한다.
-// 내가 보는 todo의 경우 밑에 작은 길이로 좋아요 갯수와 댓글 갯수 그리고 댓글 창을 볼 수 있는 공간 만들기
 
 router.post('/archive', (req, res) =>
     isEmpty(req.query)

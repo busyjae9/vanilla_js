@@ -1,18 +1,19 @@
-import { $appendTo, $el, $qs } from 'fxdom';
+import { $qs } from 'fxdom';
 import Todo from './events/main.js';
 import Login from './events/login.js';
-import { go, html } from 'fxjs';
 import Search from './templates/search.js';
 
 Todo.delegate($qs('body'));
 Login.delegate($qs('body'));
 
-go(
-    html` <link id="favicon" rel="shortcut icon" type="image/png" /> `,
-    $el,
-    (el) => ((el.href = 'http://192.168.0.7/static/favicon.png'), el),
-    $appendTo($qs('head')),
-);
+function getNotificationPermission() {
+    // 브라우저 지원 여부 체크
+    if (!('Notification' in window)) return;
+    Notification.requestPermission().then((result) => console.log(result));
+}
+
+// https만 됨...
+getNotificationPermission();
 
 let isCmd, isShift, isDot;
 

@@ -94,7 +94,7 @@ Search.pop = () =>
                     e.currentTarget,
                     (el) => new FormData(el).entries(),
                     object,
-                    (obj) => axios.get('todo/api/user/list', { params: obj }),
+                    (obj) => axios.get('/todo/api/user/list', { params: obj }),
                     ({ data }) => Search.mkResultsTmp(data.result),
                     $el,
                     $appendTo($qs('.search__body')),

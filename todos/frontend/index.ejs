@@ -7,6 +7,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-status-bar-style" content="#6b7280">
     <meta name="theme-color" content="black">
+    <link id="favicon" rel="shortcut icon" type="image/png"
+          href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/static/favicon.png' />
     <link
             rel="manifest"
             href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/static/manifest.json'

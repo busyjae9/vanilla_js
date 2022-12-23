@@ -20,5 +20,15 @@
   ],
   "start_url": "http://192.168.0.7:8080/todo",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "permissions": [
+    "tabs",
+    "<all_urls>",
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "declarativeContent",
+    "background",
+    "notifications"
+  ]
 }

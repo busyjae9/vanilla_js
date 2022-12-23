@@ -1,4 +1,4 @@
-import { curry, delay, each, go, hi, log, map, object, pipe, strMap, tap } from 'fxjs';
+import { curry, delay, each, go, hi, log, map, object, pipe, replace, strMap, tap } from 'fxjs';
 import {
     $appendTo,
     $attr,
@@ -8,8 +8,11 @@ import {
     $el,
     $find,
     $findAll,
+    $hide,
+    $insertBefore,
     $next,
     $prependTo,
+    $prev,
     $qs,
     $remove,
     $replaceWith,
@@ -17,19 +20,22 @@ import {
     $setAttr,
     $setText,
     $setVal,
+    $show,
+    $text,
     $toggleClass,
 } from 'fxdom';
 
 import { getNextDay, getPrevDay } from '../basic_func.js';
-import Alert from './alert.js';
-import Prompt from './prompt.js';
+import Alert from '../templates/alert.js';
+import Prompt from '../templates/prompt.js';
 import MainUI from '../templates/main.js';
 import axios from '../data/axios.js';
 import LoginUI from '../templates/login.js';
 import { format } from 'date-fns';
 import Search from '../templates/search.js';
-import LoadingUi from './loading.js';
 import numberToKorean from '../utils/numberToKor.js';
+import animateCSS from '../utils/animateCSS.js';
+import Reply from '../templates/reply.js';
 
 const Main = {};
 
@@ -186,7 +192,9 @@ Main.delegate = (container_el) =>
             go(
                 e.currentTarget,
                 $closest('.content'),
-                tap($attr('id'), (id) => axios.post(`/todo/api/archive/?id=${id}`)),
+                tap($attr('id'), replace('todo_', ''), (id) =>
+                    axios.post(`/todo/api/archive/?id=${id}`),
+                ),
                 Main.rmOne,
             ).catch(Main.error),
         ),
@@ -194,13 +202,19 @@ Main.delegate = (container_el) =>
             go(
                 e.currentTarget,
                 $closest('.content'),
-                tap($attr('id'), (id) => axios.post(`/todo/api/archive/delete/${id}`)),
+                tap($attr('id'), replace('todo_', ''), (id) =>
+                    axios.post(`/todo/api/archive/delete/${id}`),
+                ),
                 Main.rmOne,
             ).catch(Main.error),
         ),
         $delegate('click', '.content__info__heart', async (e) => {
-            const res = await go(e.currentTarget, $closest('.content'), $attr('id'), (id) =>
-                axios.post(`/todo/api/todo/${id}/like`),
+            const res = await go(
+                e.currentTarget,
+                $closest('.content'),
+                $attr('id'),
+                replace('todo_', ''),
+                (id) => axios.post(`/todo/api/todo/${id}/like`),
             ).catch(Main.error);
 
             if (!res.data?.result) return;
@@ -219,7 +233,7 @@ Main.delegate = (container_el) =>
         $delegate('submit', '.content__info__input', (e) => {
             e.originalEvent.preventDefault();
 
-            const id = go(e.currentTarget, $closest('.content'), $attr('id'));
+            const id = go(e.currentTarget, $closest('.content'), $attr('id'), replace('todo_', ''));
 
             go(
                 e.currentTarget,
@@ -241,7 +255,7 @@ Main.delegate = (container_el) =>
                             data.result.comment,
                             MainUI.mkCommentTmp,
                             $el,
-                            $prependTo($qs(`.content_${id} .content__comments__all`)),
+                            $prependTo($qs(`.content_${id} .content__comments__all__body`)),
                         );
                     else
                         go(axios.get(`/todo/api/todo/${id}/comment?page=1`), ({ data }) => {
@@ -258,7 +272,7 @@ Main.delegate = (container_el) =>
         }),
 
         $delegate('click', '.content__comments__all__next', (e) => {
-            const id = go(e.currentTarget, $closest('.content'), $attr('id'));
+            const id = go(e.currentTarget, $closest('.content'), $attr('id'), replace('todo_', ''));
             const page = $attr('page', e.currentTarget);
 
             go(axios.get(`/todo/api/todo/${id}/comment?page=${page}`), ({ data }) => {
@@ -284,6 +298,129 @@ Main.delegate = (container_el) =>
             });
         }),
 
+        $delegate('click', '.content__comment__body__user', (e) =>
+            go(e.currentTarget, $attr('id'), replace('comment_', ''), (id) =>
+                window.location.replace(`/todo?id=${id}`),
+            ),
+        ),
+        $delegate('click', '.content__comment__info__buttons__delete', async (e) => {
+            const comment_id = go(
+                e.currentTarget,
+                $closest('.content__comment'),
+                $attr('id'),
+                replace('comment_', ''),
+            );
+            const todo_id = go(
+                e.currentTarget,
+                $closest('.content'),
+                $attr('id'),
+                replace('todo_', ''),
+            );
+
+            const button = await Alert.pop({
+                title: '삭제하시겠습니까?',
+                buttons: Main.defaultButtons,
+            });
+
+            if (button.class === 'ok')
+                go(axios.delete(`/todo/api/todo/comment/${comment_id}`), ({ data }) => {
+                    go(
+                        $qs(`.content_${todo_id} .content__info__comment__count`),
+                        $setText(numberToKorean(data.result.comment_count)),
+                    );
+
+                    go($qs(`.comment_${comment_id}`), $remove);
+                });
+        }),
+        $delegate('click', '.content__comment__info__buttons__fix', (e) => {
+            const normal = go(e.currentTarget, $attr('status')) === 'normal';
+            const comment = go(e.currentTarget, $closest('.content__comment'));
+
+            go(
+                e.currentTarget,
+                $setText(normal ? '수정 취소' : '수정'),
+                $setAttr({ status: normal ? 'fix' : 'normal' }),
+            );
+
+            const original_text = go(
+                comment,
+                $find('.content__comment__body__text__main'),
+                $text,
+            ).trim();
+
+            if (normal) {
+                go(comment, $find('.content__comment__body__text'), $hide, (el) =>
+                    go(original_text, MainUI.commentFixTmp, $el, $insertBefore(el)),
+                );
+            } else {
+                go(
+                    comment,
+                    $find('.content__comment__body__text'),
+                    tap((el) => go(el, $prev, $remove)),
+                    $show,
+                );
+            }
+        }),
+
+        // todo
+        $delegate('click', '.content__comment__info__buttons__reply', (e) => {
+            go(
+                e.currentTarget,
+                $closest('.content__comment'),
+                $attr('id'),
+                replace('comment_', ''),
+                (id) => axios.get(`/todo/api/todo/comment/${id}`),
+                ({ data }) => Reply.pop(data.result),
+                hi,
+            );
+        }),
+        $delegate('click', '.content__comment__body__plus', (e) => {
+            go(
+                e.currentTarget,
+                $closest('.content__comment'),
+                $attr('id'),
+                replace('comment_', ''),
+                (id) => axios.get(`/todo/api/todo/comment/${id}`),
+                ({ data }) => Reply.pop(data.result),
+                hi,
+            );
+        }),
+
+        $delegate('submit', '.content__comment__body__fix__form', async (e) => {
+            e.originalEvent.preventDefault();
+            const comment_id = go(
+                e.currentTarget,
+                $closest('.content__comment'),
+                $attr('id'),
+                replace('comment_', ''),
+            );
+            const todo_id = go(
+                e.currentTarget,
+                $closest('.content'),
+                $attr('id'),
+                replace('todo_', ''),
+            );
+
+            go(
+                e.currentTarget,
+                (el) => new FormData(el).entries(),
+                object,
+                (obj) => axios.patch(`/todo/api/todo/comment/${comment_id}`, obj),
+                ({ data }) => {
+                    go(
+                        $qs(`.content_${todo_id} .content__info__comment__count`),
+                        $setText(numberToKorean(data.result.comment_count)),
+                    );
+
+                    go(
+                        $qs(`.comment_${comment_id}`),
+                        tap((el) => go(el, $find('.content__comment__body__fix'), $remove)),
+                        $replaceWith(go(data.result.comment, MainUI.mkCommentTmp, $el)),
+                    );
+                },
+            ).catch(Main.error);
+        }),
+
         $delegate('click', '.content__info__comment', (e) => {
             const comment = go(e.currentTarget, $closest('.content__info'), $next);
             const status = go(comment, $attr('status'));
@@ -301,8 +438,8 @@ Main.delegate = (container_el) =>
                 e.currentTarget,
                 $closest('.content'),
                 $attr('id'),
+                replace('todo_', ''),
                 (id) => axios.get(`/todo/api/todo/${id}/comment?page=1`),
-                hi,
                 ({ data }) => {
                     go(
                         e.currentTarget,
@@ -323,6 +460,7 @@ Main.delegate = (container_el) =>
                 tap((el) => el.blur()),
                 $closest('.content'),
                 $attr('id'),
+                replace('todo_', ''),
                 (id) => axios.get(`/todo/api/todo/${id}`),
                 (res) =>
                     Prompt.pop({
@@ -342,14 +480,16 @@ Main.delegate = (container_el) =>
             go(
                 e.currentTarget,
                 $closest('.content'),
-                tap($attr('id'), (id) => axios.post(`/todo/api/archive/return/${id}`)),
+                tap($attr('id'), replace('todo_', ''), (id) =>
+                    axios.post(`/todo/api/archive/return/${id}`),
+                ),
                 Main.rmOne,
             ).catch(Main.error),
         ),
         $delegate('click', '.content__checkbox', (e) => {
             const checked = go(e.currentTarget, (el) => $attr('status', el) === 'empty');
 
-            go(e.currentTarget, $closest('.content'), $attr('id'), (id) =>
+            go(e.currentTarget, $closest('.content'), $attr('id'), replace('todo_', ''), (id) =>
                 axios.patch(`/todo/api/todo/${id}`, { checked }),
             )
                 .then((res) => go(e.currentTarget, Main.check(res.data.result.checked)))

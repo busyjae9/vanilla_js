@@ -28,7 +28,7 @@ MainUI.heartTmp = (like) =>
 MainUI.commentFullTmp = () => go(comment_full(['content__info__comment__full']), head);
 
 MainUI.mkConTmp = (todo) => html`
-    <div class="content content_${todo.id}" id="${todo.id}">
+    <div class="content content_${todo.id}" id="todo_${todo.id}">
         <div class="content__body">
             ${todo.my_todo
                 ? `
@@ -85,22 +85,62 @@ MainUI.mkCommentTmpAll = ({ comments, next_page }) => html`
     </div>
 `;
 
+MainUI.commentFixTmp = (value) => html`
+    <div class="content__comment__body__fix">
+        <form class="content__comment__body__fix__form">
+            <input
+                type="text"
+                name="comment"
+                value="${value}"
+                class="content__comment__body__fix__form__main"
+                placeholder="비워질 수 없습니다."
+                required
+            />
+            <input class="content__comment__body__fix__form__submit" type="submit" value="변경" />
+        </form>
+    </div>
+`;
+
 MainUI.mkCommentTmp = (comment) => html`
-    <div class="content__comment" id="${comment.id}">
+    <div class="content__comment comment_${comment.id}" id="comment_${comment.id}">
         <div class="content__comment__body">
-            <div class="content__comment__body__user">${comment.user_name}</div>
-            <div class="content__comment__body__text">${comment.comment}</div>
+            <div id="user_${comment.user_id}" class="content__comment__body__user">
+                ${comment.user_name}
+            </div>
+            <div
+                status="${comment.reply_count === '0' ? 'normal' : 'more'}"
+                class="content__comment__body__text"
+            >
+                <span class="content__comment__body__text__main"> ${comment.comment} </span>
+                ${comment.reg_date !== comment.modified_date
+                    ? `<span class='mini__text__flex'>
+                        (수정됨 ${format(new Date(comment.modified_date), 'yy-MM-dd HH:mm')})
+                        <span/>`
+                    : ''}
+            </div>
+            ${comment.reply_count === '0'
+                ? ''
+                : `<div class='content__comment__body__plus'>+${comment.reply_count}</div>`}
         </div>
         <div class="content__comment__info">
+            <div class="content__comment__info__buttons">
+                <div class="content__comment__info__buttons__reply">답글</div>
+                ${comment.my_comment
+                    ? `
+                        <div status='normal' class='content__comment__info__buttons__fix'>수정</div>
+                        <div class='content__comment__info__buttons__delete'>삭제</div>
+                    `
+                    : ''}
+            </div>
             <div class="content__comment__info__reg">
-                ${new Date(comment.reg_date).toLocaleDateString()}
+                ${format(new Date(comment.modified_date), 'yy-MM-dd HH:mm')}
             </div>
         </div>
     </div>
 `;
 
 MainUI.mkArchiveConTmp = (todo) => html`
-    <div class="content content_${todo.id}" id="${todo.id}">
+    <div class="content content_${todo.id}" id="todo_${todo.id}">
         <div class="content__body">
             <span class="content__archive__title ${todo.checked ? 'done_text' : ''}">
                 ${todo.content}

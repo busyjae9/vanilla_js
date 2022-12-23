@@ -18,7 +18,8 @@
     "process": true,
     "console": true,
     "URLSearchParams": true,
-    "URL": true
+    "URL": true,
+    "Notification": true
   },
   "rules": {
     "semi": "warn",

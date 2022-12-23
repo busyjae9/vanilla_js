@@ -1,0 +1,166 @@
+.comment
+  display flex
+  flex-direction column
+  align-items center
+  justify-content space-evenly
+  background-color $grey
+  box-shadow 0 0 .1em .1em $black30
+  width_flex(96)
+  font_size(2)
+  border-radius 1em
+  padding .6em 1em
+  gap .6em
+  max-height 60vh
+
+  &__top_bar
+    display flex
+    width 100%
+    padding 0em 1em
+    gap .5em
+
+    &__close
+      font-size 1.2em
+      font-weight 600
+      cursor pointer
+
+
+  &__origin
+    width 100%
+    text-overflow ellipsis
+    box-shadow 0 0 .1em .1em $black30
+    background-color $black100
+    border-radius .8em
+    box-sizing border-box
+    overflow hidden
+
+    &__info
+      display flex
+      align-items center
+      justify-content space-between
+      width 100%
+      box-sizing border-box
+      background-color $grey
+      padding .5em 1em
+      font_size(1)
+
+
+      &__buttons
+        display flex
+        gap .5em
+
+        &__reply,
+        &__fix,
+        &__delete
+          cursor pointer
+
+        &__delete:hover
+          color $red
+
+    &__body
+      padding 1em 1em
+      display flex
+      align-items center
+      justify-content space-between
+
+      &__user
+        cursor pointer
+        max-width 20%
+        font-weight 600
+
+        &:hover
+          color $green
+
+      &__fix
+        width 70%
+        box-sizing border-box
+
+        &__form
+          width 100%
+          display flex
+          align-items center
+          justify-content space-between
+          background-color $grey
+          padding .2em .4em
+          border-radius 1em
+
+          &__main
+            width 70%
+            font-size .6em
+            color $red100
+            background-color transparent
+            border none
+            outline none
+
+          &__submit
+            padding none
+            font-size .6em
+            color $green
+            background-color transparent
+            border none
+
+      &__text
+        font-size .8em
+        box-sizing border-box
+        padding 0 .5em
+
+
+  &__input
+    padding .3em .5em
+    box-sizing border-box
+    border-radius .5em
+    box-shadow 0 0 .1em .1em $black30
+    background-color $black100
+    width 100%
+    display flex
+    justify-content space-between
+    align-items center
+
+
+    &__text
+      width 80%
+      border none
+      background-color transparent
+      outline-style none
+      color $white
+      font-size .8em
+
+    &__submit
+      border none
+      color $green
+      font-size .8em
+
+  &__replys
+    padding .5em
+    box-sizing border-box
+    width 100%
+
+    &[status="empty"]
+      padding 0 .5em
+
+    &__all
+      display flex
+      flex-direction column
+      width 100%
+      gap .8em
+      max-height 40vh
+
+    &__reply
+      display flex
+      width 100%
+      align-items flex-start
+      justify-content space-between
+
+      &__user
+        cursor pointer
+        width 30%
+        font-weight 600
+
+        &:hover
+          color $green
+
+      &__text
+        width 58%
+        overflow auto
+        text-wrap inherit
+        box-sizing border-box
+        padding 0 .5em

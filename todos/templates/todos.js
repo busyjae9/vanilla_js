@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
     const tz = req.headers.timezone;
     const now = format(zonedTimeToUtc(date, tz), 'yyyy-MM-dd');
     const user_id = req.query?.id || req.session.user.id;
-    console.time('sql');
+    console.time('좋아요 포함한 TODO 가져오기');
     const user = await Query.getById('users', user_id);
     go(
         QUERY`
@@ -61,36 +61,7 @@ router.get('/', async (req, res) => {
                         : MainUI.initTmp(todos, now),
             }),
     );
-    console.timeEnd('sql');
-
-    // : go(
-    //       req.query?.id,
-    //         (id) => ASSOCIATE1`
-    //           users ${{
-    //               column: COLUMN('name', 'id'),
-    //               query: SQL`WHERE ${EQ({ id })}`,
-    //           }}
-    //               < todos ${{
-    //                   hook: (todos) =>
-    //                       todos.map((todo) =>
-    //                           Object.assign({}, todo, {
-    //                               my_todo: (todo.user_id = req.session.user.id),
-    //                           }),
-    //                       ),
-    //                   query: SQL`WHERE ${EQ({
-    //                       date: now,
-    //                   })} AND archived_date IS NULL`,
-    //               }}
-    //                   < likes
-    //       `,
-    //       (data) =>
-    //           data
-    //               ? res.render('index', {
-    //                     user: data,
-    //                     body: MainUI.initOtherTmp(data._.todos, now),
-    //                 })
-    //               : res.render('404'),
-    //   );
+    console.timeEnd('좋아요 포함한 TODO 가져오기');
 });
 
 router.get('/archive', (req, res) =>

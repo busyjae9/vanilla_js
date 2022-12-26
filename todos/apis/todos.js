@@ -179,6 +179,66 @@ router.post('/todo/:id/like', (req, res) =>
           ).catch(Query.error(res)),
 );
 
+router.delete('/todo/comment/reply/:id', async (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.params.id,
+              tap(() => console.time('답 삭제하기')),
+              Query.update('replys')({
+                  deleted_date: zonedTimeToUtc(new Date(), 'Asia/Seoul'),
+              }),
+              tap(() => console.timeEnd('답글 삭제하기')),
+              Query.success(res, '답글 삭제 완료되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.patch('/todo/comment/reply/:id', async (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.body,
+              validCheck(['comment']),
+              tap(() => console.time('답글 수정하기')),
+              (valid_data) =>
+                  Query.update('replys')({
+                      ...valid_data,
+                      modified_date: zonedTimeToUtc(new Date(), 'Asia/Seoul'),
+                  })(req.params.id),
+              async (updated_reply) => {
+                  const reply_count = await QUERY1`
+                            SELECT
+                                COUNT(*)
+                            FROM replys
+                            WHERE
+                                replys.comment_id = ${req.params.id}
+                                AND replys.deleted_date IS NULL
+                    `.catch(Query.error(res));
+
+                  const reply = await QUERY1`
+                            SELECT
+                                replys.id,
+                                replys.reg_date,
+                                replys.modified_date,
+                                replys.comment,
+                                replys.user_id,
+                                (replys.user_id = ${req.session.user.id}) AS my_reply,
+                                users.name AS user_name
+                            FROM replys
+                            LEFT JOIN users 
+                                ON replys.user_id = users.id
+                            WHERE        
+                                replys.id = ${updated_reply.id}
+                            GROUP BY replys.id, users.id
+                    `;
+
+                  return { reply, reply_count: Number(reply_count.count) };
+              },
+              tap(() => console.timeEnd('답글 수정하기')),
+              Query.success(res, '답글 수정이 완료되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
 router.post('/todo/comment/:id/reply', async (req, res) =>
     isEmpty(req.params)
         ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
@@ -378,7 +438,7 @@ router.delete('/todo/comment/:id', async (req, res) =>
         ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
         : go(
               req.params.id,
-              tap(() => console.time('코멘트 삭하기')),
+              tap(() => console.time('코멘트 삭제하기')),
               Query.update('comments')({
                   deleted_date: zonedTimeToUtc(new Date(), 'Asia/Seoul'),
               }),
@@ -393,7 +453,9 @@ router.delete('/todo/comment/:id', async (req, res) =>
                     `;
 
                   const comment = await QUERY1`
-                            SELECT id
+                            SELECT 
+                                id,
+                                todo_id
                             FROM comments
                             WHERE comments.id = ${updated_comment.id}
                     `;
@@ -434,6 +496,7 @@ router.patch('/todo/comment/:id', async (req, res) =>
                                 comments.modified_date,
                                 comments.comment,
                                 comments.user_id,
+                                comments.todo_id,
                                 (comments.user_id = ${req.session.user.id}) AS my_comment,
                                 users.name AS user_name,
                                 COUNT(DISTINCT replys.user_id) AS reply_count
@@ -488,12 +551,13 @@ router.get('/todo/:id/comment', async (req, res) => {
                     comments.user_id,
                     (comments.user_id = ${req.session.user.id}) AS my_comment,
                     users.name AS user_name,
-                    COUNT(DISTINCT replys.user_id) AS reply_count
+                    COUNT(DISTINCT replys.id) AS reply_count
                 FROM comments
                 LEFT JOIN users 
                     ON comments.user_id = users.id
                 LEFT JOIN replys
                     ON comments.id = replys.comment_id
+                    AND replys.deleted_date IS NULL
                 WHERE
                     comments.todo_id = ${req.params.id}
                     AND comments.deleted_date IS NULL

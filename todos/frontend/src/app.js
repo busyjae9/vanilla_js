@@ -9,7 +9,9 @@ Login.delegate($qs('body'));
 function getNotificationPermission() {
     // 브라우저 지원 여부 체크
     if (!('Notification' in window)) return;
-    Notification.requestPermission().then((result) => console.log(result));
+    Notification.requestPermission().then((result) =>
+        console.log('Notification Permission: ', result),
+    );
 }
 
 // https만 됨...

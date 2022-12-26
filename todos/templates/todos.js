@@ -20,10 +20,14 @@ router.get('/', async (req, res) => {
     const tz = req.headers.timezone;
     const now = format(zonedTimeToUtc(date, tz), 'yyyy-MM-dd');
     const user_id = req.query?.id || req.session.user.id;
-    console.time('좋아요 포함한 TODO 가져오기');
-    const user = await Query.getById('users', user_id);
-    go(
-        QUERY`
+
+    try {
+        const number_id = Number(user_id);
+
+        console.time('좋아요 포함한 TODO 가져오기');
+        const user = await Query.getById('users', user_id);
+        go(
+            QUERY`
             SELECT
                 todos.*,
                 todos.user_id = ${req.session.user.id} AS my_todo,
@@ -46,22 +50,26 @@ router.get('/', async (req, res) => {
                 AND my_like.user_id = ${req.session.user.id} 
                 AND my_like.cancel_date IS NULL
             WHERE 
-                todos.user_id = ${user.id}
+                todos.user_id = ${number_id}
                 AND todos.archived_date IS NULL
                 AND ${EQ({ 'todos.date': now })}
             GROUP BY todos.id, my_like.user_id
             ORDER BY todos.id DESC
         `,
-        (todos) =>
-            res.render('index', {
-                user: user,
-                body:
-                    user.id !== req.session.user.id
-                        ? MainUI.initOtherTmp(todos, now)
-                        : MainUI.initTmp(todos, now),
-            }),
-    );
-    console.timeEnd('좋아요 포함한 TODO 가져오기');
+            (todos) =>
+                res.render('index', {
+                    user: user,
+                    body:
+                        user.id !== req.session.user.id
+                            ? MainUI.initOtherTmp(todos, now)
+                            : MainUI.initTmp(todos, now),
+                }),
+        );
+        console.timeEnd('좋아요 포함한 TODO 가져오기');
+    } catch (err) {
+        log(err);
+        return res.render('404', { message: `${req.url} 페이지가 존재하지 않습니다.` });
+    }
 });
 
 router.get('/archive', (req, res) =>

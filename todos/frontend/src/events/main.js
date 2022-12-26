@@ -299,7 +299,7 @@ Main.delegate = (container_el) =>
         }),
 
         $delegate('click', '.content__comment__body__user', (e) =>
-            go(e.currentTarget, $attr('id'), replace('comment_', ''), (id) =>
+            go(e.currentTarget, $attr('id'), replace('user_', ''), (id) =>
                 window.location.replace(`/todo?id=${id}`),
             ),
         ),

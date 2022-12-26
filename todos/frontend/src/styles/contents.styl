@@ -74,19 +74,20 @@ on-color(color)
       padding 1em 1em
       display flex
       align-items center
-      justify-content space-between
+      justify-content flex-start
+      gap 1em
 
       &__user
         cursor pointer
-        max-width 20%
+        min-width 20%
+        max-width 30%
         font-weight 600
 
         &:hover
           color $green
 
       &__fix
-        width 70%
-        box-sizing border-box
+        width 66%
 
         &__form
           width 100%
@@ -95,6 +96,7 @@ on-color(color)
           justify-content space-between
           background-color $grey
           padding .2em .4em
+          box-sizing border-box
           border-radius 1em
 
           &__main
@@ -118,10 +120,10 @@ on-color(color)
         padding 0 .5em
 
         &[status="normal"]
-          width 82%
+          width 66%
 
         &[status="more"]
-          width 70%
+          width 66%
 
       &__plus
         cursor pointer
@@ -167,7 +169,6 @@ on-color(color)
         align-items center
         justify-content center
         height auto
-
 
       &__next
         cursor pointer
@@ -288,6 +289,7 @@ on-color(color)
     width 100%
     box-sizing border-box
     padding 1em 1em
+    gap 1em
 
   .done_text
     text-align justify

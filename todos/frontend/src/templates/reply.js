@@ -28,6 +28,7 @@ import Main from '../events/main.js';
 import MainUI from './main.js';
 import numberToKorean from '../utils/numberToKor.js';
 import Alert from './alert.js';
+import animateCSS from '../utils/animateCSS.js';
 
 const Reply = {};
 
@@ -192,9 +193,6 @@ Reply.mkReplyPopTmp = (comment) => html`
     </div>
 `;
 
-// todo 내일로 넘기기 및 자동으로 넘어가기 완성 안된거
-// todo 답글 수정 및 삭제 및 등록
-
 Reply.pop = (data) =>
     new Promise((resolve) => {
         const popup = go(data, Reply.mkReplyPopTmp, $el, $appendTo($qs('body')), tap($focus));
@@ -216,13 +214,26 @@ Reply.pop = (data) =>
                 go(popup, $find('.comment__replys'), $replaceWith(new_replys));
 
                 if (data.result.replys.length === 0)
-                    go(popup, $find('.comment__replys'), $setAttr({ status: 'empty' }));
-                else go(popup, $find('.comment__replys'), $setAttr({ status: 'full' }));
+                    go(popup, $find('.comment__replys'), $setAttr({ status: 'empty' }), $hide);
+                else go(popup, $find('.comment__replys'), $setAttr({ status: 'full' }), $show);
             },
         );
 
         go(
             $qs('.bg_dark'),
+            $on(
+                'click',
+                (e) =>
+                    e.target === e.currentTarget &&
+                    go(
+                        e.currentTarget,
+                        $find('.comment'),
+                        animateCSS('fadeOutDown', '.3s'),
+                        $closest('.bg_dark'),
+                        $remove,
+                        (el) => resolve(true),
+                    ),
+            ),
             $delegate('click', '.comment__top_bar__close', (e) => {
                 go(e.currentTarget, $closest('.bg_dark'), $remove, (el) => resolve(true));
             }),
@@ -230,7 +241,7 @@ Reply.pop = (data) =>
                 e.originalEvent.preventDefault();
 
                 if (go(popup, $find('.comment__replys'), $attr('status')) === 'empty')
-                    go(popup, $find('.comment__replys'), $setAttr({ status: 'full' }));
+                    go(popup, $find('.comment__replys'), $setAttr({ status: 'full' }), $show);
 
                 go(
                     e.currentTarget,

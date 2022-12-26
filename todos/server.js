@@ -4,6 +4,7 @@ import { createClient } from 'redis';
 import session from 'express-session';
 import connect from 'connect-redis';
 import { v1 } from 'uuid';
+import localtunnel from 'localtunnel';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 import webpack from 'webpack';
@@ -11,7 +12,7 @@ import webpackConfig from './webpack.config.js';
 
 import livereload from 'livereload';
 import livereloadMiddleware from 'connect-livereload';
-import { includes } from 'fxjs';
+import { includes, log } from 'fxjs';
 
 import geoip from 'geoip-lite';
 import todos_api from './apis/todos.js';
@@ -31,7 +32,7 @@ const makeStatic = () => {
     const compiler = webpack(config);
 
     const DIST_DIR = join(process.cwd(), '/frontend/static');
-    app.use('/static', express.static(DIST_DIR));
+    app.use('/todo/static', express.static(DIST_DIR));
 
     if (DEV) {
         const webpackDevMiddlewareInstance = webpackDevMiddleware(compiler);
@@ -46,7 +47,9 @@ const makeStatic = () => {
     } else {
         const DIST_DIR = join(process.cwd(), '/frontend/dist');
         app.use('/dist', express.static(DIST_DIR));
-        return new Promise((resolve) => resolve(true));
+        return new Promise((resolve) => {
+            resolve(true);
+        });
     }
 };
 
@@ -74,6 +77,13 @@ if (DEV) {
 app.use(
     cors({
         origin: `${URL}`,
+        credentials: true,
+    }),
+);
+
+app.use(
+    cors({
+        origin: `https://jae9.loca.lt`,
         credentials: true,
     }),
 );
@@ -119,6 +129,10 @@ app.use(function (req, res, next) {
     res.locals.url = req.url;
 
     next();
+});
+
+app.get('/ping', function (req, res) {
+    res.status(200).json({ ping: true });
 });
 
 app.use(function (req, res, next) {

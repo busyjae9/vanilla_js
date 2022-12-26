@@ -67,7 +67,7 @@ Login.delegate = (container_el) =>
                     (el) => new FormData(el).entries(),
                     object,
                     Login.regCheck,
-                    (obj) => axios.post('todo/api/reg', obj),
+                    (obj) => axios.post('/todo/api/reg', obj),
                 ),
                 () => (window.location.href = '/todo/login'),
             ).catch((err) => {

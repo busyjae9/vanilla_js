@@ -8,11 +8,10 @@
     <meta name="apple-mobile-web-status-bar-style" content="#6b7280">
     <meta name="theme-color" content="black">
     <link id="favicon" rel="shortcut icon" type="image/png"
-          href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/static/favicon.png' />
-    <link
-            rel="manifest"
-            href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/static/manifest.json'
-    />
+          href='/todo/static/favicon.png' />
+    <link rel="manifest" href='/todo/static/manifest.json' />
+    <link rel="stylesheet" as="style" crossorigin
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.6/dist/web/static/pretendard.css" />
     <link
             type='text/css'
             rel="stylesheet"
@@ -21,16 +20,15 @@
     <link
             type='text/css'
             rel='stylesheet'
-            href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/dist/app.bundle.css'>
+            href='/dist/app.bundle.css'>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
 </head>
 <body>
-<script type="module"
-        src='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/dist/app.bundle.js'></script>
+<script type="module" src='/dist/app.bundle.js'></script>
 <div class='container_404'>
     <h1>404</h1>
     <% if(locals.message) { %>
-        <div class='message'><%= locals.message %></div>
+        <div class='message'><%= locals.message; %></div>
     <% } else { %>
         <div class='message'>데이터가 존재하지 않습니다</div>
     <% } %>

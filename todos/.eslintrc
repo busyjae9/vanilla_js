@@ -19,7 +19,8 @@
     "console": true,
     "URLSearchParams": true,
     "URL": true,
-    "Notification": true
+    "Notification": true,
+    "setInterval": true
   },
   "rules": {
     "semi": "warn",

@@ -18,7 +18,7 @@
       "type": "image/png"
     }
   ],
-  "start_url": "http://192.168.0.7:8080/todo",
+  "start_url": "/todo",
   "display": "standalone",
   "orientation": "portrait",
   "permissions": [

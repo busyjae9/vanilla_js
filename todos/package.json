@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js",
+    "start": "pm2 start ecosystem.config.cjs --only projectName-pd --env production",
+    "del": "pm2 del all",
     "migrate": "node util/db/migrate_fx.js",
     "knex_create": "npx knex migrate:make $name",
     "knex_up": "npx knex migrate:up"
@@ -43,6 +44,7 @@
     "i": "^0.3.7",
     "knex": "^2.3.0",
     "livereload": "^0.9.3",
+    "localtunnel": "^2.0.2",
     "mini-css-extract-plugin": "^2.7.2",
     "moment": "^2.29.4",
     "nodemon": "^2.0.20",

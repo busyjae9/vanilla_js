@@ -16,7 +16,9 @@ Alert.mkButtonTmp = (button) =>
 Alert.mkAlertTmp = (data) => `
 <div class='alert'>
     <div class='alert__body'>
-        <div class='alert__body__title'>${data.title}</div>
+        <div class='alert__body__title'>${
+            data.title ? data.title : '서버에 오류가 발생했습니다.'
+        }</div>
         ${data?.msg ? `<div class='alert__body__msg'>${data.msg}</div>` : ''}
         <div class='alert__body__buttons'>
         ${strMap(Alert.mkButtonTmp, data.buttons)}

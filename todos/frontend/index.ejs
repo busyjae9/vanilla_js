@@ -8,11 +8,10 @@
     <meta name="apple-mobile-web-status-bar-style" content="#6b7280">
     <meta name="theme-color" content="black">
     <link id="favicon" rel="shortcut icon" type="image/png"
-          href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/static/favicon.png' />
-    <link
-            rel="manifest"
-            href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/static/manifest.json'
-    />
+          href='/todo/static/favicon.png' />
+    <link rel="stylesheet" as="style" crossorigin
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.6/dist/web/static/pretendard.css" />
+    <link rel="manifest" href='/todo/static/manifest.json' />
     <link
             type='text/css'
             rel="stylesheet"
@@ -21,24 +20,24 @@
     <link
             type='text/css'
             rel='stylesheet'
-            href='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/dist/app.bundle.css'>
+            href='/dist/app.bundle.css'>
     <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
 </head>
 <body>
 <script type="module"
-        src='<%= process.env.url; %>:<%= process.env.ENV === 'dev' ? process.env.port_test : process.env.port; %>/dist/app.bundle.js'></script>
+        src='/dist/app.bundle.js'></script>
 <% if(locals.whoami) { %>
     <div class="whoami">
         <div class="whoami__container">
             <% if(locals.user && locals.whoami.id !== locals.user?.id) { %>
                 <div class="whoami__info">
                     <ion-icon class="whoami__info__icon" name="person"></ion-icon>
-                    <div class="whoami__info__name"><%= locals.user?.name %> 님</div>
+                    <div class="whoami__info__name"><%= locals.user?.name; %> 님</div>
                 </div>
             <% } else { %>
                 <div class="whoami__info">
                     <ion-icon class="whoami__info__icon" name="person"></ion-icon>
-                    <div class="whoami__info__name"><%= locals.whoami.name %></div>
+                    <div class="whoami__info__name"><%= locals.whoami.name; %></div>
                 </div>
             <% } %>
             <% if(locals.user && locals.whoami.id !== locals.user?.id) { %>
@@ -47,7 +46,7 @@
                     <button class="whoami__buttons__my_page">내 페이지</button>
                 </div>
             <% } else { %>
-                <% if(locals.url.includes("archive")) { %>
+                <% if(locals.url.includes('archive')) { %>
                     <div class="whoami__buttons">
                         <button class="whoami__buttons__del_all">전체 삭제</button>
                         <button class="whoami__buttons__return">돌아가기</button>

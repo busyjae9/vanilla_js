@@ -1,13 +1,12 @@
 // Update with your config settings.
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
 /**
- * @type { Object.<string, import("knex").Knex.Config> }
+ * @type { Object.<string, import('knex').Knex.Config> }
  */
 export default {
-
     development: {
         client: 'pg',
         debug: true,
@@ -25,7 +24,7 @@ export default {
         },
         migrations: {
             database: process.env['pg_db'],
-            directory: './knex_migration',
+            directory: './backend/knex_migration',
             disableTransactions: true,
         },
         log: {
@@ -40,8 +39,8 @@ export default {
             },
             debug(msg) {
                 console.log(msg);
-            }
-        }
+            },
+        },
     },
 
     staging: {
@@ -61,7 +60,7 @@ export default {
         },
         migrations: {
             database: process.env['pg_db'],
-            directory: './knex_migration',
+            directory: './backend/knex_migration',
             disableTransactions: true,
         },
         log: {
@@ -76,8 +75,8 @@ export default {
             },
             debug(msg) {
                 console.log(msg);
-            }
-        }
+            },
+        },
     },
 
     production: {
@@ -97,7 +96,7 @@ export default {
         },
         migrations: {
             database: process.env['pg_db'],
-            directory: './knex_migration',
+            directory: './backend/knex_migration',
             disableTransactions: true,
         },
         log: {
@@ -112,8 +111,7 @@ export default {
             },
             debug(msg) {
                 console.log(msg);
-            }
-        }
-    }
-
+            },
+        },
+    },
 };

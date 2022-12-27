@@ -2,7 +2,7 @@ module.exports = {
     apps: [
         {
             name: 'projectName-dev',
-            script: './server.js',
+            script: './backend/server.js',
             instances: 1,
             watch: true,
             env: {
@@ -17,7 +17,7 @@ module.exports = {
         },
         {
             name: 'projectName-pd',
-            script: './server.js',
+            script: './backend/server.js',
             instances: -1, // 클러스터 모드
             watch: false,
             env: {

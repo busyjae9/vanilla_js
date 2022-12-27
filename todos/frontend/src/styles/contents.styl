@@ -74,20 +74,19 @@ on-color(color)
       padding 1em 1em
       display flex
       align-items center
-      justify-content flex-start
+      justify-content space-between
       gap 1em
 
       &__user
         cursor pointer
-        min-width 20%
-        max-width 30%
+        width 20%
         font-weight 600
 
         &:hover
           color $green
 
       &__fix
-        width 66%
+        flex-grow 1
 
         &__form
           width 100%
@@ -118,12 +117,7 @@ on-color(color)
         font-size .8em
         box-sizing border-box
         padding 0 .5em
-
-        &[status="normal"]
-          width 66%
-
-        &[status="more"]
-          width 66%
+        flex-grow 1
 
       &__plus
         cursor pointer
@@ -159,6 +153,7 @@ on-color(color)
       width 100%
       padding .2em .2em
       overflow: hidden;
+      transition all .5s ease-in-out
 
       &__body
         width 100%
@@ -173,7 +168,7 @@ on-color(color)
       &__next
         cursor pointer
         width 100%
-        margin .5em 0
+        margin-top .5em
         padding .5em 1em
         text-overflow ellipsis
         box-shadow 0 0 .1em .1em $black30
@@ -185,7 +180,7 @@ on-color(color)
         font-weight 600
 
     &[status="before"]
-      padding 0em 1em
+      padding 0em .5em
       max-height 0
       overflow: hidden;
 
@@ -237,6 +232,7 @@ on-color(color)
       cursor pointer
       max-width: 20%
       justify-content flex-end
+      align-items center
 
       &__count
         max-width 60%
@@ -257,6 +253,7 @@ on-color(color)
       max-width: 20%
       justify-content flex-start
       overflow hidden
+      align-items center
 
       &__count
         max-width 60%

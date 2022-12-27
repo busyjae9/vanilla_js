@@ -4,11 +4,10 @@ import { createClient } from 'redis';
 import session from 'express-session';
 import connect from 'connect-redis';
 import { v1 } from 'uuid';
-import localtunnel from 'localtunnel';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 import webpack from 'webpack';
-import webpackConfig from './webpack.config.js';
+import webpackConfig from '../webpack.config.js';
 
 import livereload from 'livereload';
 import livereloadMiddleware from 'connect-livereload';
@@ -17,6 +16,8 @@ import { includes, log } from 'fxjs';
 import geoip from 'geoip-lite';
 import todos_api from './apis/todos.js';
 import todos_tmp from './templates/todos.js';
+import todos_api_v2 from './apis/todos_v2.js';
+import todos_tmp_v2 from './templates/todos_v2.js';
 import { join } from 'path';
 
 const DEV = process.env.ENV === 'dev';
@@ -83,7 +84,14 @@ app.use(
 
 app.use(
     cors({
-        origin: `https://jae9.loca.lt`,
+        origin: `http://192.168.0.7:8080`,
+        credentials: true,
+    }),
+);
+
+app.use(
+    cors({
+        origin: `http://192.168.0.7`,
         credentials: true,
     }),
 );
@@ -143,6 +151,9 @@ app.use(function (req, res, next) {
 
 app.use('/todo', todos_tmp);
 app.use('/todo/api', todos_api);
+
+app.use('/v2/todo', todos_tmp_v2);
+app.use('/v2/todo/api', todos_api_v2);
 
 app.use(function (req, res, next) {
     res.status(404);

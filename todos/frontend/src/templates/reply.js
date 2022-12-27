@@ -19,9 +19,12 @@ import {
     $setVal,
     $show,
     $text,
+    $children,
+    $insertAfter,
 } from 'fxdom';
-import { delay, each, go, html, log, map, object, replace, strMap, tap } from 'fxjs';
+import { delay, each, go, hi, html, log, map, object, replace, strMap, tap } from 'fxjs';
 import { format } from 'date-fns';
+import anime from 'animejs/lib/anime.es.js';
 import LoadingUi from './loading.js';
 import axios from '../data/axios.js';
 import Main from '../events/main.js';
@@ -29,6 +32,7 @@ import MainUI from './main.js';
 import numberToKorean from '../utils/numberToKor.js';
 import Alert from './alert.js';
 import animateCSS from '../utils/animateCSS.js';
+import Anime from '../utils/anime.js';
 
 const Reply = {};
 
@@ -84,12 +88,16 @@ Reply.mkReplyTmp = (reply) => html`
 `;
 
 Reply.mkReplyAllTmp = ({ replys, next_page }) => html`
-    <div class="comment__replys">
+    <div class="comment__replys" status='"empty'>
         <div class="comment__replys__all">${strMap(Reply.mkReplyTmp, replys)}</div>
         ${next_page
             ? `<div page='${next_page}' class='comment__replys__all__next'>더보기</div>`
             : ''}
     </div>
+`;
+
+Reply.mkPlusTmp = (next_page) => html`
+    <div page="${next_page}" class="comment__replys__all__next">더보기</div>
 `;
 
 Reply.commentFixTmp = (value) => html`
@@ -178,8 +186,9 @@ Reply.mkReplyPopTmp = (comment) => html`
                     </div>
                 </div>
             </div>
-            <div status="full" class="comment__replys"></div>
-            ${LoadingUi.makeTmp}
+            <div status="empty" class="comment__replys">
+                <div class="comment__replys__all"></div>
+            </div>
             <form class="comment__input">
                 <input
                     name="comment"
@@ -195,27 +204,61 @@ Reply.mkReplyPopTmp = (comment) => html`
 
 Reply.pop = (data) =>
     new Promise((resolve) => {
-        const popup = go(data, Reply.mkReplyPopTmp, $el, $appendTo($qs('body')), tap($focus));
+        const popup = go(
+            data,
+            Reply.mkReplyPopTmp,
+            $el,
+            $appendTo($qs('body')),
+            tap($focus),
+            tap(
+                $find('.comment'),
+                Anime.animeSync({
+                    opacity: [0, 1],
+                    translateY: [300, 0],
+                    autoplay: true,
+                    easing: 'easeInQuart',
+                    duration: 500,
+                }),
+            ),
+        );
 
         go(
             $qs('.bg_dark'),
             $on('keyup', (e) => {
-                if (e.key === 'Escape') go(e.currentTarget, $remove, (el) => resolve(true));
+                if (e.key === 'Escape')
+                    go(
+                        e.currentTarget,
+                        $find('.comment'),
+                        Anime.anime({
+                            opacity: 0,
+                            translateY: 300,
+                            autoplay: true,
+                            easing: 'easeOutQuart',
+                            duration: 500,
+                        }),
+                        $closest('.bg_dark'),
+                        $remove,
+                        (el) => resolve(true),
+                    );
             }),
         );
 
         go(
             data.id,
-            (id) => axios.get(`/todo/api/todo/comment/${id}/reply?page=1`),
-            ({ data }) => {
-                go(popup, $find('.loader'), $hide);
+            (id) => axios.get(`/v2/todo/api/todo/comment/${id}/reply?page=1`),
+            async ({ data }) => {
+                const reply_all = go(popup, $find('.comment__replys__all'));
+                const next = go(popup, $find('.comment__replys__all__next'));
 
-                const new_replys = go(data.result, Reply.mkReplyAllTmp, $el);
-                go(popup, $find('.comment__replys'), $replaceWith(new_replys));
+                go(data.result.replys, map(Reply.mkReplyTmp), map($el), each($appendTo(reply_all)));
+
+                if (data.result.next_page)
+                    go(data.result.next_page, Reply.mkPlusTmp, $el, $insertAfter(reply_all));
+                else if (next) go(next, $remove);
 
                 if (data.result.replys.length === 0)
-                    go(popup, $find('.comment__replys'), $setAttr({ status: 'empty' }), $hide);
-                else go(popup, $find('.comment__replys'), $setAttr({ status: 'full' }), $show);
+                    go(popup, $find('.comment__replys'), $setAttr({ status: 'empty' }));
+                else go(popup, $find('.comment__replys'), $setAttr({ status: 'full' }));
             },
         );
 
@@ -228,7 +271,13 @@ Reply.pop = (data) =>
                     go(
                         e.currentTarget,
                         $find('.comment'),
-                        animateCSS('fadeOutDown', '.3s'),
+                        Anime.anime({
+                            opacity: 0,
+                            translateY: 300,
+                            autoplay: true,
+                            easing: 'easeOutQuart',
+                            duration: 500,
+                        }),
                         $closest('.bg_dark'),
                         $remove,
                         (el) => resolve(true),
@@ -255,6 +304,11 @@ Reply.pop = (data) =>
                                 Reply.mkReplyTmp,
                                 $el,
                                 $prependTo($qs('.comment__replys__all')),
+                                Anime.anime({
+                                    easing: 'easeInSine',
+                                    translateX: [e.currentTarget.clientWidth, 0],
+                                    duration: 300,
+                                }),
                             ),
                     ),
                     $find('.comment__input__text'),
@@ -460,14 +514,14 @@ Reply.pop = (data) =>
             }),
 
             $delegate('click', '.comment__origin__body__user', (e) =>
-                go(e.currentTarget, $attr('id'), replace('user_', ''), (id) =>
-                    window.location.replace(`/todo?id=${id}`),
-                ),
+                go(e.currentTarget, $attr('id'), replace('user_', ''), (id) => {
+                    window.location = `todo?id=${id}`;
+                }),
             ),
             $delegate('click', '.comment__replys__reply__user', (e) =>
-                go(e.currentTarget, $attr('id'), replace('user_', ''), (id) =>
-                    window.location.replace(`/todo?id=${id}`),
-                ),
+                go(e.currentTarget, $attr('id'), replace('user_', ''), (id) => {
+                    window.location = `todo?id=${id}`;
+                }),
             ),
         );
     });

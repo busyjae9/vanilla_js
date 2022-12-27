@@ -76,9 +76,9 @@ MainUI.mkConTmp = (todo) => html`
     </div>
 `;
 
-MainUI.mkCommentTmpAll = ({ comments, next_page }) => html`
+MainUI.mkCommentTmpAll = ({ next_page }) => html`
     <div class="content__comments__all">
-        <div class="content__comments__all__body">${strMap(MainUI.mkCommentTmp, comments)}</div>
+        <div class="content__comments__all__body"></div>
         ${next_page
             ? `<div page='${next_page}' class='content__comments__all__next'>더보기</div>`
             : ''}
@@ -118,7 +118,7 @@ MainUI.mkCommentTmp = (comment) => html`
                         <span/>`
                     : ''}
             </div>
-            ${comment.reply_count === '0'
+            ${Number(comment.reply_count) === 0
                 ? ''
                 : `<div class='content__comment__body__plus'>+${comment.reply_count}</div>`}
         </div>

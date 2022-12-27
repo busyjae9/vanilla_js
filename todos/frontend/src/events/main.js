@@ -1,4 +1,18 @@
-import { curry, delay, each, go, hi, log, map, object, pipe, replace, strMap, tap } from 'fxjs';
+import {
+    curry,
+    delay,
+    each,
+    go,
+    head,
+    hi,
+    log,
+    map,
+    object,
+    pipe,
+    replace,
+    strMap,
+    tap,
+} from 'fxjs';
 import {
     $appendTo,
     $attr,
@@ -36,6 +50,8 @@ import Search from '../templates/search.js';
 import numberToKorean from '../utils/numberToKor.js';
 import animateCSS from '../utils/animateCSS.js';
 import Reply from '../templates/reply.js';
+import Anime from '../utils/anime.js';
+import anime from 'animejs/lib/anime.es.js';
 
 const Main = {};
 
@@ -84,7 +100,9 @@ Main.check = curry((check, el) =>
 Main.update = (data) =>
     go($qs(`.content_${data.id} `), (content) =>
         $qs('.header__today').value === format(new Date(data.date), 'yyyy-MM-dd')
-            ? go(content, $children, ([icon, content, buttons]) => $setText(data.content)(content))
+            ? go(content, $children, head, $children, ([icon, content, buttons]) =>
+                  $setText(data.content)(content),
+              )
             : $remove(content),
     );
 
@@ -107,7 +125,7 @@ Main.delegate = (container_el) =>
         container_el,
         $delegate('click', '.whoami__buttons__logout', async (e) => {
             try {
-                const res = await axios.post('/todo/api/logout');
+                const res = await axios.post('/v2/todo/api/logout');
 
                 go(e.delegateTarget, $findAll('div'), each($remove));
                 go(LoginUI.loginTmp(), $el, $appendTo(e.delegateTarget));
@@ -137,7 +155,7 @@ Main.delegate = (container_el) =>
                 }),
                 (prev) =>
                     axios.get(
-                        `/todo/api/todo/list?date=${prev.toDateInputValue()}${
+                        `/v2/todo/api/todo/list?date=${prev.toDateInputValue()}${
                             id ? `&id=${id}` : ''
                         }`,
                     ),
@@ -165,7 +183,7 @@ Main.delegate = (container_el) =>
                 }),
                 (prev) =>
                     axios.get(
-                        `/todo/api/todo/list/?date=${prev.toDateInputValue()}${
+                        `/v2/todo/api/todo/list/?date=${prev.toDateInputValue()}${
                             id ? `&id=${id}` : ''
                         }`,
                     ),
@@ -184,7 +202,8 @@ Main.delegate = (container_el) =>
                     urlParams.set('date', el.value);
                     history.replaceState({}, el.value, `todo?${urlParams.toString()}`);
                 }),
-                (el) => axios.get(`/todo/api/todo/list/?date=${el.value}${id ? `&id=${id}` : ''}`),
+                (el) =>
+                    axios.get(`/v2/todo/api/todo/list/?date=${el.value}${id ? `&id=${id}` : ''}`),
                 (res) => Main.contentViewUpdate(res.data.result),
             ).catch(Main.error);
         }),
@@ -193,7 +212,7 @@ Main.delegate = (container_el) =>
                 e.currentTarget,
                 $closest('.content'),
                 tap($attr('id'), replace('todo_', ''), (id) =>
-                    axios.post(`/todo/api/archive/?id=${id}`),
+                    axios.post(`/v2/todo/api/archive/?id=${id}`),
                 ),
                 Main.rmOne,
             ).catch(Main.error),
@@ -203,7 +222,7 @@ Main.delegate = (container_el) =>
                 e.currentTarget,
                 $closest('.content'),
                 tap($attr('id'), replace('todo_', ''), (id) =>
-                    axios.post(`/todo/api/archive/delete/${id}`),
+                    axios.post(`/v2/todo/api/archive/delete/${id}`),
                 ),
                 Main.rmOne,
             ).catch(Main.error),
@@ -214,7 +233,7 @@ Main.delegate = (container_el) =>
                 $closest('.content'),
                 $attr('id'),
                 replace('todo_', ''),
-                (id) => axios.post(`/todo/api/todo/${id}/like`),
+                (id) => axios.post(`/v2/todo/api/todo/${id}/like`),
             ).catch(Main.error);
 
             if (!res.data?.result) return;
@@ -239,9 +258,8 @@ Main.delegate = (container_el) =>
                 e.currentTarget,
                 (el) => new FormData(el).entries(),
                 object,
-                (obj) => axios.post(`/todo/api/todo/${id}/comment`, obj),
-            )
-                .then(({ data }) => {
+                (obj) => axios.post(`/v2/todo/api/todo/${id}/comment`, obj),
+                ({ data }) => {
                     const comment = $qs(`.content_${id} .content__comments`);
                     const status = go($qs(`.content_${id} .content__comments`), $attr('status'));
 
@@ -255,38 +273,84 @@ Main.delegate = (container_el) =>
                             data.result.comment,
                             MainUI.mkCommentTmp,
                             $el,
-                            $prependTo($qs(`.content_${id} .content__comments__all__body`)),
+                            $prependTo(go(comment, $find('.content__comments__all__body'))),
+                            (el) =>
+                                Anime.anime({
+                                    easing: 'easeInSine',
+                                    opacity: [0, 1],
+                                    height: [el.offsetHeight / 4, el.offsetHeight],
+                                    translateX: [comment.clientWidth, 0],
+                                    duration: 600,
+                                    delay: anime.stagger(100),
+                                })(el),
                         );
                     else
-                        go(axios.get(`/todo/api/todo/${id}/comment?page=1`), ({ data }) => {
+                        go(axios.get(`/v2/todo/api/todo/${id}/comment?page=1`), ({ data }) => {
                             if (data.result.comment_count !== 0) {
-                                go(data.result, MainUI.mkCommentTmpAll, $el, $appendTo(comment));
                                 go(comment, $setAttr({ status: 'after' }));
+                                go(
+                                    data.result,
+                                    MainUI.mkCommentTmpAll,
+                                    $el,
+                                    $appendTo(comment),
+                                    hi,
+                                    (el) =>
+                                        go(
+                                            data.result.comments,
+                                            map(MainUI.mkCommentTmp),
+                                            map($el),
+                                            each(
+                                                $appendTo(
+                                                    go(el, $find('.content__comments__all__body')),
+                                                ),
+                                            ),
+                                            Anime.anime({
+                                                easing: 'easeInSine',
+                                                opacity: [0, 1],
+                                                translateX: [comment.clientWidth, 0],
+                                                duration: 300,
+                                                delay: anime.stagger(50),
+                                            }),
+                                        ),
+                                );
                             }
                         });
 
                     go(e.currentTarget, $find('.content__info__input__text'), $setVal(''));
-                    $qs(`.content_${id} .content__comments`).scroll(0, 0);
-                })
-                .catch(Main.error);
+                    $qs(`.content_${id} .content__comments`).scrollTo({
+                        top: 0,
+                        behavior: 'smooth',
+                    });
+                },
+            ).catch(Main.error);
         }),
 
         $delegate('click', '.content__comments__all__next', (e) => {
             const id = go(e.currentTarget, $closest('.content'), $attr('id'), replace('todo_', ''));
             const page = $attr('page', e.currentTarget);
 
-            go(axios.get(`/todo/api/todo/${id}/comment?page=${page}`), ({ data }) => {
+            go(axios.get(`/v2/todo/api/todo/${id}/comment?page=${page}`), ({ data }) => {
                 go(
                     $qs(`.content_${id} .content__info__comment__count`),
                     $setText(numberToKorean(data.result.comment_count)),
                 );
+
+                const comment = $qs(`.content_${id} .content__comments`);
 
                 go(
                     data.result.comments,
                     map(MainUI.mkCommentTmp),
                     map($el),
                     each($appendTo($qs(`.content_${id} .content__comments__all__body`))),
+                    Anime.animeSync({
+                        easing: 'easeInSine',
+                        translateX: [comment.clientWidth, 0],
+                        duration: 600,
+                        delay: anime.stagger(100),
+                    }),
                 );
+
+                comment.scrollTo({ left: 0, top: comment.scrollHeight, behavior: 'smooth' });
 
                 if (!data.result.next_page)
                     go($qs(`.content_${id} .content__comments__all__next`), $remove);
@@ -299,8 +363,11 @@ Main.delegate = (container_el) =>
         }),
 
         $delegate('click', '.content__comment__body__user', (e) =>
-            go(e.currentTarget, $attr('id'), replace('user_', ''), (id) =>
-                window.location.replace(`/todo?id=${id}`),
+            go(
+                e.currentTarget,
+                $attr('id'),
+                replace('user_', ''),
+                (id) => (window.location = `/v2/todo?id=${id}`),
             ),
         ),
         $delegate('click', '.content__comment__info__buttons__delete', async (e) => {
@@ -310,6 +377,8 @@ Main.delegate = (container_el) =>
                 $attr('id'),
                 replace('comment_', ''),
             );
+            const comment = go(e.currentTarget, $closest('.content__comment'));
+
             const todo_id = go(
                 e.currentTarget,
                 $closest('.content'),
@@ -323,13 +392,22 @@ Main.delegate = (container_el) =>
             });
 
             if (button.class === 'ok')
-                go(axios.delete(`/todo/api/todo/comment/${comment_id}`), ({ data }) => {
+                go(axios.delete(`/v2/todo/api/todo/comment/${comment_id}`), ({ data }) => {
                     go(
                         $qs(`.content_${todo_id} .content__info__comment__count`),
                         $setText(numberToKorean(data.result.comment_count)),
                     );
 
-                    go($qs(`.comment_${comment_id}`), $remove);
+                    go(
+                        comment,
+                        Anime.anime({
+                            easing: 'easeOutSine',
+                            height: -Anime.font,
+                            opacity: 0,
+                            duration: 500,
+                        }),
+                        $remove,
+                    );
                 });
         }),
         $delegate('click', '.content__comment__info__buttons__fix', (e) => {
@@ -362,14 +440,13 @@ Main.delegate = (container_el) =>
             }
         }),
 
-        // todo
         $delegate('click', '.content__comment__info__buttons__reply', (e) => {
             go(
                 e.currentTarget,
                 $closest('.content__comment'),
                 $attr('id'),
                 replace('comment_', ''),
-                (id) => axios.get(`/todo/api/todo/comment/${id}`),
+                (id) => axios.get(`/v2/todo/api/todo/comment/${id}`),
                 ({ data }) => Reply.pop(data.result),
                 hi,
             );
@@ -380,7 +457,7 @@ Main.delegate = (container_el) =>
                 $closest('.content__comment'),
                 $attr('id'),
                 replace('comment_', ''),
-                (id) => axios.get(`/todo/api/todo/comment/${id}`),
+                (id) => axios.get(`/v2/todo/api/todo/comment/${id}`),
                 ({ data }) => Reply.pop(data.result),
                 hi,
             );
@@ -405,7 +482,7 @@ Main.delegate = (container_el) =>
                 e.currentTarget,
                 (el) => new FormData(el).entries(),
                 object,
-                (obj) => axios.patch(`/todo/api/todo/comment/${comment_id}`, obj),
+                (obj) => axios.patch(`/v2/todo/api/todo/comment/${comment_id}`, obj),
                 ({ data }) => {
                     go(
                         $qs(`.content_${todo_id} .content__info__comment__count`),
@@ -439,7 +516,7 @@ Main.delegate = (container_el) =>
                 $closest('.content'),
                 $attr('id'),
                 replace('todo_', ''),
-                (id) => axios.get(`/todo/api/todo/${id}/comment?page=1`),
+                (id) => axios.get(`/v2/todo/api/todo/${id}/comment?page=1`),
                 ({ data }) => {
                     go(
                         e.currentTarget,
@@ -448,8 +525,21 @@ Main.delegate = (container_el) =>
                     );
 
                     if (data.result.comment_count !== 0) {
-                        go(data.result, MainUI.mkCommentTmpAll, $el, $appendTo(comment));
                         go(comment, $setAttr({ status: 'after' }));
+                        go(data.result, MainUI.mkCommentTmpAll, $el, $appendTo(comment), hi, (el) =>
+                            go(
+                                data.result.comments,
+                                map(MainUI.mkCommentTmp),
+                                map($el),
+                                each($appendTo(go(el, $find('.content__comments__all__body')))),
+                                Anime.anime({
+                                    easing: 'easeInSine',
+                                    translateX: [comment.clientWidth, 0],
+                                    duration: 300,
+                                    delay: anime.stagger(50),
+                                }),
+                            ),
+                        );
                     }
                 },
             );
@@ -461,7 +551,7 @@ Main.delegate = (container_el) =>
                 $closest('.content'),
                 $attr('id'),
                 replace('todo_', ''),
-                (id) => axios.get(`/todo/api/todo/${id}`),
+                (id) => axios.get(`/v2/todo/api/todo/${id}`),
                 (res) =>
                     Prompt.pop({
                         title: '수정하기',
@@ -472,7 +562,7 @@ Main.delegate = (container_el) =>
                     new Promise((resolve, reject) =>
                         data.class === 'cancel' ? reject() : resolve(data),
                     ),
-                (data) => axios.patch(`/todo/api/todo/${data.value.id}`, data.value),
+                (data) => axios.patch(`/v2/todo/api/todo/${data.value.id}`, data.value),
                 (res) => Main.update(res.data.result),
             ).catch(Main.error),
         ),
@@ -481,7 +571,7 @@ Main.delegate = (container_el) =>
                 e.currentTarget,
                 $closest('.content'),
                 tap($attr('id'), replace('todo_', ''), (id) =>
-                    axios.post(`/todo/api/archive/return/${id}`),
+                    axios.post(`/v2/todo/api/archive/return/${id}`),
                 ),
                 Main.rmOne,
             ).catch(Main.error),
@@ -490,7 +580,7 @@ Main.delegate = (container_el) =>
             const checked = go(e.currentTarget, (el) => $attr('status', el) === 'empty');
 
             go(e.currentTarget, $closest('.content'), $attr('id'), replace('todo_', ''), (id) =>
-                axios.patch(`/todo/api/todo/${id}`, { checked }),
+                axios.patch(`/v2/todo/api/todo/${id}`, { checked }),
             )
                 .then((res) => go(e.currentTarget, Main.check(res.data.result.checked)))
                 .catch(Main.error);
@@ -505,7 +595,7 @@ Main.delegate = (container_el) =>
                     new Promise((resolve, reject) =>
                         data.class === 'cancel' ? reject() : resolve(data),
                     ),
-                () => axios.post(`/todo/api/archive/delete_all`),
+                () => axios.post(`/v2/todo/api/archive/delete_all`),
                 () => Main.rmAllAndDel(),
             ).catch(Main.error);
         }),
@@ -517,10 +607,12 @@ Main.delegate = (container_el) =>
                 tap(
                     (el) => new FormData(el).entries(),
                     object,
-                    (obj) => axios.post('/todo/api/todo', obj),
+                    (obj) => axios.post('/v2/todo/api/todo', obj),
                     ({ data }) => {
-                        $qs('.header__today').value ===
-                            format(new Date(data.result.date), 'yyyy-MM-dd') &&
+                        if (
+                            $qs('.header__today').value ===
+                            format(new Date(data.result.date), 'yyyy-MM-dd')
+                        )
                             go(
                                 {
                                     ...data.result,
@@ -531,6 +623,11 @@ Main.delegate = (container_el) =>
                                 MainUI.mkConTmp,
                                 $el,
                                 $prependTo($qs('.contents')),
+                                Anime.anime({
+                                    easing: 'easeInSine',
+                                    translateX: [e.currentTarget.clientWidth, 0],
+                                    duration: 500,
+                                }),
                             );
                     },
                 ),
@@ -539,11 +636,11 @@ Main.delegate = (container_el) =>
             ).catch(Main.error);
         }),
         $delegate('click', '.whoami__buttons__archive', () =>
-            window.location.replace('/todo/archive'),
+            window.location.replace('/v2/todo/archive'),
         ),
-        $delegate('click', '.whoami__buttons__return', () => window.location.replace('/todo')),
+        $delegate('click', '.whoami__buttons__return', () => (window.location = '/v2/todo')),
         $delegate('click', '.whoami__buttons__search', () => Search.pop()),
-        $delegate('click', '.whoami__buttons__my_page', () => window.location.replace('/todo')),
+        $delegate('click', '.whoami__buttons__my_page', () => (window.location = '/v2/todo')),
     );
 
 export default Main;

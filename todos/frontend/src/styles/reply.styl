@@ -133,6 +133,7 @@
     box-sizing border-box
     width 100%
     transition: all 1s ease-in-out;
+    overflow-x hidden
 
     &::-webkit-scrollbar
       width .4em
@@ -146,14 +147,12 @@
         border-radius 1em
 
     &[status="empty"]
-      padding 0 .5em
       max-height 0
-      overflow: hidden;
 
     &[status="full"]
       padding .2em .5em
       max-height 40vh
-      overflow auto
+      overflow-y auto
 
     &__all
       display flex

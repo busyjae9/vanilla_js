@@ -35,6 +35,7 @@ const {
 export default POOL;
 
 FxSQL_DEBUG.LOG = true;
+FxSQL_DEBUG.ERROR_WITH_SQL = true;
 
 export {
     VALUES,

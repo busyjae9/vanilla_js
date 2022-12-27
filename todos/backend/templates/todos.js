@@ -2,10 +2,10 @@ import express from 'express';
 import { format } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz/esm';
 
-import LoginUI from '../frontend/src/templates/login.js';
-import MainUI from '../frontend/src/templates/main.js';
+import LoginUI from '../../frontend/src/templates/login.js';
+import MainUI from '../../frontend/src/templates/main.js';
 import { flatMap, go, hi, log } from 'fxjs';
-import { ASSOCIATE, ASSOCIATE1, COLUMN, EQ, QUERY, SQL } from '../util/db/db_connect.js';
+import { ASSOCIATE, ASSOCIATE1, COLUMN, EQ, QUERY, SQL } from '../db/db_connect.js';
 import Query from '../queries/query_v1.js';
 
 const router = express.Router();

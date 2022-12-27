@@ -14,7 +14,7 @@ import {
     SET,
     SQL,
     TB,
-} from '../util/db/db_connect.js';
+} from '../db/db_connect.js';
 import { validCheck } from '../util/valid.js';
 import Query from '../queries/query_v1.js';
 

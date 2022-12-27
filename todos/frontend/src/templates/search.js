@@ -105,9 +105,7 @@ Search.pop = () =>
                 const results = $qs('.bg_transparent');
                 results && go(results, $remove);
 
-                go(e.currentTarget, $attr('user_id'), (id) =>
-                    window.location.replace(`/todo?id=${id}`),
-                );
+                go(e.currentTarget, $attr('user_id'), (id) => (window.location = `/todo?id=${id}`));
             }),
         );
     });

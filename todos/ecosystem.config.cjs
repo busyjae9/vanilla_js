@@ -19,6 +19,7 @@ module.exports = {
             name: 'projectName-pd',
             script: './backend/server.js',
             instances: -1, // 클러스터 모드
+            instance_var: 'INSTANCE_ID', // 편한 이름으로 설정하면 됩니다.
             watch: false,
             env: {
                 Server_PORT: 80, //Express PORT

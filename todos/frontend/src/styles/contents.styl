@@ -8,35 +8,51 @@ on-color(color)
   width 100%
   align-items center
   justify-content space-evenly
-  gap 1.2em
   padding 2em 0
   box-sizing border-box
 
 
 .content
   font_size()
+  position relative
   display flex
   flex-direction column
   align-items center
   justify-content flex-start
   width 100%
+  height fit-content
   border-radius 1em
   box-shadow 0 0 .1em .1em $black30
   background-color $black100
   overflow hidden
-  -moz-transition height 1s ease-in-out
-  -o-transition height 1s ease-in-out
-  transition height 1s ease-in-out
-  -webkit-transition height 1s ease-in-out
-  -ms-transition height 1s ease-in-out
-  height fit-content
-
   isolation isolate
-  -webkit-backface-visibility hidden
-  -moz-backface-visibility hidden
-  -webkit-transform translate3d(0, 0, 0)
-  -moz-transform translate3d(0, 0, 0)
+  margin .3em 0
   -webkit-overflow-scrolling touch
+  -webkit-backface-visibility hidden
+
+  &__return
+    position absolute
+    left 0
+    top 0
+    height 0
+    width 100%
+    background-color $grey30
+    align-items center
+    justify-content center
+    display flex
+    opacity 0
+
+    &__button
+      font_size(2.4)
+      color $white
+      display flex
+      align-items center
+      justify-content center
+      gap .4em
+      cursor pointer
+
+      &:hover
+        color $green
 
   &__comment
     width 100%
@@ -46,6 +62,7 @@ on-color(color)
     border-radius .8em
     box-sizing border-box
     overflow hidden
+    margin .25em 0
 
     &__info
       display flex
@@ -137,7 +154,7 @@ on-color(color)
     height fit-content
     box-sizing border-box
     background-color $grey
-    transition: all 1s ease-in-out;
+    transition: all .6s ease-in-out;
 
     &::-webkit-scrollbar
       width .4em
@@ -151,13 +168,12 @@ on-color(color)
 
     &__all
       width 100%
-      padding .2em .2em
+      padding 0 .2em
       overflow: hidden;
       transition all .5s ease-in-out
 
       &__body
         width 100%
-        gap .5em
         box-sizing border-box
         display flex
         flex-direction column
@@ -168,7 +184,7 @@ on-color(color)
       &__next
         cursor pointer
         width 100%
-        margin-top .5em
+        margin .25em 0
         padding .5em 1em
         text-overflow ellipsis
         box-shadow 0 0 .1em .1em $black30
@@ -180,7 +196,7 @@ on-color(color)
         font-weight 600
 
     &[status="before"]
-      padding 0em .5em
+      padding 0 .5em
       max-height 0
       overflow: hidden;
 

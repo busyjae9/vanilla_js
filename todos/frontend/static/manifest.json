@@ -18,7 +18,6 @@
       "type": "image/png"
     }
   ],
-  "start_url": "/todo",
   "display": "standalone",
   "orientation": "portrait",
   "permissions": [

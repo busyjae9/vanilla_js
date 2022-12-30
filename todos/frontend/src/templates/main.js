@@ -73,15 +73,19 @@ MainUI.mkConTmp = (todo) => html`
             </div>
         </div>
         <div status="before" class="content__comments"></div>
+        <div class="content__return">
+            <div class="content__return__button">
+                <ion-icon name="refresh-outline"></ion-icon>
+                <span>되돌리기</span>
+            </div>
+        </div>
     </div>
 `;
 
-MainUI.mkCommentTmpAll = ({ next_page }) => html`
+MainUI.mkCommentTmpAll = ({ last_page }) => html`
     <div class="content__comments__all">
         <div class="content__comments__all__body"></div>
-        ${next_page
-            ? `<div page='${next_page}' class='content__comments__all__next'>더보기</div>`
-            : ''}
+        ${last_page ? '' : `<div class='content__comments__all__next'>더보기</div>`}
     </div>
 `;
 

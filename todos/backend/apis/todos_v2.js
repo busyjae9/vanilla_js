@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { format } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz/esm';
 
-import { extend, go, isEmpty, log, map, tap } from 'fxjs';
+import { extend, go, hi, isEmpty, log, map, tap } from 'fxjs';
 import {
     ASSOCIATE,
     ASSOCIATE1,
@@ -17,6 +17,7 @@ import {
 } from '../db/db_connect.js';
 import { validCheck } from '../util/valid.js';
 import Query from '../queries/query_v1.js';
+import Push from '../util/push.js';
 
 const USER_COLUMNS = ['name', 'email', 'password'];
 
@@ -180,6 +181,25 @@ router.post('/todo/:id/like', (req, res) =>
                             },
                         ),
               async (like) => {
+                  if (!like.cancel_date) {
+                      const todo = await Query.getById('todos', like.todo_id);
+                      Push.sendNotification(
+                          {
+                              title: `"${todo.content}" TODO 좋아요`,
+                              body: `${req.session.user.name}님께서 당신의 TODO에 좋아요를 눌렀습니다.`,
+                              tag: `like_to_todo_${like.todo_id}`,
+                              data: {
+                                  type: 'move',
+                                  url: `/todo?id=${todo.user_id}&date=${format(
+                                      new Date(todo.date),
+                                      'yyyy-MM-dd',
+                                  )}`,
+                              },
+                          },
+                          todo.user_id,
+                      );
+                  }
+
                   const like_count = await QUERY1`
                             SELECT COUNT(user_id) AS like_count FROM likes 
                             WHERE todo_id = ${req.params.id} AND cancel_date IS NULL`;
@@ -255,11 +275,14 @@ router.post('/todo/comment/:id/reply', async (req, res) =>
                       user_id: req.session.user.id,
                   }),
               async (inserted_reply) => {
-                  const reply_extend_user = await go(
-                      Query.getByIdColumns('users', ['name'], inserted_reply.user_id),
-                      extend(inserted_reply),
+                  const reply_user = await Query.getByIdColumns(
+                      'users',
+                      ['name as user_name'],
+                      inserted_reply.user_id,
                   );
-
+                  const reply_extend_user = extend(reply_user, inserted_reply, {
+                      my_reply: Number(inserted_reply.user_id) === req.session.user.id,
+                  });
                   const reply_count = await QUERY1`
                             SELECT
                                 COUNT(*)
@@ -283,7 +306,7 @@ router.get('/todo/comment/:id/reply', async (req, res) => {
             message: '데이터 형식이 맞지 않습니다.',
         });
 
-    const page = Number(req.query.page || 1);
+    const cursor = Number(req.query.cursor || 0);
 
     console.time('답글 페이지로 가져오기');
 
@@ -319,7 +342,9 @@ router.get('/todo/comment/:id/reply', async (req, res) => {
                 ),
             query: SQL`where ${EQ({
                 comment_id: req.params.id,
-            })} and deleted_date is null limit 10 offset ${(page - 1) * 10}`,
+            })} and deleted_date is null ${
+                cursor === 0 ? SQL`` : SQL`and id < ${cursor}`
+            } order by id desc limit 10`,
         }}
             - user
     `;
@@ -341,7 +366,7 @@ router.get('/todo/comment/:id/reply', async (req, res) => {
     )({
         replys,
         reply_count: Number(reply_count.count),
-        next_page: last_page === page ? null : page + 1,
+        last_page: replys.length !== 10,
     });
 });
 
@@ -367,7 +392,6 @@ router.post('/todo/:id/comment', async (req, res) =>
                                 comments.todo_id = ${req.params.id}
                                 AND comments.deleted_date IS NULL
                     `.catch(Query.error(res));
-
                   const comment = await ASSOCIATE1`
                         comments ${{
                             hook: (comments) =>
@@ -399,6 +423,26 @@ router.post('/todo/:id/comment', async (req, res) =>
                                 query: SQL`where deleted_date is null`,
                             }}
                   `;
+
+                  const todo = await Query.getById('todos', req.params.id);
+
+                  Push.sendNotification(
+                      {
+                          title: `"${todo.content}" TODO 댓글`,
+                          body: `${req.session.user.name}님께서 당신의 TODO에 댓글을 남겼습니다.`,
+                          tag: `comment_to_todo_${todo.id}`,
+                          data: {
+                              type: ['move', 'scroll', 'click'],
+                              url: `/todo?id=${todo.user_id}&date=${format(
+                                  new Date(todo.date),
+                                  'yyyy-MM-dd',
+                              )}`,
+                              scroll_id: `#todo_${todo.id}`,
+                              click: `#todo_${todo.id} .content__info__comment`,
+                          },
+                      },
+                      todo.user_id,
+                  );
 
                   return { comment, comment_count: Number(comment_count.count) };
               },
@@ -554,7 +598,7 @@ router.get('/todo/:id/comment', async (req, res) => {
             message: '데이터 형식이 맞지 않습니다.',
         });
 
-    const page = Number(req.query.page || 1);
+    const cursor = Number(req.query.cursor || 0);
 
     console.time('코멘트 페이지로 가져오기');
     const comment_count = await QUERY1`
@@ -591,7 +635,9 @@ router.get('/todo/:id/comment', async (req, res) => {
             column: COLUMN('id', 'reg_date', 'modified_date', 'comment', 'user_id'),
             query: SQL`where ${EQ({
                 todo_id: req.params.id,
-            })} and deleted_date is null order by id desc limit 10 offset ${(page - 1) * 10}`,
+            })} and deleted_date is null ${
+                cursor === 0 ? SQL`` : SQL`and id < ${cursor}`
+            } order by id desc limit 10`,
         }}
             - user ${{
                 column: COLUMN('id', 'name'),
@@ -610,16 +656,13 @@ router.get('/todo/:id/comment', async (req, res) => {
             message: '데이터 형식이 맞지 않습니다.',
         });
 
-    const last_page =
-        Number(comment_count.count) === 0 ? 1 : Math.ceil(Number(comment_count.count) / 10);
-
     return Query.success(
         res,
         '조회되었습니다.',
     )({
         comments,
         comment_count: Number(comment_count.count),
-        next_page: last_page === page ? null : page + 1,
+        last_page: comments.length !== 10,
     });
 });
 
@@ -679,12 +722,18 @@ router.post('/archive/delete_all', (req, res) =>
 );
 
 router.post('/logout', (req, res) => {
+    const user = { ...req.session.user };
     delete req.session.user;
     req.session.destroy();
-    res.json({
-        code: '0001',
-        message: '로그아웃이 완료되었습니다.',
-    });
+
+    go(
+        Query.updateWhere(
+            'tokens',
+            { expired_date: zonedTimeToUtc(new Date(), 'Asia/Seoul') },
+            { user_id: user.id },
+        ),
+        Query.success(res, '로그아웃이 완료되었습니다.'),
+    ).catch(Query.error(res));
 });
 
 router.post('/login', async function (req, res) {

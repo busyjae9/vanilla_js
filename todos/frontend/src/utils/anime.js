@@ -19,4 +19,7 @@ Anime.animeSync = curry((option, element) =>
         tap((el) => anime({ targets: el, ...option })),
     ),
 );
+
+Anime.animation = (option) => anime(option);
+Anime.timeline = (option) => anime.timeline(option);
 export default Anime;

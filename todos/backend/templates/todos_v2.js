@@ -16,6 +16,8 @@ router.get('/', async (req, res) => {
      * 2. 로컬에서 타임존을 보내서 그에 맞춰 utc로 변환하는 방법
      * */
 
+    log(typeof process.env.INSTANCE_ID);
+
     const date = req.query?.date ? new Date(req.query?.date) : new Date();
     const tz = req.headers.timezone;
     const now = format(zonedTimeToUtc(date, tz), 'yyyy-MM-dd');

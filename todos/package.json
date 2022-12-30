@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nodemon backend/server.js",
     "start": "pm2 start ecosystem.config.cjs --only projectName-pd --env production",
+    "restart": "pm2 restart default",
     "monit": "pm2 monit",
     "del": "pm2 del all",
     "migrate": "node backend/db/migrate_fx.js",
@@ -48,6 +49,7 @@
     "livereload": "^0.9.3",
     "mini-css-extract-plugin": "^2.7.2",
     "moment": "^2.29.4",
+    "node-schedule": "^2.1.0",
     "nodemon": "^2.0.20",
     "npm": "^9.2.0",
     "pg": "^8.8.0",
@@ -56,8 +58,13 @@
     "style-loader": "^3.3.1",
     "uuid": "^9.0.0",
     "validator": "^13.7.0",
+    "web-push": "^3.5.0",
     "webpack": "^5.75.0",
-    "webpack-dev-middleware": "^6.0.1"
+    "webpack-dev-middleware": "^6.0.1",
+    "webpack-pwa-manifest": "^4.3.0",
+    "workbox-core": "^6.5.4",
+    "workbox-precaching": "^6.5.4",
+    "workbox-webpack-plugin": "^6.5.4"
   },
   "devDependencies": {
     "babel-loader": "^9.1.0",

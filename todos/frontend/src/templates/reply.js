@@ -22,7 +22,7 @@ import {
     $children,
     $insertAfter,
 } from 'fxdom';
-import { delay, each, go, hi, html, log, map, object, replace, strMap, tap } from 'fxjs';
+import { delay, each, go, hi, html, last, log, map, object, replace, strMap, tap } from 'fxjs';
 import { format } from 'date-fns';
 import anime from 'animejs/lib/anime.es.js';
 import LoadingUi from './loading.js';
@@ -96,9 +96,7 @@ Reply.mkReplyAllTmp = ({ replys, next_page }) => html`
     </div>
 `;
 
-Reply.mkPlusTmp = (next_page) => html`
-    <div page="${next_page}" class="comment__replys__all__next">더보기</div>
-`;
+Reply.mkPlusTmp = () => html` <div class="comment__replys__all__next">더보기</div> `;
 
 Reply.commentFixTmp = (value) => html`
     <div class="comment__origin__body__fix">
@@ -245,15 +243,15 @@ Reply.pop = (data) =>
 
         go(
             data.id,
-            (id) => axios.get(`/v2/todo/api/todo/comment/${id}/reply?page=1`),
+            (id) => axios.get(`todo/api/todo/comment/${id}/reply`),
             async ({ data }) => {
                 const reply_all = go(popup, $find('.comment__replys__all'));
                 const next = go(popup, $find('.comment__replys__all__next'));
 
                 go(data.result.replys, map(Reply.mkReplyTmp), map($el), each($appendTo(reply_all)));
 
-                if (data.result.next_page)
-                    go(data.result.next_page, Reply.mkPlusTmp, $el, $insertAfter(reply_all));
+                if (!data.result.last_page)
+                    go(data.result.last_page, Reply.mkPlusTmp, $el, $insertAfter(reply_all));
                 else if (next) go(next, $remove);
 
                 if (data.result.replys.length === 0)
@@ -298,9 +296,9 @@ Reply.pop = (data) =>
                         (el) => new FormData(el).entries(),
                         object,
                         (obj) => axios.post(`/todo/api/todo/comment/${data.id}/reply`, obj),
-                        ({ data }) =>
+                        (res) => {
                             go(
-                                data.result.reply,
+                                res.data.result.reply,
                                 Reply.mkReplyTmp,
                                 $el,
                                 $prependTo($qs('.comment__replys__all')),
@@ -309,7 +307,14 @@ Reply.pop = (data) =>
                                     translateX: [e.currentTarget.clientWidth, 0],
                                     duration: 300,
                                 }),
-                            ),
+                            );
+
+                            go(
+                                $qs('#comment_144'),
+                                $find('.content__comment__body__plus'),
+                                $setText('+' + res.data.result.reply_count),
+                            );
+                        },
                     ),
                     $find('.comment__input__text'),
                     $setVal(''),
@@ -498,9 +503,16 @@ Reply.pop = (data) =>
                     replace('comment_pop_', ''),
                 );
 
-                const page = $attr('page', e.currentTarget);
+                const cursor = go(
+                    e.currentTarget,
+                    $prev,
+                    $children,
+                    last,
+                    $attr('id'),
+                    replace('reply_', ''),
+                );
 
-                go(axios.get(`/todo/api/todo/comment/${id}/reply?page=${page}`), ({ data }) => {
+                go(axios.get(`/todo/api/todo/comment/${id}/reply?cursor=${cursor}`), ({ data }) => {
                     go(
                         data.result.replys,
                         map(Reply.mkReplyTmp),
@@ -508,8 +520,7 @@ Reply.pop = (data) =>
                         each($appendTo($qs(`.comment__replys__all`))),
                     );
 
-                    if (!data.result.next_page) go(e.currentTarget, $remove);
-                    else go(e.currentTarget, $setAttr({ page: data.result.next_page }));
+                    if (data.result.last_page) go(e.currentTarget, $remove);
                 });
             }),
 

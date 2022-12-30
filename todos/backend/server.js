@@ -11,14 +11,21 @@ import webpackConfig from '../webpack.config.js';
 
 import livereload from 'livereload';
 import livereloadMiddleware from 'connect-livereload';
-import { includes, log } from 'fxjs';
-
+import { extend, go, hi, includes, isNull, log, map, reject, sortByDesc, take, tap } from 'fxjs';
+import { join } from 'path';
 import geoip from 'geoip-lite';
-import todos_api from './apis/todos.js';
-import todos_tmp from './templates/todos.js';
+import schedule from 'node-schedule';
+
 import todos_api_v2 from './apis/todos_v2.js';
 import todos_tmp_v2 from './templates/todos_v2.js';
-import { join } from 'path';
+import HomeUI from '../frontend/src/templates/home.js';
+import { ASSOCIATE, COLUMN, EQ, QUERY, QUERY1, SQL } from './db/db_connect.js';
+import push from './apis/push.js';
+import { format } from 'date-fns';
+import { zonedTimeToUtc } from 'date-fns-tz/esm';
+import webPush from 'web-push';
+import * as C from 'fxjs/Concurrency';
+import Push from './util/push.js';
 
 const DEV = process.env.ENV === 'dev';
 const PORT = DEV ? process.env.port_test : process.env.port;
@@ -29,7 +36,7 @@ let build_done = false;
 const app = express();
 
 const makeStatic = () => {
-    const config = webpackConfig({ url: URL, port: PORT });
+    const config = webpackConfig();
     const compiler = webpack(config);
 
     const DIST_DIR = join(process.cwd(), '/frontend/static');
@@ -126,10 +133,6 @@ app.use((req, res, next) => {
 });
 
 makeStatic().then((status) => (build_done = status));
-app.get('/', (req, res) => {
-    build_done ? res.status(200) : res.status(400);
-});
-
 app.use(function (req, res, next) {
     if (req.session?.user) res.locals.whoami = req.session.user;
     else res.locals.whoami = undefined;
@@ -139,21 +142,45 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.get('/ping', function (req, res) {
-    res.status(200).json({ ping: true });
+app.get('/', function (req, res) {
+    console.time('메인 투두');
+    go(
+        ASSOCIATE`
+            todos ${{
+                hook: (todos) =>
+                    go(
+                        todos,
+                        map((todo) =>
+                            extend(todo, {
+                                like_count: todo._.likes.length,
+                                user_name: todo._.user.name,
+                            }),
+                        ),
+                        sortByDesc((left, right) => left.like_count < right.like_count),
+                        take(100),
+                    ),
+                column: COLUMN('checked', 'content', 'id'),
+                query: SQL`where archived_date is null`,
+            }}
+                < likes
+                - user
+        `,
+        tap(() => console.timeEnd('메인 투두')),
+        (todos) => res.render('home', { body: HomeUI.mkTmp(todos) }),
+    );
 });
 
 app.use(function (req, res, next) {
+    build_done ? res.status(200) : res.status(400);
+
     if (!req.session?.user && !includes('/todo/login', req.url) && req.method === 'GET')
         return res.redirect('/todo/login');
     next();
 });
 
-app.use('/todo', todos_tmp);
-app.use('/todo/api', todos_api);
-
-app.use('/v2/todo', todos_tmp_v2);
-app.use('/v2/todo/api', todos_api_v2);
+app.use('/todo', todos_tmp_v2);
+app.use('/todo/api', todos_api_v2);
+app.use('/push', push);
 
 app.use(function (req, res, next) {
     res.status(404);
@@ -166,7 +193,7 @@ app.use(function (req, res, next) {
 
     // respond with json
     if (req.accepts('json')) {
-        res.json({ error: 'Not found' });
+        res.json({ error: 'Not found' }); /**/
         return;
     }
 
@@ -176,4 +203,30 @@ app.use(function (req, res, next) {
 
 app.listen(PORT, () => {
     console.log(`서버 구동중 ${URL}:${PORT}`);
+
+    if (process.env.INSTANCE_ID === '0') {
+        console.log(new Date().toLocaleString());
+
+        Push.sendTodoNotification();
+
+        const rule = new schedule.RecurrenceRule();
+        rule.hour = 10;
+        rule.minute = 30;
+        rule.tz = 'Asia/Seoul';
+
+        schedule.scheduleJob(rule, () => Push.sendTodoNotification());
+
+        const second_rule = new schedule.RecurrenceRule();
+        second_rule.minute = new schedule.Range(0, 59, 30);
+        second_rule.tz = 'Asia/Seoul';
+
+        schedule.scheduleJob(second_rule, () => Push.sendTodoNotification());
+
+        const third_rule = new schedule.RecurrenceRule();
+        third_rule.hour = 17;
+        third_rule.minute = 30;
+        third_rule.tz = 'Asia/Seoul';
+
+        schedule.scheduleJob(third_rule, () => Push.sendTodoNotification());
+    }
 });

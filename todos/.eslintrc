@@ -20,7 +20,9 @@
     "URLSearchParams": true,
     "URL": true,
     "Notification": true,
-    "setInterval": true
+    "setInterval": true,
+    "navigator": true,
+    "self": true
   },
   "rules": {
     "semi": "warn",

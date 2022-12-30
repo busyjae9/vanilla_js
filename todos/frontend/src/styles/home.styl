@@ -1,0 +1,101 @@
+.home__container
+  width 100%
+  height 100%
+
+.home
+  width 100%
+  height 500vh
+
+  &__canvas
+    position fixed
+    left 50%
+    top 50%
+    height 100vh
+    width 100vw
+    /* iOS only */
+    @supports (-webkit-touch-callout: none) {
+      height -webkit-fill-available
+    }
+
+    transform translate(-50%, -50%)
+    display flex
+    align-items center
+    justify-content center
+    box-sizing border-box
+    font-size 3em
+    font-weight 600
+
+    &__todo
+      position: absolute
+      max-width 80px
+      height fit-content
+      display flex
+      flex-direction column
+      align-items center
+      justify-content center
+      gap .2em
+      box-sizing border-box
+      padding .2em
+      background $black
+      box-shadow 0 0 7px $black30
+      font-size .5em
+      z-index -1
+      opacity 0
+      border-radius .2em
+
+      &__name
+        font-size .3em
+        font-weight normal
+        text-align center
+
+      &__content
+        font-size .3em
+        font-weight bold
+        text-align center
+
+    &__play
+      cursor pointer
+      position fixed
+      top 2vh
+      left 4vw
+      text-align center
+      padding .2em
+      background $grey
+      box-shadow 0 0 7px $black30
+      border-radius .2em
+      color $green
+      z-index 1000
+
+
+    &__text
+      position absolute
+      font-size 4em
+      opacity 0
+      text-align center
+
+      &__first
+        position absolute
+        font-size 4em
+        opacity 1
+        text-align center
+
+      &__last
+        color $green
+        display flex
+        flex-direction column
+        cursor pointer
+        position absolute
+        font-size 4em
+        opacity 0
+        text-align center
+
+        padding .2em
+        background rgba(0, 0, 0, 0.35)
+        border-radius .2em
+        box-shadow 0 8px 32px 0 $black30
+        backdrop-filter: blur(11.5px);
+        -webkit-backdrop-filter: blur(11.5px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+
+        &__button
+          font-size .5em

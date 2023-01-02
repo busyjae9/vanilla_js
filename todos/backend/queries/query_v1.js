@@ -34,7 +34,8 @@ Query.passwordCheck = curry2(
 );
 
 Query.emptyCheck = curry(
-    (err, res) => new Promise((resolve, reject) => (isEmpty(res) ? reject(err) : resolve(res))),
+    (err, res) =>
+        new Promise((resolve, reject) => (isEmpty(res) || !res ? reject(err) : resolve(res))),
 );
 
 Query.duplicateCheck = curry(
@@ -54,6 +55,7 @@ Query.getByIdColumns = curry2(
 );
 
 Query.insert = curry((tb, data) => QUERY1`INSERT INTO ${TB(tb)} ${VALUES(data)} RETURNING *`);
+Query.delete = curry((tb, data) => QUERY1`DELETE FROM ${TB(tb)} WHERE ${EQ(data)}`);
 Query.update = curry2(
     (tb, data, id) => QUERY1`UPDATE ${TB(tb)} ${SET(data)} WHERE ${EQ({ id })} RETURNING *`,
 );

@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz/esm';
-import { go, hi, isNull, log, map, reject, tap } from 'fxjs';
+import { each, go, hi, isArray, isNull, log, map, reject, tap } from 'fxjs';
 import { ASSOCIATE1, EQ, QUERY, QUERY1, SQL } from '../db/db_connect.js';
 import * as C from 'fxjs/Concurrency';
 import webPush from 'web-push';
@@ -26,6 +26,11 @@ Push.sendTodoNotification = () =>
         QUERY`
             select users.id, users.name, tokens.token, 
             (select content from todos 
+            where user_id = users.id and ${EQ({
+                checked: false,
+                date: Push.now(),
+            })} order by id desc limit 1),
+            (select date from todos 
             where user_id = users.id and ${EQ({
                 checked: false,
                 date: Push.now(),
@@ -57,8 +62,8 @@ Push.sendTodoNotification = () =>
                     icon: `/todo/static/favicon.png`,
                     badge: `/todo/static/favicon.png`,
                     data: {
-                        type: 'move',
-                        url: '/todo',
+                        action: 'toTodo',
+                        payload: { user_id: user.id, date: user.date },
                     },
                 };
         }),
@@ -69,20 +74,43 @@ Push.sendTodoNotification = () =>
     ).catch((err) => log(err));
 
 Push.sendNotification = (payload, user_id) =>
-    go(
-        ASSOCIATE1`
-            users ${{ query: SQL`where ${EQ({ id: user_id })}` }}
-                < tokens ${{
-                    query: SQL`where ${EQ({ type: Push.token_type })} and expired_date is null`,
-                }}
-        `,
-        (selected_user) =>
-            selected_user._.tokens.length &&
-            webPush.sendNotification(
-                selected_user._.tokens[0].token,
-                JSON.stringify(payload),
-                Push.option,
-            ),
-    ).catch((err) => log(err));
+    isArray(user_id)
+        ? go(
+              user_id,
+              each((id) =>
+                  go(
+                      ASSOCIATE1`
+                            users ${{ query: SQL`where ${EQ({ id })}` }}
+                                < tokens ${{
+                                    query: SQL`where ${EQ({
+                                        type: Push.token_type,
+                                    })} and expired_date is null`,
+                                }}
+                        `,
+                      (selected_user) =>
+                          selected_user._.tokens.length &&
+                          webPush.sendNotification(
+                              selected_user._.tokens[0].token,
+                              JSON.stringify(payload),
+                              Push.option,
+                          ),
+                  ),
+              ),
+          ).catch((err) => log(err))
+        : go(
+              ASSOCIATE1`
+                users ${{ query: SQL`where ${EQ({ id: user_id })}` }}
+                    < tokens ${{
+                        query: SQL`where ${EQ({ type: Push.token_type })} and expired_date is null`,
+                    }}
+            `,
+              (selected_user) =>
+                  selected_user._.tokens.length &&
+                  webPush.sendNotification(
+                      selected_user._.tokens[0].token,
+                      JSON.stringify(payload),
+                      Push.option,
+                  ),
+          ).catch((err) => log(err));
 
 export default Push;

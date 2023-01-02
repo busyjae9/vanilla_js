@@ -30,32 +30,47 @@
     <div class="whoami">
         <div class="whoami__container">
             <% if(locals.user && locals.whoami.id !== locals.user?.id) { %>
-                <div class="whoami__info">
+                <div class="whoami__info" id='user_<%= locals.user.id %>'>
                     <ion-icon class="whoami__info__icon" name="person"></ion-icon>
-                    <div class="whoami__info__name"><%= locals.user?.name; %> 님</div>
+                    <div class="whoami__info__name"><%= locals.user?.name; %>
+                        <ion-icon class="whoami__info__icon" name="chevron-forward-outline"></ion-icon>
+                    </div>
                 </div>
             <% } else { %>
-                <div class="whoami__info">
+                <div class="whoami__info" id='user_<%= locals.whoami.id %>'>
                     <ion-icon class="whoami__info__icon" name="person"></ion-icon>
-                    <div class="whoami__info__name"><%= locals.whoami.name; %></div>
+                    <div class="whoami__info__name"><%= locals.whoami.name; %>
+                        <ion-icon class="whoami__info__icon" name="chevron-forward-outline"></ion-icon>
+                    </div>
                 </div>
             <% } %>
             <% if(locals.user && locals.whoami.id !== locals.user?.id) { %>
-                <div class="whoami__buttons">
-                    <button class="whoami__buttons__search">검색<span class='mini__text'>(cmd+shift+.)</span></button>
-                    <button class="whoami__buttons__my_page">내 페이지</button>
-                </div>
+                <% if(locals.url.includes('page')) { %>
+                    <div class="whoami__buttons">
+                        <button id='user_todo_<%= locals.user.id %>' class="whoami__buttons__todo">TODO 보기</button>
+                        <button class="whoami__buttons__return">HOME</button>
+                    </div>
+                <% } else { %>
+                    <div class="whoami__buttons">
+                        <button class="whoami__buttons__search">검색<span class='mini__text'>(cmd+shift+.)</span></button>
+                        <button class="whoami__buttons__return">HOME</button>
+                    </div>
+                <% } %>
             <% } else { %>
                 <% if(locals.url.includes('archive')) { %>
                     <div class="whoami__buttons">
                         <button class="whoami__buttons__del_all">전체 삭제</button>
-                        <button class="whoami__buttons__return">돌아가기</button>
+                        <button class="whoami__buttons__return">HOME</button>
+                    </div>
+                <% } else if(locals.url.includes('page')) { %>
+                    <div class="whoami__buttons">
+                        <button class="whoami__buttons__return">HOME</button>
+                        <button class="whoami__buttons__logout">로그아웃</button>
                     </div>
                 <% } else { %>
                     <div class="whoami__buttons">
                         <button class="whoami__buttons__search">검색<span class='mini__text'>(cmd+shift+.)</span></button>
                         <button class="whoami__buttons__archive">보관함</button>
-                        <button class="whoami__buttons__logout">로그아웃</button>
                     </div>
                 <% } %>
             <% } %>

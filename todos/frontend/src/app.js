@@ -1,10 +1,12 @@
-import { $el, $qs, $replaceWith, $trigger } from 'fxdom';
+import { $attr, $closest, $el, $find, $qs, $replaceWith, $trigger } from 'fxdom';
 import Todo from './events/main.js';
 import Login from './events/login.js';
 import Search from './templates/search.js';
 import Home from './events/home.js';
-import { each, go, hi, log } from 'fxjs';
+import { delay, each, go, hi, log, replace, tap } from 'fxjs';
 import axios from './data/axios.js';
+import { format } from 'date-fns';
+import Reply from './templates/reply.js';
 
 Todo.delegate($qs('body'));
 Login.delegate($qs('body'));
@@ -67,41 +69,65 @@ document.onkeyup = (e) => {
 
 const PushHandler = {};
 
-PushHandler.move = ({ url }) =>
-    new Promise((resolve) => {
-        // axios.get(url).then((res) => {
-        //     go($qs('html'), $replaceWith(go(res.data, $el)));
-        //     history.replaceState({}, 'TODO', url);
-        //     resolve(true);
-        // });
-        if (window.location.pathname + window.location.search === url) return resolve(true);
-        else {
-            window.location.replace(url);
-            return resolve(true);
-        }
-    });
+PushHandler.checkAction = () => {
+    const action = JSON.parse(sessionStorage.getItem('pushAction'));
+    sessionStorage.removeItem('pushAction');
+    if (action) PushHandler[action.action](action.payload);
+};
 
-PushHandler.scroll = ({ scroll_id }) =>
-    new Promise((resolve) => {
-        $qs(scroll_id).scrollIntoView({
-            behavior: 'smooth',
-            block: 'end',
-            inline: 'nearest',
-        });
-        resolve(true);
-    });
+PushHandler.linkAndAction = (data) => {
+    sessionStorage.setItem('pushAction', JSON.stringify(data));
+    window.location.replace(data.link);
+};
 
-PushHandler.click = ({ click }) =>
-    new Promise((resolve) => {
-        $trigger('click', $qs(click));
-        resolve(true);
-    });
+PushHandler.toTodo = ({ user_id, date }) =>
+    window.location.replace(`/todo?id=${user_id}&date=${format(new Date(date), 'yyyy-MM-dd')}`);
+
+PushHandler.toComment = ({ todo_id, id }) =>
+    go(
+        $qs(`#todo_${todo_id}`),
+        tap((todo) =>
+            todo.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest',
+            }),
+        ),
+        $find('.content__info__comment'),
+        tap((el) => $trigger('click', el)),
+        $closest('.content'),
+        delay(1000),
+        $find(`.comment_${id}`),
+        tap((comment) =>
+            comment.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest',
+            }),
+        ),
+    );
+
+PushHandler.toReply = ({ todo_id, id }) => {
+    go(
+        $qs(`#todo_${todo_id}`),
+        tap((todo) =>
+            todo.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest',
+            }),
+        ),
+        $find('.content__info__comment'),
+        tap((el) => $trigger('click', el)),
+        $closest('.content'),
+    );
+
+    go(axios.get(`/todo/api/todo/comment/${id}`), ({ data }) => Reply.pop(data.result));
+};
+
+PushHandler.checkAction();
 
 navigator.serviceWorker.addEventListener('message', (event) => {
-    typeof event.data.type == 'string'
-        ? PushHandler[event.data.type](event.data)
-        : go(
-              event.data.type,
-              each((type) => PushHandler[type](event.data)),
-          );
+    if (event.data.link) PushHandler.linkAndAction(event.data);
+    else PushHandler[event.data.action](event.data.payload);
 });

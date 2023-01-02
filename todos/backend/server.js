@@ -217,7 +217,8 @@ app.listen(PORT, () => {
         schedule.scheduleJob(rule, () => Push.sendTodoNotification());
 
         const second_rule = new schedule.RecurrenceRule();
-        second_rule.minute = new schedule.Range(0, 59, 30);
+        // second_rule.minute = new schedule.Range(0, 59, 30);
+        second_rule.minute = 0;
         second_rule.tz = 'Asia/Seoul';
 
         schedule.scheduleJob(second_rule, () => Push.sendTodoNotification());

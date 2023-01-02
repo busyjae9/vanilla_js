@@ -22,6 +22,8 @@
     "Notification": true,
     "setInterval": true,
     "navigator": true,
+    "localStorage": true,
+    "sessionStorage": true,
     "self": true
   },
   "rules": {

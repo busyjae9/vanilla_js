@@ -109,20 +109,100 @@ router.get('/user', (req, res) =>
               req.query,
               validCheck(['id', 'date']),
               (valid_data) => ASSOCIATE`
-            users ${{
-                column: COLUMN('id', 'name'),
-                query: SQL`WHERE ${EQ({ id: valid_data.id })}`,
-            }}
-                < todos ${{
-                    query: SQL`WHERE ${EQ({
-                        date: format(
-                            zonedTimeToUtc(valid_data.date, req.headers.timezone),
-                            'yyyy-MM-dd',
-                        ),
-                    })} AND archived_date IS NULL`,
-                }}
-        `,
+                    users ${{
+                        column: COLUMN('id', 'name'),
+                        query: SQL`WHERE ${EQ({ id: valid_data.id })}`,
+                    }}
+                        < todos ${{
+                            query: SQL`WHERE ${EQ({
+                                date: format(
+                                    zonedTimeToUtc(valid_data.date, req.headers.timezone),
+                                    'yyyy-MM-dd',
+                                ),
+                            })} AND archived_date IS NULL`,
+                        }}
+                `,
               Query.success(res, '조회되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.post('/user/:id/follow', (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.params.id,
+              async (id) => {
+                  await Query.insert('followings', {
+                      user_id: req.session.user.id,
+                      following_id: id,
+                  });
+                  await Query.insert('followers', {
+                      user_id: id,
+                      follower_id: req.session.user.id,
+                  });
+
+                  Push.sendNotification(
+                      {
+                          title: `${req.session.user.name}님께서 팔로우했습니다.`,
+                          body: '',
+                          tag: `follow_${req.session.user.id}`,
+                          data: {
+                              link: `/todo/page?id=${req.session.id}`,
+                          },
+                      },
+                      id,
+                  );
+
+                  const following_count = await QUERY1`
+                        SELECT COUNT(*) FROM followings 
+                        WHERE user_id = ${id}
+                        `;
+
+                  const follower_count = await QUERY1`
+                        SELECT COUNT(*) FROM followers 
+                        WHERE user_id = ${id}
+                        `;
+
+                  return {
+                      following_count: following_count.count,
+                      follower_count: follower_count.count,
+                  };
+              },
+              Query.success(res, '팔로우되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.delete('/user/:id/follow', (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.params.id,
+              async (id) => {
+                  await Query.delete('followings', {
+                      user_id: req.session.user.id,
+                      following_id: id,
+                  });
+                  await Query.delete('followers', {
+                      user_id: id,
+                      follower_id: req.session.user.id,
+                  });
+
+                  const following_count = await QUERY1`
+                        SELECT COUNT(*) FROM followings 
+                        WHERE user_id = ${id}
+                        `;
+
+                  const follower_count = await QUERY1`
+                        SELECT COUNT(*) FROM followers 
+                        WHERE user_id = ${id}
+                        `;
+
+                  return {
+                      following_count: following_count.count,
+                      follower_count: follower_count.count,
+                  };
+              },
+              Query.success(res, '팔로우가 취소되었습니다.'),
           ).catch(Query.error(res)),
 );
 
@@ -135,6 +215,34 @@ router.post('/todo', (req, res) =>
                 ...valid_data,
                 user_id: req.session.user.id,
             }),
+        tap(async (todo) => {
+            const me = await ASSOCIATE1`
+                users ${SQL`where ${EQ({ id: todo.user_id })}`} 
+                    < followers ${{
+                        hook: (followers) => map((follower) => follower.follower_id, followers),
+                    }}
+            `;
+
+            Push.sendNotification(
+                {
+                    title: `${me.name}님께서 TODO를 등록했습니다.`,
+                    body: `${todo.content} / ${format(
+                        new Date(todo.date),
+                        'yyyy년 MM월 dd일 까지',
+                    )}`,
+                    tag: `following_todo_${todo.id}`,
+                    data: {
+                        action: 'toTodo',
+                        payload: todo,
+                        link: `/todo?id=${todo.user_id}&date=${format(
+                            new Date(todo.date),
+                            'yyyy-MM-dd',
+                        )}`,
+                    },
+                },
+                me._.followers,
+            );
+        }),
         Query.success(res, '등록이 완료되었습니다.'),
     ).catch(Query.error(res)),
 );
@@ -189,11 +297,8 @@ router.post('/todo/:id/like', (req, res) =>
                               body: `${req.session.user.name}님께서 당신의 TODO에 좋아요를 눌렀습니다.`,
                               tag: `like_to_todo_${like.todo_id}`,
                               data: {
-                                  type: 'move',
-                                  url: `/todo?id=${todo.user_id}&date=${format(
-                                      new Date(todo.date),
-                                      'yyyy-MM-dd',
-                                  )}`,
+                                  action: 'toTodo',
+                                  payload: todo,
                               },
                           },
                           todo.user_id,
@@ -291,6 +396,26 @@ router.post('/todo/comment/:id/reply', async (req, res) =>
                                 replys.comment_id = ${req.params.id}
                                 AND replys.deleted_date IS NULL
                     `.catch(Query.error(res));
+
+                  const comment = await Query.getById('comments', inserted_reply.comment_id);
+                  const todo = await Query.getById('todos', comment.todo_id);
+
+                  Push.sendNotification(
+                      {
+                          title: `${req.session.user.name}님께서 답글을 달았습니다.`,
+                          body: `${inserted_reply.comment}`,
+                          tag: `reply_${inserted_reply.id}`,
+                          data: {
+                              action: 'toReply',
+                              payload: comment,
+                              link: `/todo?id=${todo.user_id}&date=${format(
+                                  new Date(todo.date),
+                                  'yyyy-MM-dd',
+                              )}`,
+                          },
+                      },
+                      [todo.user_id, comment.user_id],
+                  );
 
                   return { reply: reply_extend_user, reply_count: Number(reply_count.count) };
               },
@@ -392,6 +517,7 @@ router.post('/todo/:id/comment', async (req, res) =>
                                 comments.todo_id = ${req.params.id}
                                 AND comments.deleted_date IS NULL
                     `.catch(Query.error(res));
+
                   const comment = await ASSOCIATE1`
                         comments ${{
                             hook: (comments) =>
@@ -428,17 +554,16 @@ router.post('/todo/:id/comment', async (req, res) =>
 
                   Push.sendNotification(
                       {
-                          title: `"${todo.content}" TODO 댓글`,
-                          body: `${req.session.user.name}님께서 당신의 TODO에 댓글을 남겼습니다.`,
-                          tag: `comment_to_todo_${todo.id}`,
+                          title: `${req.session.user.name}님께서 "${todo.content}" TODO에 댓글을 달았습니다.`,
+                          body: `${inserted_comment.comment}`,
+                          tag: `comment_${inserted_comment.id}`,
                           data: {
-                              type: ['move', 'scroll', 'click'],
-                              url: `/todo?id=${todo.user_id}&date=${format(
+                              action: 'toComment',
+                              payload: inserted_comment,
+                              link: `/todo?id=${todo.user_id}&date=${format(
                                   new Date(todo.date),
                                   'yyyy-MM-dd',
                               )}`,
-                              scroll_id: `#todo_${todo.id}`,
-                              click: `#todo_${todo.id} .content__info__comment`,
                           },
                       },
                       todo.user_id,

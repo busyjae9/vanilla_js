@@ -1,4 +1,4 @@
-import { curry, delay, each, go, head, last, log, map, object, pipe, replace, tap } from 'fxjs';
+import { curry, delay, each, go, head, hi, last, log, map, object, pipe, replace, tap } from 'fxjs';
 import {
     $appendTo,
     $attr,
@@ -698,12 +698,47 @@ Main.delegate = (container_el) =>
                 $setVal(''),
             ).catch(Main.error);
         }),
+        $delegate('click', '.my_page__follow', (e) => {
+            const status = go(e.currentTarget, $attr('status'));
+
+            go(
+                e.currentTarget,
+                $attr('id'),
+                replace('user_follow_', ''),
+                (id) => axios[status](`/todo/api/user/${id}/follow`),
+                ({ data }) => {
+                    go(
+                        e.currentTarget,
+                        $setAttr({ status: status === 'delete' ? 'post' : 'delete' }),
+                        $setText(status === 'delete' ? '팔로우' : '팔로우 취소'),
+                    );
+
+                    $setText(data.result.following_count, $qs('#user_following'));
+                    $setText(data.result.follower_count, $qs('#user_follower'));
+                },
+            );
+        }),
         $delegate('click', '.whoami__buttons__archive', () =>
             window.location.replace('/todo/archive'),
         ),
         $delegate('click', '.whoami__buttons__return', () => (window.location = '/todo')),
         $delegate('click', '.whoami__buttons__search', () => Search.pop()),
-        $delegate('click', '.whoami__buttons__my_page', () => (window.location = '/todo')),
+        $delegate('click', '.whoami__buttons__todo', (e) =>
+            go(
+                e.currentTarget,
+                $attr('id'),
+                replace('user_todo_', ''),
+                (id) => (window.location = `/todo?id=${id}`),
+            ),
+        ),
+        $delegate('click', '.whoami__info', (e) =>
+            go(
+                e.currentTarget,
+                $attr('id'),
+                replace('user_', ''),
+                (id) => (window.location = `/todo/page?id=${id}`),
+            ),
+        ),
     );
 
 export default Main;

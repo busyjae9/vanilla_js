@@ -4,9 +4,10 @@ import { zonedTimeToUtc } from 'date-fns-tz/esm';
 
 import LoginUI from '../../frontend/src/templates/login.js';
 import MainUI from '../../frontend/src/templates/main.js';
-import { extend, flatMap, go, hi, log, map } from 'fxjs';
+import { add, extend, flatMap, go, filter, log, map, reduce, find } from 'fxjs';
 import { ASSOCIATE, ASSOCIATE1, COLUMN, EQ, QUERY, SQL } from '../db/db_connect.js';
 import Query from '../queries/query_v1.js';
+import MyPageUI from '../../frontend/src/templates/mypage.js';
 
 const router = express.Router();
 router.get('/', async (req, res) => {
@@ -15,8 +16,6 @@ router.get('/', async (req, res) => {
      *   - 일단 해당 방법으로 구현을 했는데, 혹시 다른 방법이 있다면 적용해보고 후보군 알아보기
      * 2. 로컬에서 타임존을 보내서 그에 맞춰 utc로 변환하는 방법
      * */
-
-    log(typeof process.env.INSTANCE_ID);
 
     const date = req.query?.date ? new Date(req.query?.date) : new Date();
     const tz = req.headers.timezone;
@@ -86,14 +85,87 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/page', async (req, res) => {
+    const user_id = req.query?.id || req.session.user.id;
+    const user = await Query.getById('users', user_id);
+    go(
+        ASSOCIATE1`
+            users ${{
+                hook: (users) =>
+                    go(
+                        users,
+                        map((user) =>
+                            extend(user, {
+                                todo_count: user._.todos.length,
+                                archive_count: user._.archive.length,
+                                checked_count: go(
+                                    user._.todos,
+                                    filter((todo) => todo.checked),
+                                ).length,
+                                comment_count: go(
+                                    user._.todos,
+                                    flatMap((todo) => todo.comment_count),
+                                    (todos) => reduce(add, todos),
+                                ),
+                                like_count: go(
+                                    user._.todos,
+                                    flatMap((todo) => todo.like_count),
+                                    (todos) => reduce(add, todos),
+                                ),
+                                follower_count: user._.followers.length,
+                                following_count: user._.followings.length,
+                                is_followed: !!go(
+                                    user._.followers,
+                                    find(
+                                        (follower) =>
+                                            Number(follower.follower_id) ===
+                                            Number(req.session.user.id),
+                                    ),
+                                ),
+                            }),
+                        ),
+                    ),
+                query: SQL`where ${EQ({ id: user_id })}`,
+            }}
+                < todos ${{
+                    hook: (todos) =>
+                        go(
+                            todos,
+                            map((todo) =>
+                                extend(todo, {
+                                    comment_count: todo._.comments.length,
+                                    like_count: todo._.likes.length,
+                                }),
+                            ),
+                        ),
+                    query: SQL`WHERE archived_date IS NULL`,
+                }}
+                    < comments
+                    < likes
+                < archive ${SQL`WHERE delete_date IS NULL`}
+                < followers
+                < followings
+        `,
+        (my) => {
+            delete my._;
+            return my;
+        },
+        (my_info) =>
+            res.render('index', {
+                user: user,
+                body: MyPageUI.makeTmp(my_info, Number(user_id) === Number(req.session.user.id)),
+            }),
+    );
+});
+
 router.get('/archive', (req, res) =>
     go(
-        ASSOCIATE`
+        ASSOCIATE1`
             users ${{ query: SQL`WHERE ${EQ({ id: req.session.user.id })}` }}
                 < archive ${{ query: SQL`WHERE delete_date IS NULL` }}
                     - todo
         `,
-        (users) => users[0]._.archive,
+        (user) => user._.archive,
         flatMap((archive) => archive._.todo),
         (archive) => res.render('index', { body: MainUI.archiveTmp(archive) }),
     ),

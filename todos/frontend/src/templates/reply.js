@@ -310,7 +310,7 @@ Reply.pop = (data) =>
                             );
 
                             go(
-                                $qs('#comment_144'),
+                                $qs(`#comment_${res.data.result.reply.comment_id}`),
                                 $find('.content__comment__body__plus'),
                                 $setText('+' + res.data.result.reply_count),
                             );

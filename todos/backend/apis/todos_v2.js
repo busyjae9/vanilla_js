@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { format } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz/esm';
 
-import { extend, go, hi, isEmpty, log, map, tap } from 'fxjs';
+import { extend, flatMap, go, hi, isEmpty, log, map, tap } from 'fxjs';
 import {
     ASSOCIATE,
     ASSOCIATE1,
@@ -126,6 +126,74 @@ router.get('/user', (req, res) =>
           ).catch(Query.error(res)),
 );
 
+router.get('/user/:id/following', (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.params.id,
+              async (id) => {
+                  const cursor = Number(req.query.cursor || 0);
+                  const following_count = await QUERY1`select count(*) from followings where ${EQ({
+                      user_id: id,
+                  })}`;
+
+                  const followings = await ASSOCIATE`
+                        followings ${SQL`where ${EQ({ user_id: id })} ${
+                            cursor === 0 ? SQL`` : SQL`and id < ${cursor}`
+                        } order by id desc limit 10`}
+                            - user ${{
+                                left_key: 'following_id',
+                                column: COLUMN('id', 'name', 'email'),
+                            }}
+                  `;
+
+                  const following_users = flatMap((following) => following._.user, followings);
+
+                  return {
+                      my_page: Number(id) === req.session.user.id,
+                      followings: following_users,
+                      following_count: following_count.count,
+                      last_page: following_users.length !== 10,
+                  };
+              },
+              Query.success(res, '팔로우가 조회되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.get('/user/:id/follower', (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.params.id,
+              async (id) => {
+                  const cursor = Number(req.query.cursor || 0);
+                  const follower_count = await QUERY1`select count(*) from followers where ${EQ({
+                      user_id: id,
+                  })}`;
+
+                  const followers = await ASSOCIATE`
+                        followers ${SQL`where ${EQ({ user_id: id })} ${
+                            cursor === 0 ? SQL`` : SQL`and id < ${cursor}`
+                        } order by id desc limit 10`}
+                            - user ${{
+                                left_key: 'follower_id',
+                                column: COLUMN('id', 'name', 'email'),
+                            }}
+                  `;
+
+                  const follower_users = flatMap((follower) => follower._.user, followers);
+
+                  return {
+                      my_page: Number(id) === req.session.user.id,
+                      followers: follower_users,
+                      follower_count: follower_count.count,
+                      last_page: follower_users.length !== 10,
+                  };
+              },
+              Query.success(res, '팔로워가 조회되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
 router.post('/user/:id/follow', (req, res) =>
     isEmpty(req.params)
         ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
@@ -155,12 +223,12 @@ router.post('/user/:id/follow', (req, res) =>
 
                   const following_count = await QUERY1`
                         SELECT COUNT(*) FROM followings 
-                        WHERE user_id = ${id}
+                        WHERE user_id = ${req.query.my_count ? req.session.user.id : id}
                         `;
 
                   const follower_count = await QUERY1`
                         SELECT COUNT(*) FROM followers 
-                        WHERE user_id = ${id}
+                        WHERE user_id = ${req.query.my_count ? req.session.user.id : id}
                         `;
 
                   return {
@@ -189,12 +257,12 @@ router.delete('/user/:id/follow', (req, res) =>
 
                   const following_count = await QUERY1`
                         SELECT COUNT(*) FROM followings 
-                        WHERE user_id = ${id}
+                        WHERE user_id = ${req.query.my_count ? req.session.user.id : id}
                         `;
 
                   const follower_count = await QUERY1`
                         SELECT COUNT(*) FROM followers 
-                        WHERE user_id = ${id}
+                        WHERE user_id = ${req.query.my_count ? req.session.user.id : id}
                         `;
 
                   return {
@@ -203,6 +271,40 @@ router.delete('/user/:id/follow', (req, res) =>
                   };
               },
               Query.success(res, '팔로우가 취소되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.delete('/user/:id/follow/cancel', (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              req.params.id,
+              async (id) => {
+                  await Query.delete('followings', {
+                      user_id: id,
+                      following_id: req.session.user.id,
+                  });
+                  await Query.delete('followers', {
+                      user_id: req.session.user.id,
+                      follower_id: id,
+                  });
+
+                  const following_count = await QUERY1`
+                        SELECT COUNT(*) FROM followings 
+                        WHERE user_id = ${req.session.user.id}
+                        `;
+
+                  const follower_count = await QUERY1`
+                        SELECT COUNT(*) FROM followers 
+                        WHERE user_id = ${req.session.user.id}
+                        `;
+
+                  return {
+                      following_count: following_count.count,
+                      follower_count: follower_count.count,
+                  };
+              },
+              Query.success(res, '팔로잉이 삭제되었습니다.'),
           ).catch(Query.error(res)),
 );
 
@@ -481,9 +583,6 @@ router.get('/todo/comment/:id/reply', async (req, res) => {
         });
 
     console.timeEnd('답글 페이지로 가져오기');
-
-    const last_page =
-        Number(reply_count.count) === 0 ? 1 : Math.ceil(Number(reply_count.count) / 10);
 
     return Query.success(
         res,

@@ -569,8 +569,9 @@ Main.delegate = (container_el) =>
                 return go(
                     comment,
                     $setAttr({ status: 'before' }),
-                    delay(1000),
-                    tap($children, each($remove)),
+                    delay(600),
+                    $children,
+                    each($remove),
                 );
             }
 
@@ -698,26 +699,7 @@ Main.delegate = (container_el) =>
                 $setVal(''),
             ).catch(Main.error);
         }),
-        $delegate('click', '.my_page__follow', (e) => {
-            const status = go(e.currentTarget, $attr('status'));
-
-            go(
-                e.currentTarget,
-                $attr('id'),
-                replace('user_follow_', ''),
-                (id) => axios[status](`/todo/api/user/${id}/follow`),
-                ({ data }) => {
-                    go(
-                        e.currentTarget,
-                        $setAttr({ status: status === 'delete' ? 'post' : 'delete' }),
-                        $setText(status === 'delete' ? '팔로우' : '팔로우 취소'),
-                    );
-
-                    $setText(data.result.following_count, $qs('#user_following'));
-                    $setText(data.result.follower_count, $qs('#user_follower'));
-                },
-            );
-        }),
+        
         $delegate('click', '.whoami__buttons__archive', () =>
             window.location.replace('/todo/archive'),
         ),

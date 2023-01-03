@@ -123,7 +123,7 @@ MainUI.mkCommentTmp = (comment) => html`
                     : ''}
             </div>
             ${Number(comment.reply_count) === 0
-                ? ''
+                ? "<div class='content__comment__body__plus'></div>"
                 : `<div class='content__comment__body__plus'>+${comment.reply_count}</div>`}
         </div>
         <div class="content__comment__info">

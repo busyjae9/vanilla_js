@@ -6,6 +6,7 @@
   align-items center
   justify-content center
   color $white
+  padding_flex(0, 2)
 
   @media $tablet
     max-width 1200px
@@ -61,20 +62,129 @@
       padding .8em 0
 
     &__row
-      gap .5em
+      gap 1em
       width 100%
       display flex
       background-color $grey
-      flex-direction column
+      align-items center
       box-sizing border-box
-      padding 1em 1em
+      padding 1.5em 1.7em
       border-radius 1em
       box-shadow 0 0 .1em .1em $black30
+      -webkit-overflow-scrolling touch
+      -webkit-backface-visibility hidden
+
+      &[direction="column"]
+        padding 1em 1.2em
+        gap 0
+        flex-direction column
+        align-items flex-start
+        justify-content center
+
+      &__following,
+      &__follower
+        width 100%
+        cursor pointer
+        display flex
+        align-items center
+        gap 1em
+        padding .5em
+
+      &__followings,
+      &__followers
+        width 100%
+        display flex
+        flex-direction column
+        background-color $grey
+        align-items flex-start
+        justify-content flex-start
+        box-sizing border-box
+        transition all .6s ease-in-out
+        height fit-content
+
+        &__more
+          display none
+          cursor pointer
+          width 100%
+          margin .25em 0
+          padding .5em 1em
+          text-overflow ellipsis
+          box-shadow 0 0 .1em .1em $black30
+          background-color $black
+          border-radius 1em
+          box-sizing border-box
+          overflow hidden
+          text-align center
+          font-weight 600
+          font-size 1.6em
+
+        &[status="before"]
+          padding 0 .2em
+          max-height 0
+          overflow hidden
+
+        &[status="after"]
+          padding-right .2em
+          padding-left .2em
+          max-height 40vh
+          overflow auto
+
+        &::-webkit-scrollbar
+          width .4em
+          background $grey
+
+          &-track
+            background-color $grey
+
+          &-thumb
+            background-color $black
+
+        &__person
+          width 100%
+          display flex
+          background-color $black
+          align-items center
+          justify-content space-between
+          box-sizing border-box
+          padding 1em 2em
+          border-radius 1em
+          box-shadow 0 0 .1em .1em $black30
+          margin .4em 0
+
+          &__info
+            cursor pointer
+            display flex
+            flex-direction column
+            gap .5em
+
+            &__name
+              font-size 2em
+
+            &__email
+              font-size 1em
+              color $grey100
+
+          &__buttons
+            font-size 2em
+
+            &__delete
+              border none
+
+              &:hover
+                color $red
+
+            &__cancel
+              border none
+
+              &:hover
+                color $red
+
 
       &__title
         font-size 2em
         font-weight 600
 
-      &__data
-        font-size 1.4em
+      &__data,
+      &__icon
+        font-size 2em
 

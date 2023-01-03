@@ -10,9 +10,11 @@
     "restart": "pm2 restart default",
     "monit": "pm2 monit",
     "del": "pm2 del all",
+    "build": "npx webpack build",
     "migrate": "node backend/db/migrate_fx.js",
     "knex_create": "npx knex migrate:make $name",
-    "knex_up": "npx knex migrate:up"
+    "knex_up": "npx knex migrate:up",
+    "localtunnel": "DEBUG=localtunnel:* lt --port 80 --subdomain jae9"
   },
   "author": "",
   "license": "ISC",

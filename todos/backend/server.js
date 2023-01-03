@@ -205,9 +205,7 @@ app.listen(PORT, () => {
     console.log(`서버 구동중 ${URL}:${PORT}`);
 
     if (process.env.INSTANCE_ID === '0') {
-        console.log(new Date().toLocaleString());
-
-        Push.sendTodoNotification();
+        // Push.sendTodoNotification();
 
         const rule = new schedule.RecurrenceRule();
         rule.hour = 10;

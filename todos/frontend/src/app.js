@@ -7,10 +7,14 @@ import { delay, each, go, hi, log, replace, tap } from 'fxjs';
 import axios from './data/axios.js';
 import { format } from 'date-fns';
 import Reply from './templates/reply.js';
+import MyPage from './events/mypage.js';
 
-Todo.delegate($qs('body'));
-Login.delegate($qs('body'));
-Home.delegate($qs('body'));
+const body = $qs('body');
+
+Todo.delegate(body);
+Login.delegate(body);
+Home.delegate(body);
+MyPage.delegate(body);
 
 function getNotificationPermission() {
     // 브라우저 지원 여부 체크

@@ -19,12 +19,8 @@ import schedule from 'node-schedule';
 import todos_api_v2 from './apis/todos_v2.js';
 import todos_tmp_v2 from './templates/todos_v2.js';
 import HomeUI from '../frontend/src/templates/home.js';
-import { ASSOCIATE, COLUMN, EQ, QUERY, QUERY1, SQL } from './db/db_connect.js';
-import push from './apis/push.js';
-import { format } from 'date-fns';
-import { zonedTimeToUtc } from 'date-fns-tz/esm';
-import webPush from 'web-push';
-import * as C from 'fxjs/Concurrency';
+import { ASSOCIATE, COLUMN, SQL } from './db/db_connect.js';
+import push_apis from './apis/push.js';
 import Push from './util/push.js';
 
 const DEV = process.env.ENV === 'dev';
@@ -162,12 +158,17 @@ app.get('/', function (req, res) {
                 column: COLUMN('checked', 'content', 'id'),
                 query: SQL`where archived_date is null`,
             }}
-                < likes
+                p < likes
                 - user
         `,
         tap(() => console.timeEnd('메인 투두')),
         (todos) => res.render('home', { body: HomeUI.mkTmp(todos) }),
     );
+});
+
+app.use((req, res, next) => {
+    // if (!DEV) return res.render('notice');
+    next();
 });
 
 app.use(function (req, res, next) {
@@ -180,7 +181,7 @@ app.use(function (req, res, next) {
 
 app.use('/todo', todos_tmp_v2);
 app.use('/todo/api', todos_api_v2);
-app.use('/push', push);
+app.use('/push', push_apis);
 
 app.use(function (req, res, next) {
     res.status(404);

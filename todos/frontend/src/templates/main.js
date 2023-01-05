@@ -1,4 +1,4 @@
-import { go, head, strMap, html } from 'fxjs';
+import { go, head, strMap, html, map, string } from 'fxjs';
 import {
     check_box,
     check_box_full,
@@ -10,6 +10,7 @@ import {
 } from './icons.js';
 import { format } from 'date-fns';
 import numberToKorean from '../utils/numberToKor.js';
+import reduce from 'fxjs/es/Strict/reduce.js';
 
 Date.prototype.toDateInputValue = function () {
     let local = new Date(this);
@@ -51,10 +52,8 @@ MainUI.mkConTmp = (todo) => html`
         </div>
         <div class="content__info">
             <div class="content__info__heart">
-                ${MainUI.heartTmp(todo.like)}
-                <span class="content__info__heart__count">
-                    ${numberToKorean(todo?.like_count) || 0}
-                </span>
+                <div class="content__info__heart__icon">${MainUI.heartTmp(todo.like)}</div>
+                ${MainUI.mkHeartCountTmp(todo)}
             </div>
             <form class="content__info__input">
                 <input
@@ -67,9 +66,9 @@ MainUI.mkConTmp = (todo) => html`
             </form>
             <div class="content__info__comment">
                 ${MainUI.commentFullTmp()}
-                <span class="content__info__comment__count">
-                    ${numberToKorean(todo?.comment_count) || 0}
-                </span>
+                <span class="content__info__comment__count"
+                    >${numberToKorean(todo?.comment_count) || '댓글을 달아보세요'}</span
+                >
             </div>
         </div>
         <div status="before" class="content__comments"></div>
@@ -80,6 +79,21 @@ MainUI.mkConTmp = (todo) => html`
             </div>
         </div>
     </div>
+`;
+
+MainUI.mkHeartCountTmp = (todo) => html`
+    <span class="content__info__heart__count">
+        ${todo?.like_3?.length > 0
+            ? `${go(
+                  todo?.like_3,
+                  map(
+                      (user) =>
+                          `<span user_id='${user.id}' class='content__info__heart__count__name'>${user.name}님</span>`,
+                  ),
+                  reduce((a, b) => `${a}, ${b}`),
+              )}${numberToKorean(todo?.like_count, '명이 좋아합니다.', ' 외 ') || '이 좋아합니다.'}`
+            : `${numberToKorean(todo?.like_count) || '좋아요를 눌러보세요'}`}
+    </span>
 `;
 
 MainUI.mkCommentTmpAll = ({ last_page }) => html`
@@ -126,8 +140,48 @@ MainUI.mkCommentTmp = (comment) => html`
                 ? "<div class='content__comment__body__plus'></div>"
                 : `<div class='content__comment__body__plus'>+${comment.reply_count}</div>`}
         </div>
+        ${comment._.replys.length
+            ? `
+             <div class='content__comment__reply'>
+             ${strMap(
+                 (reply) => html`
+                     <div class="content__comment__reply__body">
+                         <ion-icon
+                             class="content__comment__reply__body__icon"
+                             name="return-down-forward"
+                         ></ion-icon>
+                         <div
+                             id="user_${reply.user_id}"
+                             class="content__comment__reply__body__user"
+                         >
+                             ${reply.user_name}
+                         </div>
+                         <div class="content__comment__reply__body__text">
+                             <span class="content__comment__reply__body__text__main">
+                                 ${reply.comment}
+                             </span>
+                             ${reply.reg_date !== reply.modified_date
+                                 ? `
+                        <span class='mini__text__flex'>
+                            (수정됨 ${format(new Date(reply.modified_date), 'yy-MM-dd HH:mm')})
+                        <span/>`
+                                 : ''}
+                         </div>
+                     </div>
+                 `,
+                 comment._.replys,
+             )}
+            </div>
+        `
+            : ''}
         <div class="content__comment__info">
             <div class="content__comment__info__buttons">
+                <div class="content__comment__info__buttons__heart">
+                    ${MainUI.heartTmp(comment?.like)}
+                    <span class="content__comment__info__buttons__heart__count">
+                        ${numberToKorean(comment?.like_count) || 0}
+                    </span>
+                </div>
                 <div class="content__comment__info__buttons__reply">답글</div>
                 ${comment.my_comment
                     ? `

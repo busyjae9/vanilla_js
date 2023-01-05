@@ -1,13 +1,20 @@
-import { $attr, $closest, $el, $find, $qs, $replaceWith, $trigger } from 'fxdom';
+import { $closest, $find, $qs, $trigger } from 'fxdom';
 import Todo from './events/main.js';
 import Login from './events/login.js';
 import Search from './templates/search.js';
 import Home from './events/home.js';
-import { delay, each, go, hi, log, replace, tap } from 'fxjs';
+import { delay, go, tap } from 'fxjs';
 import axios from './data/axios.js';
 import { format } from 'date-fns';
 import Reply from './templates/reply.js';
 import MyPage from './events/mypage.js';
+
+const subscribeOptions = {
+    userVisibleOnly: true,
+    applicationServerKey:
+        'BHcqKRANGFHOnDVoIswavyyzvWO06LQQOB5KWqXByuDE34TFq7Uo5VTydeRpP-VIiSysts6QNB3NzBQXi4M-mio',
+    // 발급받은 vapid public key
+};
 
 const body = $qs('body');
 
@@ -25,25 +32,17 @@ function getNotificationPermission() {
         if (result === 'granted') {
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker
-                        .register('/dist/serviceWorker.js')
-                        .then(async (registration) => {
+                    go(
+                        navigator.serviceWorker.register('/dist/serviceWorker.js'),
+                        async (registration) => {
                             await registration.update();
-
-                            const subscribeOptions = {
-                                userVisibleOnly: true,
-                                applicationServerKey:
-                                    'BHcqKRANGFHOnDVoIswavyyzvWO06LQQOB5KWqXByuDE34TFq7Uo5VTydeRpP-VIiSysts6QNB3NzBQXi4M-mio', // 발급받은 vapid public key
-                            };
-
                             return registration.pushManager.subscribe(subscribeOptions);
-                        })
-                        .then(function (pushSubscription) {
-                            axios.post('/push/register', pushSubscription.toJSON());
-                        })
-                        .catch((e) => {
-                            console.log('SW registration failed: ', e);
-                        });
+                        },
+                        (pushSubscription) =>
+                            axios.post('/push/register', pushSubscription.toJSON()),
+                    ).catch((e) => {
+                        console.log('SW registration failed: ', e);
+                    });
                 });
             } // load 가 끝나면 워커를 등록해줌.
         }
@@ -74,9 +73,9 @@ document.onkeyup = (e) => {
 const PushHandler = {};
 
 PushHandler.checkAction = () => {
-    const action = JSON.parse(sessionStorage.getItem('pushAction'));
+    const data = JSON.parse(sessionStorage.getItem('pushAction'));
     sessionStorage.removeItem('pushAction');
-    if (action) PushHandler[action.action](action.payload);
+    if (data?.action) PushHandler[data.action](data.payload);
 };
 
 PushHandler.linkAndAction = (data) => {

@@ -3,12 +3,13 @@ import bcrypt from 'bcrypt';
 import { format } from 'date-fns';
 import { zonedTimeToUtc } from 'date-fns-tz/esm';
 
-import { extend, flatMap, go, hi, isEmpty, log, map, tap } from 'fxjs';
+import { extend, flatMap, go, hi, isEmpty, log, map, reject, string, tap } from 'fxjs';
 import {
     ASSOCIATE,
     ASSOCIATE1,
     COLUMN,
     EQ,
+    IN,
     QUERY,
     QUERY1,
     SET,
@@ -29,7 +30,11 @@ router.get('/todo/list/', async (req, res) => {
     const now = format(zonedTimeToUtc(date, tz), 'yyyy-MM-dd');
     const user_id = req.query?.id || req.session.user.id;
     console.time('sql');
-    const user = await Query.getById('users', user_id);
+
+    const [user, my_follwings] = await Promise.all([
+        Query.getById('users', user_id),
+        QUERY`select * from followings where user_id = ${req.session.user.id}`,
+    ]);
 
     go(
         ASSOCIATE`
@@ -41,8 +46,9 @@ router.get('/todo/list/', async (req, res) => {
                             extend(
                                 {
                                     my_todo: Number(todo.user_id) === req.session.user.id,
-                                    like_count: todo._.likes.length,
                                     comment_count: todo._.comments.length,
+                                    like_count: todo._.likes.length - todo._.limit_likes.length,
+                                    like_3: todo._.limit_likes,
                                     like: !!todo._.likes.find(
                                         (like) => Number(like.user_id) === req.session.user.id,
                                     ),
@@ -69,10 +75,28 @@ router.get('/todo/list/', async (req, res) => {
                     column: COLUMN('id', 'user_id'),
                     query: SQL`where deleted_date is null`,
                 }}
-                < likes ${{
+                p < likes ${{
                     column: COLUMN('user_id'),
                     query: SQL`where cancel_date is null`,
                 }}
+                p < limit_likes ${{
+                    hook: (likes) => flatMap((like) => like._.user, likes),
+                    key: 'attached_id',
+                    poly_type: { attached_type: 'todos' },
+                    table: 'likes',
+                    query: SQL`where cancel_date is null`,
+                    row_number: 3,
+                    //     and ${IN(
+                    //         'user_id',
+                    //         flatMap(
+                    //             (following) => following.following_id,
+                    //             [...my_follwings, { following_id: req.session.user.id }],
+                    //     ),
+                    //     )}
+                }}
+                    - user ${{
+                        column: COLUMN('name'),
+                    }}
         `,
         (todos) =>
             res.json({
@@ -215,7 +239,7 @@ router.post('/user/:id/follow', (req, res) =>
                           body: '',
                           tag: `follow_${req.session.user.id}`,
                           data: {
-                              link: `/todo/page?id=${req.session.id}`,
+                              link: `/todo/page?id=${req.session.user.id}`,
                           },
                       },
                       id,
@@ -371,11 +395,16 @@ router.post('/todo/:id/like', (req, res) =>
     isEmpty(req.params)
         ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
         : go(
-              Query.get('likes', { todo_id: req.params.id, user_id: req.session.user.id }),
+              Query.get('likes', {
+                  attached_type: 'todos',
+                  attached_id: req.params.id,
+                  user_id: req.session.user.id,
+              }),
               (like) =>
                   !like
                       ? Query.insert('likes', {
-                            todo_id: req.params.id,
+                            attached_id: req.params.id,
+                            attached_type: 'todos',
                             user_id: req.session.user.id,
                         })
                       : Query.updateWhere(
@@ -386,13 +415,14 @@ router.post('/todo/:id/like', (req, res) =>
                                     : zonedTimeToUtc(new Date(), 'Asia/Seoul'),
                             },
                             {
-                                todo_id: req.params.id,
+                                attached_id: req.params.id,
+                                attached_type: 'todos',
                                 user_id: req.session.user.id,
                             },
                         ),
               async (like) => {
                   if (!like.cancel_date) {
-                      const todo = await Query.getById('todos', like.todo_id);
+                      const todo = await Query.getById('todos', like.attached_id);
                       Push.sendNotification(
                           {
                               title: `"${todo.content}" TODO 좋아요`,
@@ -403,13 +433,115 @@ router.post('/todo/:id/like', (req, res) =>
                                   payload: todo,
                               },
                           },
-                          todo.user_id,
+                          go(
+                              [todo.user_id],
+                              reject((id) => Number(id) === Number(req.session.user.id)),
+                          ),
                       );
                   }
 
-                  const like_count = await QUERY1`
+                  const todo = await ASSOCIATE1`
+                      todos ${{
+                          hook: (todos) =>
+                              map(
+                                  (_todo) => ({
+                                      like_count: _todo._.likes.length - _todo._.limit_likes.length,
+                                      like_3: _todo._.limit_likes,
+                                      like: !!_todo._.likes.find(
+                                          (like) => Number(like.user_id) === req.session.user.id,
+                                      ),
+                                  }),
+                                  todos,
+                              ),
+                          query: SQL`where ${EQ({
+                              id: like.attached_id,
+                          })} `,
+                      }}
+                          p < likes ${{
+                              column: COLUMN('user_id'),
+                              query: SQL`where cancel_date is null`,
+                          }}
+                          p < limit_likes ${{
+                              hook: (likes) => flatMap((like) => like._.user, likes),
+                              key: 'attached_id',
+                              poly_type: { attached_type: 'todos' },
+                              table: 'likes',
+                              query: SQL`where cancel_date is null`,
+                              row_number: 3,
+                          }}
+                              - user ${{
+                                  column: COLUMN('name'),
+                              }}
+                    `;
+
+                  return {
+                      ...like,
+                      ...todo,
+                  };
+              },
+              Query.success(res, '업데이트되었습니다.'),
+          ).catch(Query.error(res)),
+);
+
+router.post('/todo/comment/:id/like', (req, res) =>
+    isEmpty(req.params)
+        ? res.status(400).json({ code: 'E001', message: '데이터 형식이 맞지 않습니다.' })
+        : go(
+              Query.get('likes', {
+                  attached_type: 'comments',
+                  attached_id: req.params.id,
+                  user_id: req.session.user.id,
+              }),
+              (like) =>
+                  !like
+                      ? Query.insert('likes', {
+                            attached_id: req.params.id,
+                            attached_type: 'comments',
+                            user_id: req.session.user.id,
+                        })
+                      : Query.updateWhere(
+                            'likes',
+                            {
+                                cancel_date: like.cancel_date
+                                    ? null
+                                    : zonedTimeToUtc(new Date(), 'Asia/Seoul'),
+                            },
+                            {
+                                attached_id: req.params.id,
+                                attached_type: 'comments',
+                                user_id: req.session.user.id,
+                            },
+                        ),
+              async (like) => {
+                  if (!like.cancel_date) {
+                      const comment = await Query.getById('comments', like.attached_id);
+                      const todo = await Query.getById('todos', comment.todo_id);
+                      Push.sendNotification(
+                          {
+                              title: `${req.session.user.name}님의 좋아요`,
+                              body: `"${comment.content}" 댓글에 좋아요를 눌렀습니다.`,
+                              tag: `comment_${comment.id}`,
+                              data: {
+                                  action: 'toComment',
+                                  payload: comment,
+                                  link: `/todo?id=${todo.user_id}&date=${format(
+                                      new Date(todo.date),
+                                      'yyyy-MM-dd',
+                                  )}`,
+                              },
+                          },
+                          go(
+                              [comment.user_id],
+                              reject((id) => Number(id) === Number(req.session.user.id)),
+                          ),
+                      );
+                  }
+
+                  const like_count = await QUERY1` 
                             SELECT COUNT(user_id) AS like_count FROM likes 
-                            WHERE todo_id = ${req.params.id} AND cancel_date IS NULL`;
+                            WHERE attached_id = ${req.params.id} 
+                            AND attached_type = 'comments' 
+                            AND cancel_date IS NULL`;
 
                   return {
                       ...like,
@@ -429,6 +561,10 @@ router.delete('/todo/comment/reply/:id', async (req, res) =>
               Query.update('replys')({
                   deleted_date: zonedTimeToUtc(new Date(), 'Asia/Seoul'),
               }),
+              tap(
+                  (reply) =>
+                      QUERY`update comments set reply_count = reply_count - 1 where id = ${reply.comment_id}`,
+              ),
               tap(() => console.timeEnd('답글 삭제하기')),
               Query.success(res, '답글 삭제 완료되었습니다.'),
           ).catch(Query.error(res)),
@@ -481,6 +617,10 @@ router.post('/todo/comment/:id/reply', async (req, res) =>
                       comment_id: req.params.id,
                       user_id: req.session.user.id,
                   }),
+              tap(
+                  (reply) =>
+                      QUERY`update comments set reply_count = reply_count + 1 where id = ${reply.comment_id}`,
+              ),
               async (inserted_reply) => {
                   const reply_user = await Query.getByIdColumns(
                       'users',
@@ -492,11 +632,10 @@ router.post('/todo/comment/:id/reply', async (req, res) =>
                   });
                   const reply_count = await QUERY1`
                             SELECT
-                                COUNT(*)
-                            FROM replys
+                                reply_count
+                            FROM comments
                             WHERE
-                                replys.comment_id = ${req.params.id}
-                                AND replys.deleted_date IS NULL
+                                id = ${req.params.id}
                     `.catch(Query.error(res));
 
                   const comment = await Query.getById('comments', inserted_reply.comment_id);
@@ -516,10 +655,13 @@ router.post('/todo/comment/:id/reply', async (req, res) =>
                               )}`,
                           },
                       },
-                      [todo.user_id, comment.user_id],
+                      go(
+                          [todo.user_id, comment.user_id],
+                          reject((id) => Number(id) === Number(req.session.user.id)),
+                      ),
                   );
 
-                  return { reply: reply_extend_user, reply_count: Number(reply_count.count) };
+                  return { reply: reply_extend_user, reply_count: Number(reply_count.reply_count) };
               },
               tap(() => console.timeEnd('답글 입력하기')),
               Query.success(res, '답글 등록이 완료되었습니다.'),
@@ -570,8 +712,8 @@ router.get('/todo/comment/:id/reply', async (req, res) => {
             query: SQL`where ${EQ({
                 comment_id: req.params.id,
             })} and deleted_date is null ${
-                cursor === 0 ? SQL`` : SQL`and id < ${cursor}`
-            } order by id desc limit 10`,
+                cursor === 0 ? SQL`` : SQL`and id > ${cursor}`
+            } order by id asc limit 10`,
         }}
             - user
     `;
@@ -629,24 +771,64 @@ router.post('/todo/:id/comment', async (req, res) =>
                                                     Number(_comment._.user.id) ===
                                                     req.session.user.id,
                                                 user_name: _comment._.user.name,
-                                                reply_count: _comment._.replys.length,
+                                                like_count: _comment._.likes.length,
+                                                like: !!_comment._.likes.find(
+                                                    (like) =>
+                                                        Number(like.user_id) ===
+                                                        req.session.user.id,
+                                                ),
                                             },
                                             _comment,
                                         ),
                                     ),
                                 ),
-                            column: COLUMN('id', 'reg_date', 'modified_date', 'comment', 'user_id'),
+                            column: COLUMN(
+                                'id',
+                                'reg_date',
+                                'modified_date',
+                                'comment',
+                                'user_id',
+                                'reply_count',
+                            ),
                             query: SQL`where ${EQ({
                                 id: inserted_comment.id,
                             })} and deleted_date is null`,
                         }}
+                            p < likes ${{
+                                column: COLUMN('user_id'),
+                                query: SQL`where cancel_date is null`,
+                            }}
                             - user ${{
                                 column: COLUMN('id', 'name'),
                             }}
                             < replys ${{
-                                column: COLUMN('id'),
+                                hook: (replys) =>
+                                    go(
+                                        replys,
+                                        map((reply) =>
+                                            extend(
+                                                {
+                                                    user_name: reply._.user.name,
+                                                    my_reply:
+                                                        reply._.user.id === req.session.user.id,
+                                                },
+                                                reply,
+                                            ),
+                                        ),
+                                    ),
+                                column: COLUMN(
+                                    'id',
+                                    'reg_date',
+                                    'modified_date',
+                                    'comment',
+                                    'user_id',
+                                ),
                                 query: SQL`where deleted_date is null`,
+                                row_number: [3, SQL`id asc`],
                             }}
+                                - user ${{
+                                    column: COLUMN('id', 'name'),
+                                }}
                   `;
 
                   const todo = await Query.getById('todos', req.params.id);
@@ -665,7 +847,10 @@ router.post('/todo/:id/comment', async (req, res) =>
                               )}`,
                           },
                       },
-                      todo.user_id,
+                      go(
+                          [todo.user_id],
+                          reject((id) => Number(id) === Number(req.session.user.id)),
+                      ),
                   );
 
                   return { comment, comment_count: Number(comment_count.count) };
@@ -692,22 +877,54 @@ router.get('/todo/comment/:id', async (req, res) =>
                                             my_comment:
                                                 Number(_comment._.user.id) === req.session.user.id,
                                             user_name: _comment._.user.name,
-                                            reply_count: _comment._.replys.length,
+                                            like_count: _comment._.likes.length,
+                                            like: !!_comment._.likes.find(
+                                                (like) =>
+                                                    Number(like.user_id) === req.session.user.id,
+                                            ),
                                         },
                                         _comment,
                                     ),
                                 ),
                             ),
-                        column: COLUMN('id', 'reg_date', 'modified_date', 'comment', 'user_id'),
+                        column: COLUMN(
+                            'id',
+                            'reg_date',
+                            'modified_date',
+                            'comment',
+                            'user_id',
+                            'reply_count',
+                        ),
                         query: SQL`where ${EQ({ id })} and deleted_date is null`,
                     }}
+                        p < likes ${{
+                            column: COLUMN('user_id'),
+                            query: SQL`where cancel_date is null`,
+                        }}
                         - user ${{
                             column: COLUMN('id', 'name'),
                         }}
                         < replys ${{
-                            column: COLUMN('id'),
+                            hook: (replys) =>
+                                go(
+                                    replys,
+                                    map((reply) =>
+                                        extend(
+                                            {
+                                                user_name: reply._.user.name,
+                                                my_reply: reply._.user.id === req.session.user.id,
+                                            },
+                                            reply,
+                                        ),
+                                    ),
+                                ),
+                            column: COLUMN('id', 'reg_date', 'modified_date', 'comment', 'user_id'),
                             query: SQL`where deleted_date is null`,
+                            row_number: [3, SQL`id asc`],
                         }}
+                            - user ${{
+                                column: COLUMN('id', 'name'),
+                            }}
                 `,
               tap(() => console.timeEnd('코멘트 가져오기')),
               Query.success(res, '댓글이 조회되었습니다.'),
@@ -782,7 +999,12 @@ router.patch('/todo/comment/:id', async (req, res) =>
                                                         Number(_comment._.user.id) ===
                                                         req.session.user.id,
                                                     user_name: _comment._.user.name,
-                                                    reply_count: _comment._.replys.length,
+                                                    like_count: _comment._.likes.length,
+                                                    like: !!_comment._.likes.find(
+                                                        (like) =>
+                                                            Number(like.user_id) ===
+                                                            req.session.user.id,
+                                                    ),
                                                 },
                                                 _comment,
                                             ),
@@ -794,18 +1016,47 @@ router.patch('/todo/comment/:id', async (req, res) =>
                                     'modified_date',
                                     'comment',
                                     'user_id',
+                                    'reply_count',
                                 ),
                                 query: SQL`where ${EQ({
                                     id: updated_comment.id,
                                 })} and deleted_date is null`,
                             }}
+                                p < likes ${{
+                                    column: COLUMN('user_id'),
+                                    query: SQL`where cancel_date is null`,
+                                }}
                                 - user ${{
                                     column: COLUMN('id', 'name'),
                                 }}
                                 < replys ${{
-                                    column: COLUMN('id'),
+                                    hook: (replys) =>
+                                        go(
+                                            replys,
+                                            map((reply) =>
+                                                extend(
+                                                    {
+                                                        user_name: reply._.user.name,
+                                                        my_reply:
+                                                            reply._.user.id === req.session.user.id,
+                                                    },
+                                                    reply,
+                                                ),
+                                            ),
+                                        ),
+                                    column: COLUMN(
+                                        'id',
+                                        'reg_date',
+                                        'modified_date',
+                                        'comment',
+                                        'user_id',
+                                    ),
                                     query: SQL`where deleted_date is null`,
+                                    row_number: [3, SQL`id asc`],
                                 }}
+                                    - user ${{
+                                        column: COLUMN('id', 'name'),
+                                    }}
                 `;
 
                   return { comment, comment_count: Number(comment_count.count) };
@@ -850,26 +1101,50 @@ router.get('/todo/:id/comment', async (req, res) => {
                             {
                                 my_comment: Number(_comment._.user.id) === req.session.user.id,
                                 user_name: _comment._.user.name,
-                                reply_count: _comment._.replys.length,
+                                like_count: _comment._.likes.length,
+                                like: !!_comment._.likes.find(
+                                    (like) => Number(like.user_id) === req.session.user.id,
+                                ),
                             },
                             _comment,
                         ),
                     ),
                 ),
-            column: COLUMN('id', 'reg_date', 'modified_date', 'comment', 'user_id'),
+            column: COLUMN('id', 'reg_date', 'modified_date', 'comment', 'user_id', 'reply_count'),
             query: SQL`where ${EQ({
                 todo_id: req.params.id,
             })} and deleted_date is null ${
                 cursor === 0 ? SQL`` : SQL`and id < ${cursor}`
             } order by id desc limit 10`,
         }}
+            p < likes ${{
+                column: COLUMN('user_id'),
+                query: SQL`where cancel_date is null`,
+            }}
             - user ${{
                 column: COLUMN('id', 'name'),
             }}
             < replys ${{
-                column: COLUMN('id'),
+                hook: (replys) =>
+                    go(
+                        replys,
+                        map((reply) =>
+                            extend(
+                                {
+                                    user_name: reply._.user.name,
+                                    my_reply: reply._.user.id === req.session.user.id,
+                                },
+                                reply,
+                            ),
+                        ),
+                    ),
+                column: COLUMN('id', 'reg_date', 'modified_date', 'comment', 'user_id'),
                 query: SQL`where deleted_date is null`,
+                row_number: [3, SQL`id asc`],
             }}
+                - user ${{
+                    column: COLUMN('id', 'name'),
+                }}
     `.catch(Query.error(res));
 
     console.timeEnd('코멘트 페이지로 가져오기');

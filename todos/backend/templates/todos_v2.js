@@ -36,7 +36,8 @@ router.get('/', async (req, res) => {
                                 extend(
                                     {
                                         my_todo: Number(todo.user_id) === req.session.user.id,
-                                        like_count: todo._.likes.length,
+                                        like_count: todo._.likes.length - todo._.limit_likes.length,
+                                        like_3: todo._.limit_likes,
                                         comment_count: todo._.comments.length,
                                         like: !!todo._.likes.find(
                                             (like) => Number(like.user_id) === req.session.user.id,
@@ -64,10 +65,33 @@ router.get('/', async (req, res) => {
                         column: COLUMN('id', 'user_id'),
                         query: SQL`where deleted_date is null`,
                     }}
-                    < likes ${{
+                        p < likes ${{
+                            column: COLUMN('user_id'),
+                            query: SQL`where cancel_date is null`,
+                        }}
+                    p < likes ${{
                         column: COLUMN('user_id'),
                         query: SQL`where cancel_date is null`,
                     }}
+                    p < limit_likes ${{
+                        hook: (likes) => flatMap((like) => like._.user, likes),
+                        key: 'attached_id',
+                        poly_type: { attached_type: 'todos' },
+                        table: 'likes',
+                        query: SQL`where cancel_date is null`,
+                        row_number: 3,
+                        //     and ${IN(
+                        //         'user_id',
+                        //         flatMap(
+                        //             (following) => following.following_id,
+                        //             [...my_follwings, { following_id: req.session.user.id }],
+                        //     ),
+                        //     )}
+                    }}
+                        - user ${{
+                            column: COLUMN('name'),
+                        }}
+                    
             `,
             (todos) =>
                 res.render('index', {
@@ -141,7 +165,7 @@ router.get('/page', async (req, res) => {
                     query: SQL`WHERE archived_date IS NULL`,
                 }}
                     < comments
-                    < likes
+                    p < likes
                 < archive ${SQL`WHERE delete_date IS NULL`}
                 < followers
                 < followings

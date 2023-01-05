@@ -1,7 +1,7 @@
 import { each, go, hi, range } from 'fxjs';
 
-const numberToKorean = (number) => {
-    if (Number(number) < 0) return 0;
+const numberToKorean = (number, str = '', pre = '') => {
+    if (Number(number) <= 0) return false;
 
     const input_number = String(number);
 
@@ -17,7 +17,7 @@ const numberToKorean = (number) => {
         each((index) => (thumbs += input_number[index])),
     );
 
-    return thumbs + units[unit_index];
+    return pre + thumbs + units[unit_index] + str;
 };
 
 export default numberToKorean;

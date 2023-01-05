@@ -16,7 +16,6 @@ import {
     $qs,
     $remove,
     $replaceWith,
-    $scrollTop,
     $setAttr,
     $setText,
     $setVal,
@@ -37,6 +36,7 @@ import numberToKorean from '../utils/numberToKor.js';
 import Reply from '../templates/reply.js';
 import Anime from '../utils/anime.js';
 import anime from 'animejs/lib/anime.es.js';
+import Loading from '../data/loading.js';
 
 const Main = {};
 
@@ -60,7 +60,6 @@ Main.error = (err) =>
             : Alert.pop({ title: '일시 오류가 발생했습니다.' }).then(() => log(err))
         : log('취소');
 
-Main.mkCon = (todoData) => go(todoData, Main.mkConTmp, $el, (v) => $prependTo($qs('.contents'))(v));
 Main.rmAll = pipe($findAll('div.content'), each($remove));
 Main.rmOne = pipe($closest('div.content'), $remove);
 Main.rmAllAndDel = () => go($qs('.contents'), Main.rmAll);
@@ -96,8 +95,6 @@ Main.setPrevDate = (el) =>
 
 Main.setNextDate = (el) =>
     go(el, (el) => ((el.value = getNextDay(el.value).toDateInputValue()), el));
-
-Main.updateElValue = (f) => (el) => f(el.value);
 
 Main.contentViewUpdate = (todos) => {
     go($qs('.contents'), $remove);
@@ -290,13 +287,36 @@ Main.delegate = (container_el) =>
                 Main.rmOne,
             ).catch(Main.error),
         ),
-        $delegate('click', '.content__info__heart', async (e) => {
+        $delegate('click', '.content__info__heart__icon', async (e) => {
             const res = await go(
                 e.currentTarget,
                 $closest('.content'),
                 $attr('id'),
                 replace('todo_', ''),
                 (id) => axios.post(`/todo/api/todo/${id}/like`),
+            ).catch(Main.error);
+            ``;
+            if (!res.data?.result) return;
+
+            go(
+                e.currentTarget,
+                $closest('.content__info__heart'),
+                tap(
+                    $find('.content__heart'),
+                    $replaceWith(go(MainUI.heartTmp(!res.data.result?.cancel_date), $el)),
+                ),
+                $find('.content__info__heart__count'),
+                $replaceWith(go(MainUI.mkHeartCountTmp(res.data.result), $el)),
+            );
+        }),
+
+        $delegate('click', '.content__comment__info__buttons__heart', async (e) => {
+            const res = await go(
+                e.currentTarget,
+                $closest('.content__comment'),
+                $attr('id'),
+                replace('comment_', ''),
+                (id) => axios.post(`/todo/api/todo/comment/${id}/like`),
             ).catch(Main.error);
 
             if (!res.data?.result) return;
@@ -307,7 +327,7 @@ Main.delegate = (container_el) =>
                     $find('.content__heart'),
                     $replaceWith(go(MainUI.heartTmp(!res.data.result?.cancel_date), $el)),
                 ),
-                $find('.content__info__heart__count'),
+                $find('.content__comment__info__buttons__heart__count'),
                 $setText(res.data.result.like_count),
             );
         }),
@@ -328,7 +348,7 @@ Main.delegate = (container_el) =>
 
                     go(
                         $qs(`.content_${id} .content__info__comment__count`),
-                        $setText(numberToKorean(data.result.comment_count)),
+                        $setText(numberToKorean(data.result.comment_count) || '댓글을 달아보세요'),
                     );
 
                     if (status === 'after')
@@ -401,7 +421,7 @@ Main.delegate = (container_el) =>
             go(axios.get(`/todo/api/todo/${id}/comment?cursor=${cursor}`), ({ data }) => {
                 go(
                     $qs(`.content_${id} .content__info__comment__count`),
-                    $setText(numberToKorean(data.result.comment_count)),
+                    $setText(numberToKorean(data.result.comment_count) || '댓글을 달아보세요'),
                 );
 
                 const comment = $qs(`.content_${id} .content__comments`);
@@ -459,7 +479,7 @@ Main.delegate = (container_el) =>
                 go(axios.delete(`/todo/api/todo/comment/${comment_id}`), ({ data }) => {
                     go(
                         $qs(`.content_${todo_id} .content__info__comment__count`),
-                        $setText(numberToKorean(data.result.comment_count)),
+                        $setText(numberToKorean(data.result.comment_count) || '댓글을 달아보세요'),
                     );
 
                     go(
@@ -549,7 +569,7 @@ Main.delegate = (container_el) =>
                 ({ data }) => {
                     go(
                         $qs(`.content_${todo_id} .content__info__comment__count`),
-                        $setText(numberToKorean(data.result.comment_count)),
+                        $setText(numberToKorean(data.result.comment_count) || '댓글을 달아보세요'),
                     );
 
                     go(
@@ -575,17 +595,21 @@ Main.delegate = (container_el) =>
                 );
             }
 
+            if (Loading.get('click', '.content__info__comment')) return;
+
             go(
                 e.currentTarget,
                 $closest('.content'),
                 $attr('id'),
                 replace('todo_', ''),
+                tap(() => Loading.set('click', '.content__info__comment')),
                 (id) => axios.get(`/todo/api/todo/${id}/comment`),
                 ({ data }) => {
+                    Loading.del('click', '.content__info__comment');
                     go(
                         e.currentTarget,
                         $find('.content__info__comment__count'),
-                        $setText(numberToKorean(data.result.comment_count)),
+                        $setText(numberToKorean(data.result.comment_count) || '댓글을 달아보세요'),
                     );
 
                     if (data.result.comment_count !== 0) {
@@ -699,7 +723,7 @@ Main.delegate = (container_el) =>
                 $setVal(''),
             ).catch(Main.error);
         }),
-        
+
         $delegate('click', '.whoami__buttons__archive', () =>
             window.location.replace('/todo/archive'),
         ),
@@ -718,6 +742,13 @@ Main.delegate = (container_el) =>
                 e.currentTarget,
                 $attr('id'),
                 replace('user_', ''),
+                (id) => (window.location = `/todo/page?id=${id}`),
+            ),
+        ),
+        $delegate('click', '.content__info__heart__count__name', (e) =>
+            go(
+                e.currentTarget,
+                $attr('user_id'),
                 (id) => (window.location = `/todo/page?id=${id}`),
             ),
         ),

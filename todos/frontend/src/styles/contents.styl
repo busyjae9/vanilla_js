@@ -64,6 +64,43 @@ on-color(color)
     overflow hidden
     margin .25em 0
 
+    &__reply
+      box-sizing border-box
+      padding-bottom .5em
+      padding-left 1em
+      padding-right 1em
+      width 100%
+      display flex
+      flex-direction column
+
+      &__body
+        padding .2em .5em
+        display flex
+        width 100%
+        align-items center
+        justify-content flex-start
+        box-sizing border-box
+
+        &__user
+          cursor pointer
+          width 15%
+          padding 0 .5em
+          font-weight 600
+          font-size .8em
+          color $white100
+
+          &:hover
+            color $green
+
+        &__text
+          width 75%
+          overflow auto
+          text-wrap inherit
+          box-sizing border-box
+          font-size .6em
+          padding 0 .5em
+          color $white100
+
     &__info
       display flex
       align-items center
@@ -76,19 +113,25 @@ on-color(color)
 
       &__buttons
         display flex
+        align-items center
         gap .5em
 
         &__reply,
+        &__heart,
         &__fix,
         &__delete
           cursor pointer
+          display flex
+          align-items center
+          gap .4em
+
 
         &__delete:hover
           color $red
 
 
     &__body
-      padding 1em 1em
+      padding .5em 1em
       display flex
       align-items center
       justify-content space-between
@@ -215,7 +258,7 @@ on-color(color)
     width 100%
     box-sizing border-box
     background-color $grey
-    padding .5em 1em
+    padding .8em 1em
 
     &__input
       padding .3em .4em
@@ -223,6 +266,8 @@ on-color(color)
       border-radius .5em
       box-shadow 0 0 .1em .1em $black30
       background-color $black100
+      position absolute
+      left 25%
       width 50%
       display flex
       justify-content space-between
@@ -243,7 +288,7 @@ on-color(color)
         font-size .8em
 
     &__comment
-      gap .2em
+      gap .4em
       display flex
       cursor pointer
       max-width: 20%
@@ -251,10 +296,10 @@ on-color(color)
       align-items center
 
       &__count
-        max-width 60%
+        font-size .6em
+        max-width 90%
         overflow hidden
         text-overflow ellipsis
-        text-wrap avoid
 
       &__full:hover
         on-color($green)
@@ -263,19 +308,28 @@ on-color(color)
 
 
     &__heart
-      gap .2em
+      gap .4em
       display flex
-      cursor pointer
       max-width: 20%
       justify-content flex-start
+
       overflow hidden
       align-items center
 
+      &__icon
+        cursor pointer
+
       &__count
-        max-width 60%
+        font-size .6em
+        max-width 90%
         overflow hidden
         text-overflow ellipsis
-        text-wrap avoid
+
+        &__name
+          vertical-align baseline
+          font-weight 600
+          cursor pointer
+          font-size 1.1em
 
       &:hover
         on-color($white)

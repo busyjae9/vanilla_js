@@ -9,7 +9,6 @@ import {
     $hide,
     $insertBefore,
     $on,
-    $prependTo,
     $prev,
     $qs,
     $remove,
@@ -22,16 +21,13 @@ import {
     $children,
     $insertAfter,
 } from 'fxdom';
-import { delay, each, go, hi, html, last, log, map, object, replace, strMap, tap } from 'fxjs';
+import { each, go, html, last, map, object, replace, strMap, tap } from 'fxjs';
 import { format } from 'date-fns';
-import anime from 'animejs/lib/anime.es.js';
-import LoadingUi from './loading.js';
 import axios from '../data/axios.js';
 import Main from '../events/main.js';
 import MainUI from './main.js';
 import numberToKorean from '../utils/numberToKor.js';
 import Alert from './alert.js';
-import animateCSS from '../utils/animateCSS.js';
 import Anime from '../utils/anime.js';
 
 const Reply = {};
@@ -301,7 +297,7 @@ Reply.pop = (data) =>
                                 res.data.result.reply,
                                 Reply.mkReplyTmp,
                                 $el,
-                                $prependTo($qs('.comment__replys__all')),
+                                $appendTo($qs('.comment__replys__all')),
                                 Anime.anime({
                                     easing: 'easeInSine',
                                     translateX: [e.currentTarget.clientWidth, 0],

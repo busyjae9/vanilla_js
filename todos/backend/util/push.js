@@ -4,6 +4,7 @@ import { each, go, hi, isArray, isNull, log, map, reject, tap } from 'fxjs';
 import { ASSOCIATE1, EQ, QUERY, QUERY1, SQL } from '../db/db_connect.js';
 import * as C from 'fxjs/Concurrency';
 import webPush from 'web-push';
+import Query from '../queries/query_v1.js';
 
 const Push = {};
 
@@ -47,7 +48,7 @@ Push.sendTodoNotification = () =>
                             user_id: user.id,
                             date: Push.now(),
                             checked: false,
-                        })}
+                        })} and archived_date is null
                     `;
 
             if (Number(todo_count.count) === 0) return null;
@@ -81,22 +82,38 @@ Push.sendNotification = (payload, user_id) =>
                   go(
                       ASSOCIATE1`
                             users ${{ query: SQL`where ${EQ({ id })}` }}
-                                < tokens ${{
-                                    query: SQL`where ${EQ({
-                                        type: Push.token_type,
-                                    })} and expired_date is null`,
-                                }}
+                                < tokens ${SQL`where ${EQ({
+                                    type: Push.token_type,
+                                })} and expired_date is null`}
                         `,
-                      (selected_user) =>
-                          selected_user._.tokens.length &&
-                          webPush.sendNotification(
-                              selected_user._.tokens[0].token,
-                              JSON.stringify(payload),
-                              Push.option,
-                          ),
+                      (selected_user) => {
+                          if (selected_user._.tokens.length) {
+                              log(selected_user);
+                              webPush
+                                  .sendNotification(
+                                      selected_user._.tokens[0].token,
+                                      JSON.stringify(payload),
+                                      Push.option,
+                                  )
+                                  .catch((err) =>
+                                      err.statusCode === 410
+                                          ? Query.updateWhere(
+                                                'tokens',
+                                                {
+                                                    expired_date: zonedTimeToUtc(
+                                                        new Date(),
+                                                        'Asia/Seoul',
+                                                    ),
+                                                },
+                                                { user_id: selected_user.id },
+                                            )
+                                          : log(err),
+                                  );
+                          }
+                      },
                   ),
               ),
-          ).catch((err) => log(err))
+          )
         : go(
               ASSOCIATE1`
                 users ${{ query: SQL`where ${EQ({ id: user_id })}` }}
@@ -104,13 +121,28 @@ Push.sendNotification = (payload, user_id) =>
                         query: SQL`where ${EQ({ type: Push.token_type })} and expired_date is null`,
                     }}
             `,
-              (selected_user) =>
-                  selected_user._.tokens.length &&
-                  webPush.sendNotification(
-                      selected_user._.tokens[0].token,
-                      JSON.stringify(payload),
-                      Push.option,
-                  ),
-          ).catch((err) => log(err));
+              (selected_user) => {
+                  if (selected_user._.tokens.length) {
+                      log(selected_user);
+                      webPush
+                          .sendNotification(
+                              selected_user._.tokens[0].token,
+                              JSON.stringify(payload),
+                              Push.option,
+                          )
+                          .catch((err) =>
+                              err.statusCode === 410
+                                  ? Query.updateWhere(
+                                        'tokens',
+                                        {
+                                            expired_date: zonedTimeToUtc(new Date(), 'Asia/Seoul'),
+                                        },
+                                        { user_id: selected_user.id },
+                                    )
+                                  : log(err),
+                          );
+                  }
+              },
+          );
 
 export default Push;

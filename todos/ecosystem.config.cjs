@@ -21,6 +21,8 @@ module.exports = {
             instances: -1, // 클러스터 모드
             instance_var: 'INSTANCE_ID', // 편한 이름으로 설정하면 됩니다.
             watch: false,
+            exp_backoff_restart_delay: 100,
+            restart_delay: 3000,
             env: {
                 Server_PORT: 80, //Express PORT
                 NODE_ENV: 'development',
